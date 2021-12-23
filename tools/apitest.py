@@ -70,7 +70,6 @@ def main():
     else:
         headers = default_headers
 
-    print(DATA)
     method = methods.get(args.method, methods['GET'])
     response = method(url, json=DATA, headers=headers)
 
