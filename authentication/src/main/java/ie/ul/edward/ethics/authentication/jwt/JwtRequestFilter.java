@@ -31,7 +31,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     /**
      * The authentication utility class providing Jwt authentication
      */
-    private final JwtAuthentication jwtAuthentication;
+    private final JWT jwt;
 
     /**
      * The authorization header
@@ -46,12 +46,12 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     /**
      * Construct a filter for JWT processing
      * @param accountService the service providing account access
-     * @param jwtAuthentication the authentication object for JWT utilities
+     * @param jwt the authentication object for JWT utilities
      */
     @Autowired
-    public JwtRequestFilter(UserDetailsService accountService, JwtAuthentication jwtAuthentication) {
+    public JwtRequestFilter(UserDetailsService accountService, JWT jwt) {
         this.accountService = accountService;
-        this.jwtAuthentication = jwtAuthentication;
+        this.jwt = jwt;
     }
 
     /**
@@ -73,8 +73,10 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             token = tokenHeader.substring(BEARER.length());
 
             try {
-                if (!jwtAuthentication.isTokenExpired(token))
-                    authenticated = jwtAuthentication.getAuthenticatedAccount(token);
+                if (!jwt.isTokenExpired(token))
+                    authenticated = jwt.getAuthenticatedAccount(token);
+                else
+                    log.error("Failed to authenticate with JWT due to an expired token");
             } catch (AuthenticationException ex) {
                 log.error("An error occurred filtering the JWT request", ex);
             }

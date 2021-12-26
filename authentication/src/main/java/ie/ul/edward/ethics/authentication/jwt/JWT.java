@@ -1,5 +1,6 @@
 package ie.ul.edward.ethics.authentication.jwt;
 
+import ie.ul.edward.ethics.authentication.config.AuthenticationConfiguration;
 import ie.ul.edward.ethics.authentication.exceptions.AuthenticationException;
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.models.AuthenticatedAccount;
@@ -23,16 +24,11 @@ import java.util.Map;
  * This class provides utility functions for handling the authentication of requests using JWT
  */
 @Component
-public final class JwtAuthentication {
+public final class JWT {
     /**
      * The secret key used for hashing/decrypting JWT tokens
      */
     private final Key secret;
-
-    /**
-     * The length of time the JWT Token is valid for
-     */
-    private static final long TOKEN_VALIDITY = 2;
 
     /**
      * The name of the environment variable to lookup for the secret key
@@ -40,22 +36,17 @@ public final class JwtAuthentication {
     public static final String ENV_SECRET_KEY = "ETHICS_AUTH_SECRET";
 
     /**
-     * The name of the property key which is looked up if not found in the environment
+     * The authentication configuration
      */
-    public static final String PROPERTY_SECRET_KEY = "jwt.secret";
+    private final AuthenticationConfiguration authConfig;
 
     /**
-     * The secret key from properties
-     */
-    private final String propertySecret;
-
-    /**
-     * Creates a JwtAuthentication object
+     * Creates a JWT object
      * @throws AuthenticationException if the secret key cannot be found
      */
     @Autowired
-    public JwtAuthentication(@Value("${" + PROPERTY_SECRET_KEY + "}") String propertySecret) {
-        this.propertySecret = propertySecret;
+    public JWT(AuthenticationConfiguration authConfig) {
+        this.authConfig = authConfig;
         this.secret = initialiseSecret();
     }
 
@@ -69,13 +60,8 @@ public final class JwtAuthentication {
     private Key initialiseSecret() throws AuthenticationException {
         String secret = System.getenv(ENV_SECRET_KEY);
 
-        if (secret == null) {
-            if (propertySecret != null)
-                secret = propertySecret;
-
-            if (secret == null)
-                throw new AuthenticationException("Cannot find JWT secret key in environment or application properties");
-        }
+        if (secret == null)
+            secret = authConfig.getJwt().getSecret();
 
         return Keys.hmacShaKeyFor(secret.getBytes());
     }
@@ -139,7 +125,7 @@ public final class JwtAuthentication {
     public String generateToken(Account account) {
         Map<String, Object> claims = new HashMap<>();
 
-        LocalDateTime expiration = LocalDateTime.now().plusHours(TOKEN_VALIDITY);
+        LocalDateTime expiration = LocalDateTime.now().plusHours(authConfig.getJwt().getToken().getValidity());
 
         return Jwts.builder().setClaims(claims).setSubject(account.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
