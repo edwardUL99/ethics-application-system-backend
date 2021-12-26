@@ -28,7 +28,10 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 /**
  * This class provides unit tests for the Account Service
  */
-@SpringBootTest(properties = {"jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long"}, classes = {ie.ul.edward.ethics.test.utils.TestApplication.class})
+@SpringBootTest(properties = {
+        "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
+        "auth.jwt.token.validity=2"
+        }, classes = {ie.ul.edward.ethics.test.utils.TestApplication.class})
 public class AccountServiceTest {
     /**
      * The mocked account repository

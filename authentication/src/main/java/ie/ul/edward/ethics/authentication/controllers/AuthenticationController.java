@@ -2,7 +2,7 @@ package ie.ul.edward.ethics.authentication.controllers;
 
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
-import ie.ul.edward.ethics.authentication.jwt.JwtAuthentication;
+import ie.ul.edward.ethics.authentication.jwt.JWT;
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import lombok.extern.log4j.Log4j2;
@@ -35,7 +35,7 @@ public class AuthenticationController {
     /**
      * The authentication utilities for JWT tokens
      */
-    private final JwtAuthentication jwtAuthentication;
+    private final JWT jwt;
     /**
      * The account service used for creating and retrieving accounts
      */
@@ -44,13 +44,13 @@ public class AuthenticationController {
     /**
      * Create an AuthenticationController
      * @param authenticationManager authentication manager for authenticating requests
-     * @param jwtAuthentication utilities for JWT token authentication
+     * @param jwt utilities for JWT token authentication
      * @param accountService the service used for creating and retrieving accounts
      */
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, JwtAuthentication jwtAuthentication, AccountService accountService) {
+    public AuthenticationController(AuthenticationManager authenticationManager, JWT jwt, AccountService accountService) {
         this.authenticationManager = authenticationManager;
-        this.jwtAuthentication = jwtAuthentication;
+        this.jwt = jwt;
         this.accountService = accountService;
     }
 
@@ -94,8 +94,8 @@ public class AuthenticationController {
         String errorMsg = error.get();
 
         if (errorMsg == null) {
-            String token = jwtAuthentication.generateToken(account);
-            return ResponseEntity.ok(jwtAuthentication.getAuthenticatedAccount(token));
+            String token = jwt.generateToken(account);
+            return ResponseEntity.ok(jwt.getAuthenticatedAccount(token));
         } else {
             response.put(ERROR, errorMsg);
         }
