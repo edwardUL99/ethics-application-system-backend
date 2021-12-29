@@ -13,6 +13,11 @@ public final class Constants {
     public static final String API_BASE = "api";
 
     /**
+     * A key to use for a general message in the response body
+     */
+    public static final String MESSAGE = "message";
+
+    /**
      * The key for response body error messages
      */
     public static final String ERROR = "error";
@@ -36,6 +41,16 @@ public final class Constants {
      * Invalid login credentials given
      */
     public static final String INVALID_CREDENTIALS = "invalid_credentials";
+
+    /**
+     * A constant used for when an account is updated correctly
+     */
+    public static final String ACCOUNT_UPDATED = "account_updated";
+
+    /**
+     * The message used when sending an illegal update
+     */
+    public static final String ILLEGAL_UPDATE = "illegal_update";
 
     /**
      * This enum provides endpoint constants identifying the endpoints.

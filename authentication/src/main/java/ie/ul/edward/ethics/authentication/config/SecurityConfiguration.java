@@ -81,7 +81,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
                 .authorizeRequests().antMatchers(
-                        createApiPath(Endpoint.AUTHENTICATION, "*")
+                        createApiPath(Endpoint.AUTHENTICATION, "register"),
+                        createApiPath(Endpoint.AUTHENTICATION, "login")
                 ).permitAll()
                 .anyRequest().authenticated().and()
                 .exceptionHandling().authenticationEntryPoint(entrypoint)

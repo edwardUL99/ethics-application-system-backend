@@ -1,6 +1,7 @@
 package ie.ul.edward.ethics.authentication.models;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * This class represents an AuthenticatedAccount and how long the account remains authenticated for.
@@ -52,5 +53,28 @@ public class AuthenticatedAccount extends Account {
      */
     public boolean isExpired() {
         return expiration.isBefore(LocalDateTime.now());
+    }
+
+    /**
+     * Determine if object o is equal to this object
+     * @param o the object to check equality
+     * @return true if equal, false if not
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AuthenticatedAccount account = (AuthenticatedAccount) o;
+        return Objects.equals(username, account.username) && Objects.equals(jwtToken, account.jwtToken)
+                && Objects.equals(expiration, account.expiration);
+    }
+
+    /**
+     * Generate the hashcode for the provided object
+     * @return the generated hashcode
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(username, jwtToken, expiration);
     }
 }

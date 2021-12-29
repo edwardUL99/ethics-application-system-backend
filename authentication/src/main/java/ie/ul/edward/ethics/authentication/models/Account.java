@@ -3,6 +3,9 @@ package ie.ul.edward.ethics.authentication.models;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 /**
  * The account class provides the "authentication" aspect of a user's account. I.e., rather than containing all the user's
@@ -16,16 +19,19 @@ public class Account {
      */
     @Id
     @Column(length=32)
-    private String username;
+    protected String username;
     /**
      * The account's email address
      */
     @Column(unique=true)
-    private String email;
+    @Email
+    @NotNull(message = "An email must be provided with an account")
+    protected String email;
     /**
      * The account's password
      */
-    private String password;
+    @NotNull
+    protected String password;
 
     /**
      * Create a default Account object
@@ -92,5 +98,27 @@ public class Account {
      */
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    /**
+     * Determine if object o is equal to this object
+     * @param o the object to check equality
+     * @return true if equal, false if not
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return Objects.equals(username, account.username) && Objects.equals(email, account.email) && Objects.equals(password, account.password);
+    }
+
+    /**
+     * Generate the hashcode for the provided object
+     * @return the generated hashcode
+     */
+    @Override
+    public int hashCode() {
+        return Objects.hash(username, email, password);
     }
 }

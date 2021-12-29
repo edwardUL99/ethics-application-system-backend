@@ -85,6 +85,8 @@ public class AccountServiceImpl implements AccountService {
         String username = account.getUsername();
         String email = account.getEmail();
 
+        account.setPassword(passwordEncoder.encode(account.getPassword()));
+
         if (getAccount(username, false) == null)
             throw new IllegalUpdateException(username, false);
 

@@ -24,7 +24,7 @@ import java.util.Map;
  * This class provides utility functions for handling the authentication of requests using JWT
  */
 @Component
-public final class JWT {
+public class JWT {
     /**
      * The secret key used for hashing/decrypting JWT tokens
      */

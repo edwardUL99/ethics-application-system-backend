@@ -1,12 +1,14 @@
 package ie.ul.edward.ethics.authentication.controllers;
 
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
+import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.jwt.JWT;
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -14,6 +16,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,11 +63,10 @@ public class AuthenticationController {
      * @return the JSON response
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Account account) {
+    public ResponseEntity<?> register(@RequestBody @Valid Account account) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            // TODO may need validation
             Account createdAccount = accountService.createAccount(account.getUsername(), account.getEmail(), account.getPassword());
             createdAccount.setPassword(""); // hide the password from the response
 
@@ -102,6 +104,47 @@ public class AuthenticationController {
 
         return ResponseEntity.badRequest().body(response);
     }
+
+    /**
+     * This method retrieves the user with the given username or email
+     * @param username the username or email if email param is true
+     * @param email true if username is email, else treat username as username
+     * @return the response
+     */
+    @GetMapping("/account")
+    public ResponseEntity<?> getAccount(@RequestParam String username, @RequestParam(required = false) boolean email) {
+        Account account = accountService.getAccount(username, email);
+
+        if (account != null)
+            account.setPassword(null);
+
+        return (account == null) ? ResponseEntity.notFound().build():ResponseEntity.ok(account);
+    }
+
+    /**
+     * This method updates the given account
+     * @param updated the account to update
+     * @return the updated account or an error if it occurs
+     */
+    @PutMapping("/account")
+    public ResponseEntity<?> updateAccount(@RequestBody @Valid Account updated) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            accountService.updateAccount(updated);
+
+            response.put(MESSAGE, ACCOUNT_UPDATED);
+
+            return ResponseEntity.ok(response);
+        } catch (IllegalUpdateException ex) {
+            ex.printStackTrace();
+            response.put(ERROR, ILLEGAL_UPDATE);
+        }
+
+        return ResponseEntity.badRequest().body(response);
+    }
+
+
 
     /**
      * Authenticates the username and password with the authentication manager

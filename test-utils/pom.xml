@@ -13,4 +13,10 @@
     <name>Ethics Application System Backend Test Utils</name>
     <description>Testing utilities for all the ethics system backend</description>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+    </dependencies>
 </project>

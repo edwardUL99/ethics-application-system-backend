@@ -52,29 +52,29 @@ public class AccountServiceTest {
     /**
      * The username for test accounts
      */
-    private static final String USERNAME = "user";
+    public static final String USERNAME = "user";
 
     /**
      * The email for test accounts
      */
-    private static final String EMAIL = "email@example.com";
+    public static final String EMAIL = "email@example.com";
 
     /**
      * The password for test accounts
      */
-    private static final String PASSWORD = "user-password";
+    public static final String PASSWORD = "user-password";
 
     /**
      * The encrypted password for testing
      */
-    private static final String ENCRYPTED_PASSWORD = "hhsggfsf24552dyuhh&gdhdgg";
+    public static final String ENCRYPTED_PASSWORD = "hhsggfsf24552dyuhh&gdhdgg";
 
     /**
      * Creates an account for testing
      * @return the account for testing
      */
-    private Account createTestAccount() {
-        return new Account(USERNAME, EMAIL, ENCRYPTED_PASSWORD);
+    public static Account createTestAccount() {
+        return new Account(USERNAME, EMAIL, PASSWORD);
     }
 
     /**
@@ -151,10 +151,14 @@ public class AccountServiceTest {
                 .willReturn(Optional.of(account));
         given(accountRepository.findByEmail(EMAIL))
                 .willReturn(Optional.of(account));
+        given(passwordEncoder.encode(PASSWORD))
+                .willReturn(ENCRYPTED_PASSWORD);
 
         assertDoesNotThrow(() -> accountService.updateAccount(account));
+        assertEquals(account.getPassword(), ENCRYPTED_PASSWORD);
         verify(accountRepository).findByUsername(USERNAME);
         verify(accountRepository).findByEmail(EMAIL);
+        verify(passwordEncoder).encode(PASSWORD);
     }
 
     /**
