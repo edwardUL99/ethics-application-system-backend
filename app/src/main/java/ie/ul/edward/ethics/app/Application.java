@@ -1,5 +1,6 @@
 package ie.ul.edward.ethics.app;
 
+import org.apache.logging.log4j.Level;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;

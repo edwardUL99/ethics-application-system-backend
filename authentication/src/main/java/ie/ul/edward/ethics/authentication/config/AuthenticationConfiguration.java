@@ -66,7 +66,7 @@ public class AuthenticationConfiguration {
         public String getSecret() {
             if (secret == null)
                 throw new IllegalStateException("To use the authentication module, you have to set the secret key " +
-                        "auth.jwt.secret in a properties file on the classpath");
+                        "auth.jwt.secret in the authentication.ethics.properties file");
             return secret;
         }
 
