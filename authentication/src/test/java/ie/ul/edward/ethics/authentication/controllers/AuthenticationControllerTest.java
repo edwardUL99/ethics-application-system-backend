@@ -4,8 +4,7 @@ import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.jwt.JWT;
-import ie.ul.edward.ethics.authentication.models.Account;
-import ie.ul.edward.ethics.authentication.models.AuthenticatedAccount;
+import ie.ul.edward.ethics.authentication.models.*;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import static ie.ul.edward.ethics.common.Constants.*;
 import static ie.ul.edward.ethics.authentication.services.AccountServiceTest.*;
@@ -109,7 +108,7 @@ public class AuthenticationControllerTest {
         Account account = createTestAccount();
         String json = JSON.convertJSON(account);
         account.setPassword("");
-        String resultJson = JSON.convertJSON(account);
+        String resultJson = JSON.convertJSON(new AccountResponse(USERNAME, EMAIL));
 
         given(accountService.createAccount(USERNAME, EMAIL, PASSWORD))
                 .willReturn(account);
@@ -182,17 +181,21 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldAuthenticate() throws Exception {
         Account account = createTestAccount();
-        account.setEmail(null);
-        String json = JSON.convertJSON(account);
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
+        String json = JSON.convertJSON(authenticationRequest);
+
+        account.setPassword(null); // don't need the password anymore
+        account.setEmail(null); // also don't need the email
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
 
         AuthenticatedAccount authenticatedAccount = createAuthenticatedAccount();
-        String resultJson = JSON.convertJSON(authenticatedAccount);
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(), authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
+        String resultJson = JSON.convertJSON(authenticationResponse);
 
         given(authenticationManager.authenticate(authentication))
                 .willReturn(authentication);
-        given(jwt.generateToken(account))
+        given(jwt.generateToken(account, -1L))
                 .willReturn(JWT_TOKEN);
         given(jwt.getAuthenticatedAccount(JWT_TOKEN))
                 .willReturn(authenticatedAccount);
@@ -206,14 +209,92 @@ public class AuthenticationControllerTest {
     }
 
     /**
+     * This tests that if authentication is requested using email, it will be carried out successfully
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void shouldAuthenticateUsingEmail() throws Exception {
+        Account account = createTestAccount();
+        AuthenticationRequest authenticationRequest =
+                new AuthenticationRequest(account.getEmail(), account.getPassword(), true, null);
+        String json = JSON.convertJSON(authenticationRequest);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+
+        AuthenticatedAccount authenticatedAccount = createAuthenticatedAccount();
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(), authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
+        String resultJson = JSON.convertJSON(authenticationResponse);
+
+        given(authenticationManager.authenticate(authentication))
+                .willReturn(authentication);
+        given(accountService.getAccount(EMAIL, true))
+                .willReturn(account);
+        given(jwt.generateToken(account, -1L))
+                .willReturn(JWT_TOKEN);
+        given(jwt.getAuthenticatedAccount(JWT_TOKEN))
+                .willReturn(authenticatedAccount);
+
+        mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(resultJson));
+
+        verify(accountService).getAccount(EMAIL, true);
+    }
+
+    /**
+     * This method tests that expiry should be treated correctly
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void shouldAuthenticateWithExpiry() throws Exception {
+        Account account = createTestAccount();
+
+        AuthenticationRequest authenticationRequest =
+                new AuthenticationRequest(account.getUsername(), account.getPassword(), null, 24L);
+        String json = JSON.convertJSON(authenticationRequest);
+
+        account.setPassword(null); // don't need the password anymore
+        account.setEmail(null); // also don't need the email
+
+        LocalDateTime expiry = LocalDateTime.now().plusHours(24L);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+
+        AuthenticatedAccount authenticatedAccount = new AuthenticatedAccount(USERNAME, JWT_TOKEN, expiry);
+
+        AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(),
+                authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
+        String resultJson = JSON.convertJSON(authenticationResponse);
+
+        given(authenticationManager.authenticate(authentication))
+                .willReturn(authentication);
+        given(jwt.generateToken(account, 24L))
+                .willReturn(JWT_TOKEN);
+        given(jwt.getAuthenticatedAccount(JWT_TOKEN))
+                .willReturn(authenticatedAccount);
+
+        mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(resultJson));
+
+        verify(jwt).generateToken(account, 24L); // verify the correct expory value was passed in
+    }
+
+    /**
      * This method tests that an error message should be returned if a user is disabled
      * @throws Exception if an error occurs
      */
     @Test
     public void shouldThrowDisabledErrorOnAuthenticate() throws Exception {
         Account account = createTestAccount();
-        account.setEmail(null);
-        String json = JSON.convertJSON(account);
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
+        String json = JSON.convertJSON(authenticationRequest);
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
 
@@ -264,8 +345,8 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldGetAccountByUsername() throws Exception {
         Account account = createTestAccount();
-        account.setPassword(null);
-        String resultJson = JSON.convertJSON(account);
+        AccountResponse response = new AccountResponse(account.getUsername(), account.getEmail());
+        String resultJson = JSON.convertJSON(response);
 
         given(accountService.getAccount(USERNAME, false))
                 .willReturn(account);
@@ -285,8 +366,8 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldGetAccountByEmail() throws Exception {
         Account account = createTestAccount();
-        account.setPassword(null);
-        String resultJson = JSON.convertJSON(account);
+        AccountResponse response = new AccountResponse(account.getUsername(), account.getEmail());
+        String resultJson = JSON.convertJSON(response);
 
         given(accountService.getAccount(EMAIL, true))
                 .willReturn(account);

@@ -120,12 +120,15 @@ public class JWT {
     /**
      * Generate a JWT Token for the provided account
      * @param account the account to generate the token for
+     * @param expiry, the time in hours to expire the token at. If null, a default value will be used
      * @return the generated JWT token
      */
-    public String generateToken(Account account) {
+    public String generateToken(Account account, Long expiry) {
         Map<String, Object> claims = new HashMap<>();
 
-        LocalDateTime expiration = LocalDateTime.now().plusHours(authConfig.getJwt().getToken().getValidity());
+        expiry = (expiry == null || expiry == -1L) ? authConfig.getJwt().getToken().getValidity():expiry;
+
+        LocalDateTime expiration = LocalDateTime.now().plusHours(expiry);
 
         return Jwts.builder().setClaims(claims).setSubject(account.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))

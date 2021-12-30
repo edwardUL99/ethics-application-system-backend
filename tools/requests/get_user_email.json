@@ -1,0 +1,6 @@
+{
+	"endpoint": "api/auth/account?username=eddylynch9@gmail.com&email=true",
+	"headers": {
+		"Authorization": "Bearer eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJlZGR5bHluY2g5IiwiaWF0IjoxNjQwOTA2NTg5LCJleHAiOjE2NDIxMTYxODl9.n-KxqlOIuo0Fgl-92Vnzo_BdstZBrVEcrepN58DgSGmj_kYbhsYMPbyR5uW5A96T"
+	}
+}

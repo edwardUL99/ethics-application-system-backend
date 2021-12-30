@@ -1,0 +1,10 @@
+{
+	"endpoint": "api/auth/login/",
+	"data": {
+		"username": "eddylynch9@gmail.com",
+		"password": "testPass2",
+		"expiry": 336,
+		"email": true
+	},
+	"method": "POST"
+}

@@ -4,7 +4,7 @@ import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.jwt.JWT;
-import ie.ul.edward.ethics.authentication.models.Account;
+import ie.ul.edward.ethics.authentication.models.*;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,10 +67,12 @@ public class AuthenticationController {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            Account createdAccount = accountService.createAccount(account.getUsername(), account.getEmail(), account.getPassword());
-            createdAccount.setPassword(""); // hide the password from the response
+            String username = account.getUsername();
+            String email = account.getEmail();
 
-            return ResponseEntity.ok(createdAccount);
+            Account createdAccount = accountService.createAccount(username, email, account.getPassword());
+
+            return ResponseEntity.ok(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
         } catch (UsernameExistsException ex) {
             log.error(ex);
             response.put(ERROR, USERNAME_EXISTS);
@@ -83,23 +85,50 @@ public class AuthenticationController {
     }
 
     /**
+     * Looks up the account with username as email if useEmail is true.
+     * Otherwise returns an account with username and all other fields null.
+     * @param username the username/email
+     * @param useEmail true if username is an email and to lookup the true username, else just use it as username
+     * @return the created account
+     */
+    private Account accountLookup(String username, boolean useEmail) {
+        if (useEmail)
+            return accountService.getAccount(username, true);
+        else
+            return new Account(username, null, null);
+    }
+
+    /**
      * The endpoint for authentication
-     * @param account the account sent for authentication
+     * @param request the authentication request object
      * @return the response of the request
      */
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody Account account) {
+    public ResponseEntity<?> authenticate(@RequestBody @Valid  AuthenticationRequest request) {
         Map<String, Object> response = new HashMap<>();
 
-        AtomicReference<String> error = new AtomicReference<>();
-        authenticateInternal(account.getUsername(), account.getPassword(), error);
-        String errorMsg = error.get();
+        String username = request.getUsername();
+        String password = request.getPassword();
 
-        if (errorMsg == null) {
-            String token = jwt.generateToken(account);
-            return ResponseEntity.ok(jwt.getAuthenticatedAccount(token));
+        Account account = accountLookup(username, request.isEmail());
+
+        if (account == null) {
+            response.put(ERROR, INVALID_CREDENTIALS);
         } else {
-            response.put(ERROR, errorMsg);
+            username = account.getUsername();
+
+            AtomicReference<String> error = new AtomicReference<>();
+            authenticateInternal(username, password, error);
+            String errorMsg = error.get();
+
+            if (errorMsg == null) {
+                String token = jwt.generateToken(account, request.getExpiry());
+                AuthenticatedAccount authenticatedAccount = (AuthenticatedAccount) jwt.getAuthenticatedAccount(token);
+                return ResponseEntity.ok(new AuthenticationResponse(authenticatedAccount.getUsername(),
+                        authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration()));
+            } else {
+                response.put(ERROR, errorMsg);
+            }
         }
 
         return ResponseEntity.badRequest().body(response);
@@ -115,10 +144,7 @@ public class AuthenticationController {
     public ResponseEntity<?> getAccount(@RequestParam String username, @RequestParam(required = false) boolean email) {
         Account account = accountService.getAccount(username, email);
 
-        if (account != null)
-            account.setPassword(null);
-
-        return (account == null) ? ResponseEntity.notFound().build():ResponseEntity.ok(account);
+        return (account == null) ? ResponseEntity.notFound().build():ResponseEntity.ok(new AccountResponse(account.getUsername(), account.getEmail()));
     }
 
     /**

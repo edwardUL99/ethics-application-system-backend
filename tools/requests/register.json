@@ -1,0 +1,9 @@
+{
+	"endpoint": "api/auth/register/",
+	"data": {
+		"username": "eddylynch9",
+		"email": "eddylynch9@gmail.com",
+		"password": "testPass2"
+	},
+	"method": "POST"
+}
