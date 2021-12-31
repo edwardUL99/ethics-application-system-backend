@@ -7,6 +7,7 @@ import ie.ul.edward.ethics.authentication.jwt.JWT;
 import ie.ul.edward.ethics.authentication.models.*;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import static ie.ul.edward.ethics.common.Constants.*;
+import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
 import static ie.ul.edward.ethics.authentication.services.AccountServiceTest.*;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
