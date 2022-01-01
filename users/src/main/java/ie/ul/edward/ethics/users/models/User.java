@@ -1,6 +1,7 @@
 package ie.ul.edward.ethics.users.models;
 
 import ie.ul.edward.ethics.authentication.models.Account;
+import ie.ul.edward.ethics.users.models.roles.Role;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -32,12 +33,17 @@ public class User {
      * The department this user is based in
      */
     private String department;
+    /**
+     * The User's role
+     */
+    @OneToOne
+    private Role role;
 
     /**
      * Create a default user
      */
     public User() {
-        this(null, null, null, null);
+        this(null, null, null, null, Role.STANDARD_USER);
     }
 
     /**
@@ -45,9 +51,10 @@ public class User {
      * @param name the name of the user
      * @param account the account of the user. The username is set based from this account
      * @param department the department name the user is associated with
+     * @param role the role the user belongs to, determining their permissions
      */
-    public User(String name, Account account, String department) {
-        this(null, name, null, department);
+    public User(String name, Account account, String department, Role role) {
+        this(null, name, null, department, role);
         setAccount(account);
     }
 
@@ -59,7 +66,7 @@ public class User {
      * @param department the department the user is situated in
      */
     public User(String username, String name, String department) {
-        this(username, name, null, department);
+        this(username, name, null, department, Role.STANDARD_USER);
     }
 
     /**
@@ -68,12 +75,14 @@ public class User {
      * @param name the name of the user
      * @param account the account for the user
      * @param department the department the user belongs to
+     * @param role the role the user owns
      */
-    private User(String username, String name, Account account, String department) {
+    private User(String username, String name, Account account, String department , Role role) {
         this.username = username;
         this.name = name;
         this.account = account;
         this.department = department;
+        this.role = role;
     }
 
     /**
@@ -97,7 +106,7 @@ public class User {
      * @param name the user's new name
      */
     public void setName(String name) {
-
+        this.name = name;
     }
 
     /**
@@ -136,6 +145,22 @@ public class User {
     }
 
     /**
+     * Get the user's role
+     * @return the role of the user
+     */
+    public Role getRole() {
+        return role;
+    }
+
+    /**
+     * Set the role of the user
+     * @param role the user's role
+     */
+    public void setRole(Role role) {
+        this.role = role;
+    }
+
+    /**
      * Check if the provided object is equal to this User
      * @param o the object to check
      * @return true if equal, false if not
@@ -145,7 +170,8 @@ public class User {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return Objects.equals(username, user.username) && Objects.equals(name, user.name) && Objects.equals(account, user.account) && Objects.equals(department, user.department);
+        return Objects.equals(username, user.username) && Objects.equals(name, user.name) && Objects.equals(account, user.account)
+                && Objects.equals(department, user.department) && Objects.equals(role, user.role);
     }
 
     /**
@@ -154,6 +180,6 @@ public class User {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(username, name, account, department);
+        return Objects.hash(username, name, account, department, role);
     }
 }

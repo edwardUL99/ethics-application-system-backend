@@ -4,6 +4,7 @@ import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import ie.ul.edward.ethics.users.exceptions.AccountNotExistsException;
 import ie.ul.edward.ethics.users.models.User;
+import ie.ul.edward.ethics.users.models.roles.Role;
 import ie.ul.edward.ethics.users.repositories.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,7 @@ public class UserServiceTest {
      * @return the test user
      */
     private User createTestUser() {
-        return new User(NAME, createTestAccount(), DEPARTMENT);
+        return new User(NAME, createTestAccount(), DEPARTMENT, Role.STANDARD_USER);
     }
 
     /**
