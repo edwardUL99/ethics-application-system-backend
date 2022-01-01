@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -47,8 +48,12 @@ public class RoleConfig implements CommandLineRunner {
      * @param permission the permission to save
      */
     private void savePermissionIfNotExists(Permission permission) {
-        if (!permissionRepository.existsByName(permission.getName()))
+        Optional<Permission> foundPermission = permissionRepository.findByName(permission.getName());
+
+        if (foundPermission.isEmpty())
             permissionRepository.save(permission);
+        else
+            permission.setId(foundPermission.get().getId());
     }
 
     /**
@@ -56,8 +61,12 @@ public class RoleConfig implements CommandLineRunner {
      * @param role the role to save
      */
     private void saveRoleIfNotExists(Role role) {
-        if (!roleRepository.existsByName(role.getName()))
+        Optional<Role> foundRole = roleRepository.findByName(role.getName());
+
+        if (foundRole.isEmpty())
             roleRepository.save(role);
+        else
+            role.setId(foundRole.get().getId());
     }
 
     /**

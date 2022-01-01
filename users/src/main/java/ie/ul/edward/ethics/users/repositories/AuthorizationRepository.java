@@ -17,11 +17,4 @@ public interface AuthorizationRepository<T extends Authorization> extends CrudRe
      * @return the found object if found, or else an empty optional
      */
     Optional<T> findByName(String name);
-
-    /**
-     * Determine if the authorization exists by name
-     * @param name the name of the object
-     * @return true if it exists, false if not
-     */
-    boolean existsByName(String name);
 }

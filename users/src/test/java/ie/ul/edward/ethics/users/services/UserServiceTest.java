@@ -29,7 +29,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
         ie.ul.edward.ethics.authentication.jwt.JwtRequestFilter.class
 }, properties = {
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
-        "auth.jwt.token.validity=2"
+        "auth.jwt.token.validity=2",
+        "permissions.authorization.enabled=true"
 })
 public class UserServiceTest {
     /**
