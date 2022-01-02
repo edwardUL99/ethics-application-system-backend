@@ -39,10 +39,10 @@ import java.util.Map;
 /**
  * This class tests the authentication controller
  */
-@SpringBootTest(properties = {
-        "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
-        "auth.jwt.token.validity=2"
-}, classes = {ie.ul.edward.ethics.test.utils.TestApplication.class})
+@SpringBootTest(classes = {
+        ie.ul.edward.ethics.test.utils.TestApplication.class,
+        ie.ul.edward.ethics.authentication.test.config.TestConfiguration.class
+})
 public class AuthenticationControllerTest {
     /**
      * Web app context used for testing

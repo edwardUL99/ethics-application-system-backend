@@ -1,13 +1,14 @@
-package ie.ul.edward.ethics.users.roles;
+package ie.ul.edward.ethics.users.authorization;
 
 import ie.ul.edward.ethics.authentication.jwt.AuthenticationInformation;
-import ie.ul.edward.ethics.users.config.PermissionsConfigurer;
+import ie.ul.edward.ethics.common.Constants;
+import ie.ul.edward.ethics.users.config.PermissionsAuthorizationConfigurer;
+import ie.ul.edward.ethics.users.config.UserPermissionsConfig;
 import ie.ul.edward.ethics.users.models.AuthorizedUser;
 import ie.ul.edward.ethics.users.models.User;
 import ie.ul.edward.ethics.users.services.UserService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -25,7 +26,7 @@ import java.io.PrintWriter;
  */
 @Component
 @Log4j2
-public class UserAuthorizationFilter extends OncePerRequestFilter {
+public class PermissionsAuthorizationFilter extends OncePerRequestFilter {
     /**
      * The information from authentication
      */
@@ -39,10 +40,9 @@ public class UserAuthorizationFilter extends OncePerRequestFilter {
     private AuthorizedUser authorizedUser;
 
     /**
-     * This config property enables/disabled the permissions authorization
+     * This configuration object for user permissions
      */
-    @Value("${permissions.authorization.enabled}")
-    private boolean enabled;
+    private final UserPermissionsConfig userPermissionsConfig;
 
     /**
      * The service for loading users
@@ -52,17 +52,25 @@ public class UserAuthorizationFilter extends OncePerRequestFilter {
     /**
      * The object for performing user permissions authorization
      */
-    private final UserAuthorizer userAuthorizer;
+    private final PermissionsAuthorizer permissionsAuthorizer;
 
     /**
      * Create the filter with the provided user service
      * @param userService the user service for loading users
      * @param permissionsConfigurer the configuration object used for configuring permissions authorization
+     * @param userPermissionsConfig the config object for user permissions
      */
     @Autowired
-    public UserAuthorizationFilter(UserService userService, PermissionsConfigurer permissionsConfigurer) {
+    public PermissionsAuthorizationFilter(UserService userService, PermissionsAuthorizationConfigurer permissionsConfigurer, UserPermissionsConfig userPermissionsConfig) {
         this.userService = userService;
-        this.userAuthorizer = permissionsConfigurer.getAuthorizer();
+        this.permissionsAuthorizer = permissionsConfigurer.getAuthorizer();
+        this.userPermissionsConfig = userPermissionsConfig;
+
+        if (userPermissionsConfig.isEnabled())
+            log.info("Will authorize user permissions for any configured paths");
+        else
+            log.warn("User permission authorization is disabled. This should be enabled as when disabled, " +
+                    "users can perform actions even if not permitted to do so");
     }
 
     /**
@@ -72,17 +80,18 @@ public class UserAuthorizationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String username = authenticationInformation.getUsername();
 
-        if (enabled && username != null) {
+        if (userPermissionsConfig.isEnabled() && username != null) {
             User user = userService.loadUser(username);
             String path = request.getRequestURI();
 
-            if (!userAuthorizer.authorise(path, user)) {
+            if (!permissionsAuthorizer.authorise(path, request.getMethod(), user)) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
 
                 PrintWriter writer = response.getWriter();
 
-                writer.print("{\"error\": \"insufficient_permissions\"}"); // todo make a constant
+                writer.print(String.format("{\"%s\": \"%s\"}", Constants.ERROR, Constants.INSUFFICIENT_PERMISSIONS));
                 writer.flush();
 
                 return;

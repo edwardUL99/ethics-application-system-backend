@@ -1,7 +1,8 @@
 package ie.ul.edward.ethics.users.models;
 
 import ie.ul.edward.ethics.authentication.models.Account;
-import ie.ul.edward.ethics.users.models.roles.Role;
+import ie.ul.edward.ethics.users.models.authorization.Role;
+import ie.ul.edward.ethics.users.authorization.Roles;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -43,7 +44,7 @@ public class User {
      * Create a default user
      */
     public User() {
-        this(null, null, null, null, Role.STANDARD_USER);
+        this(null, null, null, null, Roles.STANDARD_USER);
     }
 
     /**
@@ -66,7 +67,7 @@ public class User {
      * @param department the department the user is situated in
      */
     public User(String username, String name, String department) {
-        this(username, name, null, department, Role.STANDARD_USER);
+        this(username, name, null, department, Roles.STANDARD_USER);
     }
 
     /**

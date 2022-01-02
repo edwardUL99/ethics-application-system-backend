@@ -1,6 +1,6 @@
 package ie.ul.edward.ethics.users.config;
 
-import ie.ul.edward.ethics.users.models.roles.Permission;
+import ie.ul.edward.ethics.users.authorization.Permissions;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 
@@ -14,8 +14,8 @@ public class PermissionsConfiguration {
      * @param permissionsConfigurer the configuration object
      */
     @Autowired
-    public void configurePermissions(PermissionsConfigurer permissionsConfigurer) {
+    public void configurePermissions(PermissionsAuthorizationConfigurer permissionsConfigurer) {
         permissionsConfigurer
-                .requireOneOfPermissions("/api/auth/account", Permission.CREATE_APPLICATION); // todo put different paths here
+                .requireOneOfPermissions("/api/auth/account", Permissions.CREATE_APPLICATION); // todo put different paths here
     }
 }

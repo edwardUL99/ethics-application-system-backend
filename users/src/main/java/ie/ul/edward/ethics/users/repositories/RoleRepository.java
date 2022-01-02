@@ -1,7 +1,6 @@
 package ie.ul.edward.ethics.users.repositories;
 
-import ie.ul.edward.ethics.users.models.roles.Role;
-import org.springframework.data.repository.CrudRepository;
+import ie.ul.edward.ethics.users.models.authorization.Role;
 import org.springframework.stereotype.Repository;
 
 /**

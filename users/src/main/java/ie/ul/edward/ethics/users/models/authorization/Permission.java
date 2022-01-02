@@ -1,49 +1,29 @@
-package ie.ul.edward.ethics.users.models.roles;
+package ie.ul.edward.ethics.users.models.authorization;
 
 import javax.persistence.Entity;
-import java.util.Objects;
+import java.util.*;
 
 /**
- * This class represents a permission
+ * A permission is the smallest unit that represents an Authorization. It can be used to lock access to one or more related
+ * resources where the user must possess that permission to access it.
  */
 @Entity
 public class Permission extends Authorization {
     /**
-     * This permission allows a role to create an application
-     */
-    public static final Permission CREATE_APPLICATION = new Permission(null, "Create Application");
-
-    /**
-     * This permission allows a role to edit an application
-     */
-    public static final Permission EDIT_APPLICATION = new Permission(null, "Edit Application");
-
-    /**
-     * This permission allows a role to view their own applications
-     */
-    public static final Permission VIEW_OWN_APPLICATIONS = new Permission(null, "View Own Applications");
-
-    /**
-     * This permission allows a role to view all submitted applications
-     */
-    public static final Permission VIEW_ALL_APPLICATIONS = new Permission(null, "View All Applications");
-
-    // TODO put more defined roles here
-
-    /**
      * Creates a default Permission object
      */
     public Permission() {
-        this(null, null);
+        this(null, null, null);
     }
 
     /**
      * Creates a Permission object with the provided ID and name
      * @param id the ID of the permission
      * @param name the name of the permission
+     * @param description a short description of this permission
      */
-    public Permission(Long id, String name) {
-        super(id, name);
+    public Permission(Long id, String name, String description) {
+        super(id, name, description);
     }
 
     /**

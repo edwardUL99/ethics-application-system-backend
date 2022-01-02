@@ -2,9 +2,12 @@ package ie.ul.edward.ethics.users.services;
 
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.services.AccountService;
+import ie.ul.edward.ethics.users.config.UserPermissionsConfig;
 import ie.ul.edward.ethics.users.exceptions.AccountNotExistsException;
 import ie.ul.edward.ethics.users.models.User;
+import ie.ul.edward.ethics.users.models.authorization.Role;
 import ie.ul.edward.ethics.users.repositories.UserRepository;
+import ie.ul.edward.ethics.users.authorization.Roles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -24,14 +27,21 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
 
     /**
+     * The configuration for user permissions
+     */
+    private final UserPermissionsConfig userPermissionsConfig;
+
+    /**
      * Construct a UserService with the provided dependencies
      * @param accountService the service for loading accounts
      * @param userRepository the repository for storing users
+     * @param userPermissionsConfig the configuration for user permissions
      */
     @Autowired
-    public UserServiceImpl(AccountService accountService, UserRepository userRepository) {
+    public UserServiceImpl(AccountService accountService, UserRepository userRepository, UserPermissionsConfig userPermissionsConfig) {
         this.accountService = accountService;
         this.userRepository = userRepository;
+        this.userPermissionsConfig = userPermissionsConfig;
     }
 
     /**
@@ -43,6 +53,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public User loadUser(String username) {
         return userRepository.findByUsername(username).orElse(null);
+    }
+
+    /**
+     * Check if the user's email address matches the specified chair/administrator email and if so, assign the respective roles
+     * @param user the user to check
+     */
+    private void checkUserRole(User user) {
+        String email = user.getAccount().getEmail();
+
+        Role role = Roles.STANDARD_USER;
+
+        if (email.equals(userPermissionsConfig.getChair()))
+            role = Roles.CHAIR;
+        else if (email.equals(userPermissionsConfig.getAdministrator()))
+            role = Roles.ADMINISTRATOR;
+
+        user.setRole(role);
     }
 
     /**
@@ -68,7 +95,7 @@ public class UserServiceImpl implements UserService {
             throw new AccountNotExistsException(username);
 
         user.setAccount(account);
-
+        checkUserRole(user);
         userRepository.save(user);
 
         return user;

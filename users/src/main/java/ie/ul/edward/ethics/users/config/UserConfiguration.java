@@ -1,12 +1,9 @@
 package ie.ul.edward.ethics.users.config;
 
 import ie.ul.edward.ethics.users.models.AuthorizedUser;
-import ie.ul.edward.ethics.users.models.roles.Permission;
 import ie.ul.edward.ethics.users.repositories.PermissionRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.web.context.annotation.RequestScope;
 
 /**
@@ -29,11 +26,11 @@ public class UserConfiguration {
 
     /**
      * Create the bean for configuring the user role authorization
-     * @return the PermissionsConfigurer object for configuration
+     * @return the PermissionsAuthorizationConfigurer object for configuration
      */
     @Bean
-    public PermissionsConfigurer permissionsConfigurer() {
-        return new PermissionsConfigurer(permissionRepository);
+    public PermissionsAuthorizationConfigurer permissionsConfigurer() {
+        return new PermissionsAuthorizationConfigurer(permissionRepository);
     }
 
     /**

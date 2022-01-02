@@ -30,10 +30,10 @@ import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
 /**
  * This class provides unit tests for the Account Service
  */
-@SpringBootTest(properties = {
-        "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
-        "auth.jwt.token.validity=2"
-        }, classes = {ie.ul.edward.ethics.test.utils.TestApplication.class})
+@SpringBootTest(classes = {
+        ie.ul.edward.ethics.test.utils.TestApplication.class,
+        ie.ul.edward.ethics.authentication.test.config.TestConfiguration.class
+})
 public class AccountServiceTest {
     /**
      * The mocked account repository

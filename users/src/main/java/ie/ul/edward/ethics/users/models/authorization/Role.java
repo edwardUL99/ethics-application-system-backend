@@ -1,22 +1,7 @@
-package ie.ul.edward.ethics.users.models.roles;
+package ie.ul.edward.ethics.users.models.authorization;
 
 import javax.persistence.*;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Objects;
-
-/*
-TODO will need to create an object that defines a set of permissions/roles required and authorize(User) method which checks the user's role and therefore, permissions to see if that user can perform the operation
-
-Example:
-An interface OperationAuthorization with method authorize(User) could be defined.
-One implementation could define anyone with a specified role can access it,
-I.e. Standard User or chair can perform the operation
-
-Other implementation could define a set of permissions required to perform the operation.
-The user's role is then used to check the permissions that they have
- */
+import java.util.*;
 
 /**
  * A role represents a set of permissions with a given name
@@ -25,41 +10,27 @@ The user's role is then used to check the permissions that they have
 public class Role extends Authorization {
     /**
      * The collection of permissions belonging to this role
-     * TODO may be able to use composite pattern and allow roles contain sub-roles Collection of Authorization objects instead
      */
-    @OneToMany
+    @ManyToMany
     private final Collection<Permission> permissions;
-
-    /**
-     * The standard user that has the permissions CREATE_APPLICATION, EDIT_APPLICATION and VIEW_OWN_APPLICATIONS
-     */
-    public static final Role STANDARD_USER = new Role();
-
-    // todo add more default roles here
-
-    static {
-        STANDARD_USER.setName("Standard User");
-        STANDARD_USER.addPermission(Permission.CREATE_APPLICATION);
-        STANDARD_USER.addPermission(Permission.EDIT_APPLICATION);
-        STANDARD_USER.addPermission(Permission.VIEW_OWN_APPLICATIONS);
-    }
 
     /**
      * Create a default role
      */
     public Role() {
-        this(null, null, new LinkedHashSet<>());
+        this(null, null, null, new LinkedHashSet<>());
     }
 
     /**
      * Create a role with the provided ID, name and permissions
      * @param id the ID of the role
      * @param name the name of the role
+     * @param description a short description of this role
      * @param permissions the permissions this role contains
      */
-    public Role(Long id, String name, Collection<Permission> permissions) {
-        super(id, name);
-        this.permissions = permissions;
+    public Role(Long id, String name, String description, Collection<Permission> permissions) {
+        super(id, name, description);
+        this.permissions = new LinkedHashSet<>(permissions);
     }
 
     /**
@@ -79,11 +50,27 @@ public class Role extends Authorization {
     }
 
     /**
+     * Add all the permissions in the given collection to this role
+     * @param permissions the permissions to add
+     */
+    public void addAllPermissions(Collection<Permission> permissions) {
+        this.permissions.addAll(permissions);
+    }
+
+    /**
      * Remove the permission from the role
      * @param permission the permission to remove
      */
     public void removePermission(Permission permission) {
         this.permissions.remove(permission);
+    }
+
+    /**
+     * Remove all the permissions in the provided collection from this role
+     * @param permissions the permissions to remove
+     */
+    public void removeAllPermissions(Collection<Permission> permissions) {
+        this.permissions.removeAll(permissions);
     }
 
     /**

@@ -1,6 +1,6 @@
 package ie.ul.edward.ethics.users.repositories;
 
-import ie.ul.edward.ethics.users.models.roles.Authorization;
+import ie.ul.edward.ethics.users.models.authorization.Authorization;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 

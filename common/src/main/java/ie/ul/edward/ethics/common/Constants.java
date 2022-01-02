@@ -53,6 +53,12 @@ public final class Constants {
     public static final String ILLEGAL_UPDATE = "illegal_update";
 
     /**
+     * An error message for when a user does not have sufficient permissions to pass through permissions authorization
+     * for a resource
+     */
+    public static final String INSUFFICIENT_PERMISSIONS = "insufficient_permissions";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

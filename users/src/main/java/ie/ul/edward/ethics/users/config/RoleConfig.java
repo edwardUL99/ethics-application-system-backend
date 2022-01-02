@@ -1,20 +1,17 @@
 package ie.ul.edward.ethics.users.config;
 
-import ie.ul.edward.ethics.users.models.roles.Permission;
-import ie.ul.edward.ethics.users.models.roles.Role;
+import ie.ul.edward.ethics.users.models.authorization.Permission;
+import ie.ul.edward.ethics.users.models.authorization.Role;
 import ie.ul.edward.ethics.users.repositories.PermissionRepository;
 import ie.ul.edward.ethics.users.repositories.RoleRepository;
+import ie.ul.edward.ethics.users.authorization.Permissions;
+import ie.ul.edward.ethics.users.authorization.Roles;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * This config loads default permissions and roles into the respective repositories
@@ -36,11 +33,15 @@ public class RoleConfig implements CommandLineRunner {
      * Create a RoleConfig object
      * @param roleRepository the repository for saving and loading roles
      * @param permissionRepository the repository for saving and loading permissions
+     * @param userPermissionsConfig the config for user permissions authorization
      */
     @Autowired
-    public RoleConfig(RoleRepository roleRepository, PermissionRepository permissionRepository) {
+    public RoleConfig(RoleRepository roleRepository, PermissionRepository permissionRepository, UserPermissionsConfig userPermissionsConfig) {
         this.roleRepository = roleRepository;
         this.permissionRepository = permissionRepository;
+
+        if (!userPermissionsConfig.isEnabled())
+            System.setProperty(UserPermissionsConfig.USER_PERMISSIONS_DISABLED, "true");
     }
 
     /**
@@ -72,16 +73,8 @@ public class RoleConfig implements CommandLineRunner {
     /**
      * Save the default permissions
      */
-    private void saveDefaultPermissions() throws Exception {
-        Permission permissionObj = new Permission();
-
-        List<Field> fields = Arrays.stream(Permission.class.getDeclaredFields())
-                .filter(f -> Modifier.isStatic(f.getModifiers()) &&
-                        Modifier.isFinal(f.getModifiers()))
-                .collect(Collectors.toList());
-
-        for (Field field : fields) {
-            Permission permission = (Permission)field.get(permissionObj);
+    private void saveDefaultPermissions() {
+        for (Permission permission : Permissions.getPermissions()) {
             log.debug("Loading permission {}", permission.getName());
             savePermissionIfNotExists(permission);
         }
@@ -90,16 +83,8 @@ public class RoleConfig implements CommandLineRunner {
     /**
      * Save the default roles
      */
-    private void saveDefaultRoles() throws Exception {
-        Role roleObj = new Role();
-
-        List<Field> fields = Arrays.stream(Role.class.getDeclaredFields())
-                .filter(f -> Modifier.isStatic(f.getModifiers()) &&
-                        Modifier.isFinal(f.getModifiers()))
-                .collect(Collectors.toList());
-
-        for (Field field : fields) {
-            Role role = (Role)field.get(roleObj);
+    private void saveDefaultRoles() {
+        for (Role role : Roles.getRoles()) {
             log.debug("Loading role {} with {} permissions", role.getName(), role.getPermissions().size());
             saveRoleIfNotExists(role);
         }

@@ -4,8 +4,8 @@ import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.services.AccountService;
 import ie.ul.edward.ethics.users.exceptions.AccountNotExistsException;
 import ie.ul.edward.ethics.users.models.User;
-import ie.ul.edward.ethics.users.models.roles.Role;
 import ie.ul.edward.ethics.users.repositories.UserRepository;
+import ie.ul.edward.ethics.users.authorization.Roles;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,12 +25,15 @@ import static org.mockito.Mockito.verifyNoInteractions;
  */
 @SpringBootTest(classes = {
         ie.ul.edward.ethics.test.utils.TestApplication.class,
+        ie.ul.edward.ethics.users.test.config.TestConfiguration.class,
         ie.ul.edward.ethics.authentication.jwt.JWT.class,
         ie.ul.edward.ethics.authentication.jwt.JwtRequestFilter.class
 }, properties = {
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
         "auth.jwt.token.validity=2",
-        "permissions.authorization.enabled=true"
+        "permissions.authorization.enabled=true",
+        CHAIR_EMAIL_PROPERTY,
+        ADMINISTRATOR_EMAIL_PROPERTY
 })
 public class UserServiceTest {
     /**
@@ -62,7 +65,7 @@ public class UserServiceTest {
      * @return the test user
      */
     private User createTestUser() {
-        return new User(NAME, createTestAccount(), DEPARTMENT, Role.STANDARD_USER);
+        return new User(NAME, createTestAccount(), DEPARTMENT, Roles.STANDARD_USER);
     }
 
     /**
@@ -109,6 +112,49 @@ public class UserServiceTest {
         User returned = userService.createUser(newUser);
 
         assertEquals(createdUser, returned);
+        assertEquals(createdUser.getRole(), Roles.STANDARD_USER);
+        verify(accountService).getAccount(USERNAME);
+        verify(userRepository).save(newUser);
+    }
+
+    /**
+     * This test tests that the user is assigned chair role if the email matches the chair email
+     */
+    @Test
+    public void shouldSetChairRoleOnCreateUser() {
+        User newUser = new User(USERNAME, NAME, DEPARTMENT);
+        User createdUser = createTestUser();
+        createdUser.setRole(Roles.CHAIR);
+        createdUser.getAccount().setEmail(CHAIR_EMAIL);
+
+        given(accountService.getAccount(USERNAME))
+                .willReturn(createdUser.getAccount());
+
+        User returned = userService.createUser(newUser);
+
+        assertEquals(createdUser, returned);
+        assertEquals(returned.getRole(), Roles.CHAIR);
+        verify(accountService).getAccount(USERNAME);
+        verify(userRepository).save(newUser);
+    }
+
+    /**
+     * This test tests that the user is assigned administrator role if the email matches the administrator email
+     */
+    @Test
+    public void shouldSetAdministratorRoleOnCreateUser() {
+        User newUser = new User(USERNAME, NAME, DEPARTMENT);
+        User createdUser = createTestUser();
+        createdUser.setRole(Roles.ADMINISTRATOR);
+        createdUser.getAccount().setEmail(ADMINISTRATOR_EMAIL);
+
+        given(accountService.getAccount(USERNAME))
+                .willReturn(createdUser.getAccount());
+
+        User returned = userService.createUser(newUser);
+
+        assertEquals(createdUser, returned);
+        assertEquals(returned.getRole(), Roles.ADMINISTRATOR);
         verify(accountService).getAccount(USERNAME);
         verify(userRepository).save(newUser);
     }

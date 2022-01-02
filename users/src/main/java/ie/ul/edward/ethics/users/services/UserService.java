@@ -15,7 +15,8 @@ public interface UserService {
     User loadUser(String username);
 
     /**
-     * Create a new user by loading the user's account and save it
+     * Create a new user by loading the user's account and save it.
+     * If the user's email matches the chair or administrator's email, they are assigned the chair or administrator role respectively
      * @param user the user to create. Should be constructed using the {@link User#User(String, String, String)} constructor
      * @return the created user with loaded account
      * @throws AccountNotExistsException if no account exists for the user's username
