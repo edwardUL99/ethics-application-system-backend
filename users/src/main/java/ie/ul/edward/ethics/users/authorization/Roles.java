@@ -1,48 +1,51 @@
 package ie.ul.edward.ethics.users.authorization;
 
 import ie.ul.edward.ethics.users.models.authorization.Role;
+import org.springframework.security.core.parameters.P;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * This class provides a listing of the default pre-defined roles in the system
+ * This class provides a listing of the default pre-defined roles in the system.
+ *
+ * After the system is first started with a database connected, it is a bug condition to change the names of the already
+ * defined roles, as this will result in undefined errors and dangling references. You can however, add new roles, with
+ * unique names, and these will be added on the next start-up or update the descriptions
  */
 public final class Roles {
     /**
      * The standard user that has the permissions CREATE_APPLICATION, EDIT_APPLICATION and VIEW_OWN_APPLICATIONS
      */
-    public static final Role STANDARD_USER = new Role();
+    public static final Role STANDARD_USER =
+            new Role(null, "Standard User",
+                    "This role is the default role allocated to every new user",
+                    Arrays.asList(
+                    Permissions.CREATE_APPLICATION,
+                    Permissions.EDIT_APPLICATION,
+                    Permissions.VIEW_OWN_APPLICATIONS
+            ));
 
     // todo add more default roles here
 
     /**
      * This role is a role that has all available permissions
      */
-    public static final Role CHAIR = new Role();
+    public static final Role CHAIR =
+            new Role(null, "Chair",
+                    "This role gives a user access to all defined permissions",
+                    Permissions.getPermissions());
 
     /**
      * This is a role that has all the permissions of the CHAIR except for a certain set
      */
-    public static final Role ADMINISTRATOR = new Role();
-
-    static {
-        STANDARD_USER.setName("Standard User");
-        STANDARD_USER.addPermission(Permissions.CREATE_APPLICATION);
-        STANDARD_USER.addPermission(Permissions.EDIT_APPLICATION);
-        STANDARD_USER.addPermission(Permissions.VIEW_OWN_APPLICATIONS);
-        STANDARD_USER.setDescription("This role is the default role allocated to every new user");
-
-        CHAIR.setName("Chair");
-        CHAIR.addAllPermissions(Permissions.getPermissions());
-        CHAIR.setDescription("This role gives a user access to all defined permissions");
-
-        ADMINISTRATOR.setName("Administrator");
-        ADMINISTRATOR.addAllPermissions(Permissions.getPermissions());
-        ADMINISTRATOR.removeAllPermissions(Collections.singletonList(Permissions.GRANT_PERMISSIONS)); // sub administrators (e.g, secretary) aren't allowed grant permissions
-        ADMINISTRATOR.setDescription("This role has the same permissions as the chair, but is not allowed grant permissions to users");
-    }
+    public static final Role ADMINISTRATOR =
+            new Role(null, "Administrator",
+                    "This role has the same permissions as the chair except for the permission to grant permissions to others",
+                    Permissions.getPermissions().stream()
+                            .filter(p -> !Objects.equals(Permissions.GRANT_PERMISSIONS, p))
+                            .collect(Collectors.toCollection(LinkedHashSet::new)));
 
     /**
      * Get the default declared role objects

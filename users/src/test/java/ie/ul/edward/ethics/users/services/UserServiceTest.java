@@ -56,7 +56,7 @@ public class UserServiceTest {
      * Creates a test account
      * @return the test account
      */
-    private Account createTestAccount() {
+    public static Account createTestAccount() {
         return new Account(USERNAME, EMAIL, PASSWORD);
     }
 
@@ -64,7 +64,7 @@ public class UserServiceTest {
      * Creates a test user
      * @return the test user
      */
-    private User createTestUser() {
+    public static User createTestUser() {
         return new User(NAME, createTestAccount(), DEPARTMENT, Roles.STANDARD_USER);
     }
 

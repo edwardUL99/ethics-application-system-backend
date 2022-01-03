@@ -1,5 +1,6 @@
 package ie.ul.edward.ethics.users.config;
 
+import ie.ul.edward.ethics.users.authorization.RequestMethod;
 import lombok.*;
 
 import java.util.*;
@@ -40,8 +41,9 @@ public class PermissionsPathsConfig {
          */
         private boolean requireAll;
         /**
-         * The request method to configure this for
+         * The request method to configure this path for. Can be a comma separated list of multiple
          */
+        @Getter(AccessLevel.NONE)
         private String requestMethod;
 
         /**
@@ -49,6 +51,9 @@ public class PermissionsPathsConfig {
          * @return the array of registered permissions
          */
         public String[] getPermissions() {
+            if (this.permissions == null)
+                throw new IllegalStateException("You need to specify permissions in a configured path");
+
             Collection<String> permissions = Arrays.stream(this.permissions.split(","))
                     .map(String::trim)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -56,6 +61,25 @@ public class PermissionsPathsConfig {
             String[] array = new String[permissions.size()];
 
             return permissions.toArray(array);
+        }
+
+        /**
+         * Returns the list of request methods that can be configured for this path
+         * @return the array of request methods to configure the permissions for
+         */
+        public RequestMethod[] getRequestMethods() {
+            if (requestMethod == null) {
+                return new RequestMethod[]{RequestMethod.ALL};
+            } else {
+                Collection<RequestMethod> methods = Arrays.stream(this.requestMethod.split(","))
+                        .map(String::trim)
+                        .map(RequestMethod::valueOf)
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+                RequestMethod[] array = new RequestMethod[methods.size()];
+
+                return methods.toArray(array);
+            }
         }
     }
 }

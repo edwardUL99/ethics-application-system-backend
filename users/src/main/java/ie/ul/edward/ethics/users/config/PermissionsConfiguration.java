@@ -36,7 +36,7 @@ public class PermissionsConfiguration {
         List<PermissionsPathsConfig.ConfiguredPath> configuredPaths = permissionsPathsConfig.getPaths();
 
         if (configuredPaths == null || configuredPaths.size() == 0) {
-            // TODO put default paths here
+            // TODO put default paths here (may need to configure permissions endpoint for all methods. if so, change permissions.json too)
             String permissionsEndpoint = createApiPath(Endpoint.USERS, "permissions");
             permissionsConfigurer
                     .requireOneOfPermissions(permissionsEndpoint, RequestMethod.POST, Permissions.GRANT_PERMISSIONS)
@@ -45,16 +45,17 @@ public class PermissionsConfiguration {
             for (PermissionsPathsConfig.ConfiguredPath configuredPath : configuredPaths) {
                 String path = configuredPath.getPath();
                 String[] permissions = configuredPath.getPermissions();
-                String method = configuredPath.getRequestMethod();
-                RequestMethod requestMethod = (method == null) ? RequestMethod.ALL:RequestMethod.valueOf(method);
+                RequestMethod[] methods = configuredPath.getRequestMethods();
                 boolean requireAll = configuredPath.isRequireAll();
 
-                if (requireAll) {
-                    permissionsConfigurer
-                            .requireAllPermissions(path, requestMethod, permissions);
-                } else {
-                    permissionsConfigurer
-                            .requireOneOfPermissions(path, requestMethod, permissions);
+                for (RequestMethod requestMethod : methods) {
+                    if (requireAll) {
+                        permissionsConfigurer
+                                .requireAllPermissions(path, requestMethod, permissions);
+                    } else {
+                        permissionsConfigurer
+                                .requireOneOfPermissions(path, requestMethod, permissions);
+                    }
                 }
             }
         }

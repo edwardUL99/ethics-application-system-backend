@@ -72,7 +72,7 @@ public class AuthenticationController {
 
             Account createdAccount = accountService.createAccount(username, email, account.getPassword());
 
-            return ResponseEntity.ok(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
         } catch (UsernameExistsException ex) {
             log.error(ex);
             response.put(ERROR, USERNAME_EXISTS);
@@ -86,7 +86,7 @@ public class AuthenticationController {
 
     /**
      * Looks up the account with username as email if useEmail is true.
-     * Otherwise returns an account with username and all other fields null.
+     * Otherwise, returns an account with username and all other fields null.
      * @param username the username/email
      * @param useEmail true if username is an email and to lookup the true username, else just use it as username
      * @return the created account

@@ -11,6 +11,10 @@ import java.util.stream.Collectors;
 
 /**
  * This class provides a list of permissions in the system
+ *
+ * After the system is first started with a database connected, it is a bug condition to change the names of the already
+ * defined permissions, as this will result in undefined errors and dangling references. You can however, add new roles, with
+ * unique names, and these will be added on the next start-up or update the descriptions
  */
 public final class Permissions {
     /**

@@ -108,7 +108,6 @@ public class AuthenticationControllerTest {
     public void shouldRegisterAccount() throws Exception {
         Account account = createTestAccount();
         String json = JSON.convertJSON(account);
-        account.setPassword("");
         String resultJson = JSON.convertJSON(new AccountResponse(USERNAME, EMAIL));
 
         given(accountService.createAccount(USERNAME, EMAIL, PASSWORD))
@@ -118,7 +117,7 @@ public class AuthenticationControllerTest {
                 post(createApiPath(Endpoint.AUTHENTICATION, "register"))
                         .contentType(JSON.MEDIA_TYPE)
                         .content(json))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
 

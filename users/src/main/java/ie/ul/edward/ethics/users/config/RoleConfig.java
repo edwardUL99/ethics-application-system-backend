@@ -45,29 +45,37 @@ public class RoleConfig implements CommandLineRunner {
     }
 
     /**
-     * Save the permission if it doesn't exist
+     * Save the permission if it doesn't exist or update if it changed
      * @param permission the permission to save
      */
     private void savePermissionIfNotExists(Permission permission) {
-        Optional<Permission> foundPermission = permissionRepository.findByName(permission.getName());
+        Permission foundPermission = permissionRepository.findByName(permission.getName()).orElse(null);
 
-        if (foundPermission.isEmpty())
+        if (foundPermission == null || !foundPermission.equals(permission)) {
+            if (foundPermission != null)
+                permission.setId(foundPermission.getId());
+
             permissionRepository.save(permission);
-        else
-            permission.setId(foundPermission.get().getId());
+        } else {
+            permission.setId(foundPermission.getId());
+        }
     }
 
     /**
-     * Save the role if not exists
+     * Save the role if not exists or update if it changed
      * @param role the role to save
      */
     private void saveRoleIfNotExists(Role role) {
-        Optional<Role> foundRole = roleRepository.findByName(role.getName());
+        Role foundRole = roleRepository.findByName(role.getName()).orElse(null);
 
-        if (foundRole.isEmpty())
+        if (foundRole == null || !foundRole.equals(role)) {
+            if (foundRole != null)
+                role.setId(foundRole.getId());
+
             roleRepository.save(role);
-        else
-            role.setId(foundRole.get().getId());
+        } else {
+            role.setId(foundRole.getId());
+        }
     }
 
     /**

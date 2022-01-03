@@ -59,6 +59,11 @@ public final class Constants {
     public static final String INSUFFICIENT_PERMISSIONS = "insufficient_permissions";
 
     /**
+     * An error message for when a user is attempted to be created but the account doesn't exist for them
+     */
+    public static final String ACCOUNT_NOT_EXISTS = "account_not_exists";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */
