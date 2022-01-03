@@ -1,0 +1,14 @@
+{
+  "paths": [
+    {
+      "path": "/api/users/permissions/",
+      "permissions": "GRANT_PERMISSIONS",
+      "requestMethod": "POST"
+    },
+    {
+      "path": "/api/users/permissions/",
+      "permissions": "GRANT_PERMISSIONS",
+      "requestMethod": "PUT"
+    }
+  ]
+}

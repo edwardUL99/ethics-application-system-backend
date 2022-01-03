@@ -1,22 +1,19 @@
 package ie.ul.edward.ethics.users.config;
 
+import ie.ul.edward.ethics.users.authorization.Permissions;
 import ie.ul.edward.ethics.users.models.authorization.Permission;
-import ie.ul.edward.ethics.users.repositories.PermissionRepository;
 import ie.ul.edward.ethics.users.authorization.PermissionsAuthorizer;
 import ie.ul.edward.ethics.users.authorization.RequestMethod;
 import ie.ul.edward.ethics.users.authorization.RequiredPermissions;
+import lombok.extern.log4j.Log4j2;
 
 import java.util.*;
 
 /**
  * This class configures the PermissionsAuthorizer object to authorize permissions
  */
+@Log4j2
 public class PermissionsAuthorizationConfigurer {
-    /**
-     * The permission repository for reading and loading permissions
-     */
-    private final PermissionRepository permissionRepository;
-
     /**
      * The map of required permissions
      */
@@ -24,23 +21,21 @@ public class PermissionsAuthorizationConfigurer {
 
     /**
      * Create a permissions configurer object
-     * @param permissionRepository the repository required for matching permissions
      */
-    public PermissionsAuthorizationConfigurer(PermissionRepository permissionRepository) {
-        this.permissionRepository = permissionRepository;
+    public PermissionsAuthorizationConfigurer() {
         this.requiredPermissions = new HashMap<>();
     }
 
     /**
      * Get the permissions matching the names
-     * @param permissionNames the names of the permissions
+     * @param permissionNames the names of the permissions as fields (eg. Permissions.CREATE_APPLICATION and not Create Application)
      * @return the collection of matching permissions
      */
     private Collection<Permission> getPermissions(String...permissionNames) {
         Collection<Permission> permissions = new LinkedHashSet<>();
 
         for (String name : permissionNames) {
-            Permission permission = permissionRepository.findByName(name).orElse(null);
+            Permission permission = Permissions.getPermissionByFieldName(name);
 
             if (permission == null)
                 throw new IllegalArgumentException("No suitable permission found for permission name " + name);
@@ -163,6 +158,9 @@ public class PermissionsAuthorizationConfigurer {
      * @return an instance of this for chaining
      */
     public PermissionsAuthorizationConfigurer requirePermissions(String antPath, RequestMethod requestMethod, Collection<Permission> permissions, boolean requireAll) {
+        log.debug("Configuring path {} to require permissions {} for request method {}, and require all permissions: {}",
+                antPath, requestMethod, permissions, requireAll);
+
         if (!antPath.endsWith("*") && !antPath.endsWith("/"))
             antPath += "/";
 

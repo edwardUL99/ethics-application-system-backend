@@ -81,6 +81,30 @@ public final class Permissions {
     }
 
     /**
+     * Retrieve the permission that matches the provided field name (e.g. CREATE_APPLICATION)
+     * @param fieldName the field name
+     * @return the found permission, null if not found
+     */
+    public static Permission getPermissionByFieldName(String fieldName) {
+        Permissions permissionObj = new Permissions();
+
+        return Arrays.stream(Permissions.class.getDeclaredFields())
+                .filter(f -> Modifier.isStatic(f.getModifiers()) &&
+                        Modifier.isFinal(f.getModifiers()) &&
+                        f.getName().equals(fieldName))
+                .map(f -> {
+                    try {
+                        return (Permission) f.get(permissionObj);
+                    } catch (IllegalAccessException ex) {
+                        ex.printStackTrace();
+                        return null;
+                    }
+                }).filter(Objects::nonNull)
+                .findFirst()
+                .orElse(null);
+    }
+
+    /**
      * Don't allow external instantiation
      */
     private Permissions() {}

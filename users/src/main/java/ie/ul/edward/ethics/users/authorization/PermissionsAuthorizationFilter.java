@@ -83,8 +83,13 @@ public class PermissionsAuthorizationFilter extends OncePerRequestFilter {
         if (userPermissionsConfig.isEnabled() && username != null) {
             User user = userService.loadUser(username);
             String path = request.getRequestURI();
+            String method = request.getMethod();
 
-            if (!permissionsAuthorizer.authorise(path, request.getMethod(), user)) {
+            log.debug("Authorizing permissions for username {}, path {} and method {}", username, path, method);
+
+            if (!permissionsAuthorizer.authorise(path, method, user)) {
+                log.error("Failed to authorize permissions for user {} on path {} and method {}", user, path, method);
+
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
