@@ -13,6 +13,10 @@ public class Role extends Authorization {
      */
     @ManyToMany(fetch = FetchType.EAGER)
     private final Collection<Permission> permissions;
+    /**
+     * This field determines if the role is only allowed to be assigned to a single user or not
+     */
+    private boolean singleUser;
 
     /**
      * Create a default role
@@ -22,15 +26,28 @@ public class Role extends Authorization {
     }
 
     /**
-     * Create a role with the provided ID, name and permissions
+     * Create a role with the provided ID, name and permissions, with singleUser set to false
      * @param id the ID of the role
      * @param name the name of the role
      * @param description a short description of this role
      * @param permissions the permissions this role contains
      */
     public Role(Long id, String name, String description, Collection<Permission> permissions) {
+        this(id, name, description, permissions, false);
+    }
+
+    /**
+     * Create a role with the provided ID, name and permissions, and singleUser
+     * @param id the ID of the role
+     * @param name the name of the role
+     * @param description a short description of this role
+     * @param permissions the permissions this role contains
+     * @param singleUser true if the role is only allowed to be assigned to a single user at a time
+     */
+    public Role(Long id, String name, String description, Collection<Permission> permissions, boolean singleUser) {
         super(id, name, description);
         this.permissions = new LinkedHashSet<>(permissions);
+        this.singleUser = singleUser;
     }
 
     /**
@@ -74,6 +91,22 @@ public class Role extends Authorization {
     }
 
     /**
+     * Returns true if this role is for only one user, else false
+     * @return true if role is allocated to only 1 user
+     */
+    public boolean isSingleUser() {
+        return singleUser;
+    }
+
+    /**
+     * Set the value of singleUser
+     * @param singleUser true if this role is to be for only a single user, false if not
+     */
+    public void setSingleUser(boolean singleUser) {
+        this.singleUser = singleUser;
+    }
+
+    /**
      * Check if the provided object matches this role
      * @param o the object to check equality of
      * @return true if equal, false if not
@@ -83,7 +116,8 @@ public class Role extends Authorization {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Role role = (Role) o;
-        return Objects.equals(id, role.id) && Objects.equals(name, role.name) && Objects.equals(permissions, role.permissions);
+        return Objects.equals(id, role.id) && Objects.equals(name, role.name) && Objects.equals(permissions, role.permissions)
+                && Objects.equals(singleUser, role.singleUser);
     }
 
     /**
@@ -92,6 +126,6 @@ public class Role extends Authorization {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, permissions);
+        return Objects.hash(id, name, permissions, singleUser);
     }
 }

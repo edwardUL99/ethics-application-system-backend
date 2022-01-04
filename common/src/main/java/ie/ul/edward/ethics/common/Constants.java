@@ -64,6 +64,11 @@ public final class Constants {
     public static final String ACCOUNT_NOT_EXISTS = "account_not_exists";
 
     /**
+     * An error message for when a role is not found
+     */
+    public static final String ROLE_NOT_FOUND = "role_not_found";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

@@ -3,7 +3,6 @@ package ie.ul.edward.ethics.users.config;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ie.ul.edward.ethics.users.models.AuthorizedUser;
 import lombok.extern.log4j.Log4j2;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;

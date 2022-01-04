@@ -1,7 +1,6 @@
 package ie.ul.edward.ethics.users.authorization;
 
 import ie.ul.edward.ethics.users.models.authorization.Role;
-import org.springframework.security.core.parameters.P;
 
 import java.lang.reflect.Modifier;
 import java.util.*;
@@ -30,12 +29,20 @@ public final class Roles {
     // todo add more default roles here
 
     /**
+     * The role that is assigned to committee members that is not the administrator or chair
+     */
+    public static final Role COMMITTEE_MEMBER =
+            new Role(null, "Committee Member",
+                    "This role is the role allocated to a committee member",
+                    Collections.emptyList()); // TODO create permissions for committee members
+
+    /**
      * This role is a role that has all available permissions
      */
     public static final Role CHAIR =
             new Role(null, "Chair",
                     "This role gives a user access to all defined permissions",
-                    Permissions.getPermissions());
+                    Permissions.getPermissions(), true);
 
     /**
      * This is a role that has all the permissions of the CHAIR except for a certain set
@@ -45,7 +52,7 @@ public final class Roles {
                     "This role has the same permissions as the chair except for the permission to grant permissions to others",
                     Permissions.getPermissions().stream()
                             .filter(p -> !Objects.equals(Permissions.GRANT_PERMISSIONS, p))
-                            .collect(Collectors.toCollection(LinkedHashSet::new)));
+                            .collect(Collectors.toCollection(LinkedHashSet::new)), true);
 
     /**
      * Get the default declared role objects

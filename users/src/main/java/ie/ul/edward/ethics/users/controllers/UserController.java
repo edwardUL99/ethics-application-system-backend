@@ -1,10 +1,11 @@
 package ie.ul.edward.ethics.users.controllers;
 
 import ie.ul.edward.ethics.authentication.jwt.AuthenticationInformation;
+import ie.ul.edward.ethics.users.authorization.Permissions;
+import ie.ul.edward.ethics.users.authorization.Roles;
 import ie.ul.edward.ethics.users.exceptions.AccountNotExistsException;
-import ie.ul.edward.ethics.users.models.CreateUpdateUserRequest;
-import ie.ul.edward.ethics.users.models.UserResponse;
-import ie.ul.edward.ethics.users.models.User;
+import ie.ul.edward.ethics.users.models.*;
+import ie.ul.edward.ethics.users.models.authorization.Role;
 import ie.ul.edward.ethics.users.services.UserService;
 import static ie.ul.edward.ethics.common.Constants.*;
 
@@ -17,6 +18,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * This controller is used for providing endpoints for users
@@ -45,13 +47,26 @@ public class UserController {
     }
 
     /**
+     * This endpoint retrieves all the users in the system
+     * @return the response body
+     */
+    @GetMapping
+    public ResponseEntity<?> getAllUsers() {
+        return ResponseEntity.ok(userService.getAllUsers()
+                .stream()
+                .map(UserResponseShortened::new)
+                .collect(Collectors.toList()));
+    }
+
+    /**
      * This endpoint loads the user with the provided username
      * @param username the username of the user to load
+     * @param email, true if the username if an email, false if just username
      * @return the response body
      */
     @GetMapping("/user")
-    public ResponseEntity<?> getUser(@RequestParam String username) {
-        User user = userService.loadUser(username);
+    public ResponseEntity<?> getUser(@RequestParam String username, @RequestParam(required = false) boolean email) {
+        User user = userService.loadUser(username, email);
 
         if (user == null)
             return ResponseEntity.notFound().build();
@@ -67,10 +82,24 @@ public class UserController {
      */
     private ResponseEntity<?> createUserInternal(CreateUpdateUserRequest request, boolean update) {
         try {
-            User user = new User(request.getUsername(), request.getName(), request.getDepartment());
-            user = userService.createUser(user);
+            if (update) {
+                User user = userService.loadUser(request.getUsername());
 
-            return ResponseEntity.status((update) ? HttpStatus.OK:HttpStatus.CREATED).body(new UserResponse(user));
+                if (user == null)
+                    return ResponseEntity.notFound().build();
+
+                user.setName(request.getName());
+                user.setDepartment(request.getDepartment());
+
+                userService.updateUser(user);
+
+                return ResponseEntity.ok(new UserResponse(user));
+            } else {
+                User user = new User(request.getUsername(), request.getName(), request.getDepartment());
+                user = userService.createUser(user);
+
+                return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponse(user));
+            }
         } catch (AccountNotExistsException ex) {
             Map<String, Object> response = new HashMap<>();
 
@@ -79,10 +108,6 @@ public class UserController {
             return ResponseEntity.badRequest().body(response);
         }
     }
-
-    /*
-     * TODO determine if update should be separate to createUser or if createUser is sufficient to also perform an update
-     */
 
     /**
      * This endpoint creates/updates a user. The username must match the authenticated username
@@ -118,5 +143,50 @@ public class UserController {
         return createUserInternal(request, servletRequest.getMethod().equalsIgnoreCase("PUT"));
     }
 
-    // TODO see OneNote FYP TODOs notebook for security hole in this createUser method and also add more tests and endpoints for updating permissions (these endpoints should be locked by permissions validation)
+    /**
+     * The endpoint for updating user roles. This should be locked behind a grant permissions permission
+     * @param request the request for updating the user's role
+     * @return the response body
+     */
+    @PutMapping("/user/role")
+    public ResponseEntity<?> updateUserRole(@RequestBody @Valid UpdateRoleRequest request) {
+        User user = userService.loadUser(request.getUsername());
+
+        if (user == null)
+            return ResponseEntity.notFound().build();
+
+        Role role = Roles.getRoles().stream()
+                .filter(r -> r.getId().equals(request.getRole()))
+                .findFirst().orElse(null);
+
+        Map<String, Object> response = new HashMap<>();
+
+        if (role == null) {
+            response.put(ERROR, ROLE_NOT_FOUND);
+
+            return ResponseEntity.badRequest().body(response);
+        } else {
+            userService.updateRole(user, role);
+
+            return ResponseEntity.ok(new UserResponse(user));
+        }
+    }
+
+    /**
+     * This endpoint returns a listing of all roles in the system
+     * @return the response body
+     */
+    @GetMapping("/roles")
+    public ResponseEntity<?> getRoles() {
+        return ResponseEntity.ok(new GetAuthorizationResponse<>(Roles.getRoles()));
+    }
+
+    /**
+     * This endpoint returns a listing of all permissions in the system
+     * @return the response body
+     */
+    @GetMapping("/permissions")
+    public ResponseEntity<?> getPermissions() {
+        return ResponseEntity.ok(new GetAuthorizationResponse<>(Permissions.getPermissions()));
+    }
 }

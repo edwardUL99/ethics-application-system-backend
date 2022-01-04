@@ -26,4 +26,11 @@ public interface UserRepository extends CrudRepository<User, String> {
      * @return the list of users
      */
     List<User> findByRole_Name(String name);
+
+    /**
+     * Find the user based on their account email
+     * @param email the email to find the user with
+     * @return the user if found, empty if not
+     */
+    Optional<User> findByAccount_Email(String email);
 }

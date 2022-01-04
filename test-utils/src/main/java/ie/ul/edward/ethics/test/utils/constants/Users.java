@@ -23,14 +23,4 @@ public final class Users {
      * The property for setting the chair email for testing
      */
     public static final String CHAIR_EMAIL_PROPERTY = "permissions.chair=" + CHAIR_EMAIL;
-
-    /**
-     * The administrator email for testing
-     */
-    public static final String ADMINISTRATOR_EMAIL = "administrator@email.com";
-
-    /**
-     * The property for setting the administrator email for testing
-     */
-    public static final String ADMINISTRATOR_EMAIL_PROPERTY = "permissions.administrator=" + ADMINISTRATOR_EMAIL;
 }

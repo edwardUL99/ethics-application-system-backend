@@ -36,11 +36,9 @@ public class PermissionsConfiguration {
         List<PermissionsPathsConfig.ConfiguredPath> configuredPaths = permissionsPathsConfig.getPaths();
 
         if (configuredPaths == null || configuredPaths.size() == 0) {
-            // TODO put default paths here (may need to configure permissions endpoint for all methods. if so, change permissions.json too)
-            String permissionsEndpoint = createApiPath(Endpoint.USERS, "permissions");
+            String permissionsEndpoint = createApiPath(Endpoint.USERS, "user", "role");
             permissionsConfigurer
-                    .requireOneOfPermissions(permissionsEndpoint, RequestMethod.POST, Permissions.GRANT_PERMISSIONS)
-                    .requireOneOfPermissions(permissionsEndpoint, RequestMethod.PUT, Permissions.GRANT_PERMISSIONS)
+                    .requireOneOfPermissions(permissionsEndpoint, Permissions.GRANT_PERMISSIONS)
                     .requireAllPermissions("/api/**/admin/**", Permissions.ADMIN);
         } else {
             for (PermissionsPathsConfig.ConfiguredPath configuredPath : configuredPaths) {

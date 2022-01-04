@@ -1,7 +1,6 @@
 package ie.ul.edward.ethics.authentication.controllers;
 
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
-import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.jwt.AuthenticationInformation;
 import ie.ul.edward.ethics.authentication.jwt.JWT;

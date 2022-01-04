@@ -8,15 +8,19 @@ import ie.ul.edward.ethics.users.models.User;
 import ie.ul.edward.ethics.users.models.authorization.Role;
 import ie.ul.edward.ethics.users.repositories.UserRepository;
 import ie.ul.edward.ethics.users.authorization.Roles;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * This class provides the implementation of the UserService interface
  */
 @Service
+@Log4j2
 public class UserServiceImpl implements UserService {
     /**
      * The account service for retrieving accounts
@@ -47,6 +51,20 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * Retrieve all users in the system
+     *
+     * @return the list of users
+     */
+    @Override
+    public List<User> getAllUsers() {
+        Iterable<User> allUsers = userRepository.findAll();
+        List<User> users = new ArrayList<>();
+        allUsers.forEach(users::add);
+
+        return users;
+    }
+
+    /**
      * Load the user with the given username
      *
      * @param username the username of the user to find
@@ -54,11 +72,24 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public User loadUser(String username) {
-        return userRepository.findByUsername(username).orElse(null);
+        return loadUser(username, false);
     }
 
     /**
-     * Check if the user's email address matches the specified chair/administrator email and if so, assign the respective roles
+     * Load the user with the given username
+     *
+     * @param username the username to load the user with
+     * @param email    true if username is to be treated as email, false if username
+     * @return the user if found, null if not
+     */
+    @Override
+    public User loadUser(String username, boolean email) {
+        Optional<User> optional = (email) ? userRepository.findByAccount_Email(username):userRepository.findByUsername(username);
+        return optional.orElse(null);
+    }
+
+    /**
+     * Check if the user's email address matches the specified chair email and if so, assign the chair role if so
      * @param user the user to check
      */
     private void checkUserRole(User user) {
@@ -69,10 +100,10 @@ public class UserServiceImpl implements UserService {
         if (email.equals(userPermissionsConfig.getChair())) {
             List<User> currentChairs = userRepository.findByRole_Name(Roles.CHAIR.getName());
 
-            if (currentChairs.size() == 0)
+            if (currentChairs.size() == 0 || !Roles.CHAIR.isSingleUser()) {
+                log.info("User signed up with Chair email {}. Assigning Chair role", email);
                 role = Roles.CHAIR;
-        } else if (email.equals(userPermissionsConfig.getAdministrator())) {
-            role = Roles.ADMINISTRATOR;
+            }
         }
 
         user.setRole(role);
@@ -105,5 +136,63 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         return user;
+    }
+
+    /**
+     * This method updates the user
+     *
+     * @param user the user the update
+     * @throws IllegalStateException if the user's account has changed as the account must stay the same and not be
+     * updated in this request
+     * @throws AccountNotExistsException if there is no saved account for this user
+     */
+    @Override
+    public void updateUser(User user) {
+        String username = user.getUsername();
+
+        Account account = user.getAccount();
+        Account savedAccount = accountService.getAccount(username);
+
+        if (savedAccount == null)
+            throw new AccountNotExistsException(username);
+        else if (!account.equals(savedAccount))
+            throw new IllegalStateException("The user's account cannot be changed by updateUser");
+
+        userRepository.save(user);
+    }
+
+    /**
+     * Downgrade any users with the specified role to the role specified by downgrade
+     * @param role the role to match users by
+     *
+     */
+    private void downgradeRoles(Role role) {
+        String name = role.getName();
+        String committeeRole = Roles.COMMITTEE_MEMBER.getName();
+        List<User> users = userRepository.findByRole_Name(name);
+
+        for (User u : users) {
+            log.info("Can only have one user with role {}, so downgrading user {} to role {}", name, u.getUsername(), committeeRole);
+            u.setRole(Roles.COMMITTEE_MEMBER);
+            userRepository.save(u);
+        }
+    }
+
+    /**
+     * This method updates the user's role. If the role is chair and a chair already exists, the existing chair is demoted
+     * to a committee member
+     *
+     * @param user the user to update
+     * @param role the role to change
+     */
+    @Override
+    public void updateRole(User user, Role role) {
+        if (role.isSingleUser()) {
+            downgradeRoles(role);
+        }
+
+        user.setRole(role);
+
+        userRepository.save(user);
     }
 }
