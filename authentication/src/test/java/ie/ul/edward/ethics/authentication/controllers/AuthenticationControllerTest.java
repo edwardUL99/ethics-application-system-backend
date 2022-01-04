@@ -3,6 +3,7 @@ package ie.ul.edward.ethics.authentication.controllers;
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
+import ie.ul.edward.ethics.authentication.jwt.AuthenticationInformation;
 import ie.ul.edward.ethics.authentication.jwt.JWT;
 import ie.ul.edward.ethics.authentication.models.*;
 import ie.ul.edward.ethics.authentication.services.AccountService;
@@ -72,6 +73,12 @@ public class AuthenticationControllerTest {
      */
     @MockBean
     private JWT jwt;
+
+    /**
+     * The mock used for setting authentication information
+     */
+    @MockBean
+    private AuthenticationInformation authenticationInformation;
 
     /**
      * A fake jwt token to use for testing
@@ -402,9 +409,14 @@ public class AuthenticationControllerTest {
      */
     @Test
     public void shouldUpdateAccount() throws Exception {
+        UpdateAccountRequest request = new UpdateAccountRequest(USERNAME, PASSWORD);
         Account account = createTestAccount();
-        String json = JSON.convertJSON(account);
+        String json = JSON.convertJSON(request);
 
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(accountService.getAccount(USERNAME))
+                .willReturn(account);
         doNothing().when(accountService).updateAccount(account);
 
         Map<String, Object> response = new HashMap<>();
@@ -418,6 +430,10 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
+
+        verify(authenticationInformation).getUsername();
+        verify(accountService).updateAccount(account);
+        verify(accountService).getAccount(USERNAME);
     }
 
     /**
@@ -426,14 +442,18 @@ public class AuthenticationControllerTest {
      */
     @Test
     public void shouldThrowIllegalUpdate() throws Exception {
-        Account account = createTestAccount();
-        String json = JSON.convertJSON(account);
+        UpdateAccountRequest request = new UpdateAccountRequest(USERNAME, PASSWORD);
+        String json = JSON.convertJSON(request);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
 
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, ILLEGAL_UPDATE);
         String resultJson = JSON.convertJSON(response);
 
-        doThrow(IllegalUpdateException.class).when(accountService).updateAccount(account);
+        given(accountService.getAccount(USERNAME))
+                .willReturn(null);
 
         mockMvc.perform(put(createApiPath(Endpoint.AUTHENTICATION, "account"))
                 .contentType(JSON.MEDIA_TYPE)
@@ -442,5 +462,75 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
+
+        verify(authenticationInformation).getUsername();
+        verify(accountService).getAccount(USERNAME);
+    }
+
+    /**
+     * This tests that if a user attempts to update another user's account, a 401 will be raised with a message illegal_update
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void shouldThrowIllegalUpdateIfUpdateAnotherUsersAccount() throws Exception {
+        UpdateAccountRequest request = new UpdateAccountRequest("not_my_username", PASSWORD);
+        String json = JSON.convertJSON(request);
+
+        Account account = createTestAccount();
+        account.setUsername("not_my_username");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, ILLEGAL_UPDATE);
+        String resultJson = JSON.convertJSON(response);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+
+        mockMvc.perform(put(createApiPath(Endpoint.AUTHENTICATION, "account"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + JWT_TOKEN))
+                .andExpect(status().isUnauthorized())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(resultJson));
+
+        verify(authenticationInformation).getUsername();
+        verifyNoInteractions(accountService);
+    }
+
+    /**
+     * This tests that an admin can update any account without requiring username verification
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void shouldUpdateAccountAdmin() throws Exception {
+        UpdateAccountRequest request = new UpdateAccountRequest("not_my_username", PASSWORD);
+        String json = JSON.convertJSON(request);
+
+        Account account = createTestAccount();
+        account.setUsername("not_my_username");
+
+        // don't need to write tests for Illegal update etc. since updates are the same for admin/non-admin,
+        // except for username verification in non-admin requests
+
+        given(accountService.getAccount("not_my_username"))
+                .willReturn(account);
+        doNothing().when(accountService).updateAccount(account);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(MESSAGE, ACCOUNT_UPDATED);
+        String resultJson = JSON.convertJSON(response);
+
+        mockMvc.perform(put(createApiPath(Endpoint.AUTHENTICATION, "admin", "account"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + JWT_TOKEN))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(resultJson));
+
+        verifyNoInteractions(authenticationInformation);
+        verify(accountService).updateAccount(account);
+        verify(accountService).getAccount("not_my_username");
     }
 }

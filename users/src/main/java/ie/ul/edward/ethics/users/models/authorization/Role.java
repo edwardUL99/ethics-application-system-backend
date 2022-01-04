@@ -11,7 +11,7 @@ public class Role extends Authorization {
     /**
      * The collection of permissions belonging to this role
      */
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     private final Collection<Permission> permissions;
 
     /**

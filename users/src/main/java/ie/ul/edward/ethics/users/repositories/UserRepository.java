@@ -4,6 +4,7 @@ import ie.ul.edward.ethics.users.models.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -18,4 +19,11 @@ public interface UserRepository extends CrudRepository<User, String> {
      * @return the found user, or empty if not found
      */
     Optional<User> findByUsername(String username);
+
+    /**
+     * Find a list of users with the provided name
+     * @param name the name of the role
+     * @return the list of users
+     */
+    List<User> findByRole_Name(String name);
 }

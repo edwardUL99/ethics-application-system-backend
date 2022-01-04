@@ -40,7 +40,8 @@ public class PermissionsConfiguration {
             String permissionsEndpoint = createApiPath(Endpoint.USERS, "permissions");
             permissionsConfigurer
                     .requireOneOfPermissions(permissionsEndpoint, RequestMethod.POST, Permissions.GRANT_PERMISSIONS)
-                    .requireOneOfPermissions(permissionsEndpoint, RequestMethod.PUT, Permissions.GRANT_PERMISSIONS);
+                    .requireOneOfPermissions(permissionsEndpoint, RequestMethod.PUT, Permissions.GRANT_PERMISSIONS)
+                    .requireAllPermissions("/api/**/admin/**", Permissions.ADMIN);
         } else {
             for (PermissionsPathsConfig.ConfiguredPath configuredPath : configuredPaths) {
                 String path = configuredPath.getPath();

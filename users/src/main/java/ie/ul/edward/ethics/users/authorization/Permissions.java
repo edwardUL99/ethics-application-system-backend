@@ -41,6 +41,12 @@ public final class Permissions {
     public static final Permission VIEW_ALL_APPLICATIONS =
             new Permission(null, "View All Applications", "This permission allows a user to view all applications in the system");
 
+    /**
+     * This permission allows a role to view all admin resources
+     */
+    public static final Permission ADMIN =
+            new Permission(null, "Admin", "This permission grants a user access to certain admin resources");
+
     // TODO put more defined roles here
 
     /**

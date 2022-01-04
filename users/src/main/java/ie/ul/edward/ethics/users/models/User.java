@@ -28,7 +28,7 @@ public class User {
     /**
      * This field holds the user's account used for authentication
      */
-    @OneToOne(fetch = FetchType.LAZY)
+    @OneToOne(fetch = FetchType.EAGER)
     private Account account;
     /**
      * The department this user is based in
@@ -37,7 +37,7 @@ public class User {
     /**
      * The User's role
      */
-    @OneToOne
+    @OneToOne(fetch = FetchType.EAGER)
     private Role role;
 
     /**

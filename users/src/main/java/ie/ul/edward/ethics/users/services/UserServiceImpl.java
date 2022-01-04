@@ -11,6 +11,8 @@ import ie.ul.edward.ethics.users.authorization.Roles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 /**
  * This class provides the implementation of the UserService interface
  */
@@ -64,10 +66,14 @@ public class UserServiceImpl implements UserService {
 
         Role role = Roles.STANDARD_USER;
 
-        if (email.equals(userPermissionsConfig.getChair()))
-            role = Roles.CHAIR;
-        else if (email.equals(userPermissionsConfig.getAdministrator()))
+        if (email.equals(userPermissionsConfig.getChair())) {
+            List<User> currentChairs = userRepository.findByRole_Name(Roles.CHAIR.getName());
+
+            if (currentChairs.size() == 0)
+                role = Roles.CHAIR;
+        } else if (email.equals(userPermissionsConfig.getAdministrator())) {
             role = Roles.ADMINISTRATOR;
+        }
 
         user.setRole(role);
     }

@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.Collections;
 import java.util.Optional;
 
 import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
@@ -129,12 +130,38 @@ public class UserServiceTest {
 
         given(accountService.getAccount(USERNAME))
                 .willReturn(createdUser.getAccount());
+        given(userRepository.findByRole_Name(Roles.CHAIR.getName()))
+                .willReturn(Collections.emptyList());
 
         User returned = userService.createUser(newUser);
 
         assertEquals(createdUser, returned);
         assertEquals(returned.getRole(), Roles.CHAIR);
         verify(accountService).getAccount(USERNAME);
+        verify(userRepository).findByRole_Name(Roles.CHAIR.getName());
+        verify(userRepository).save(newUser);
+    }
+
+    /**
+     * Tests that chairperson role is not set if a chair already is set-up in the system
+     */
+    @Test
+    public void shouldNotSetChairRoleIfChairAlreadyExists() {
+        User newUser = new User(USERNAME, NAME, DEPARTMENT);
+        User createdUser = createTestUser();
+        createdUser.getAccount().setEmail(CHAIR_EMAIL);
+
+        given(accountService.getAccount(USERNAME))
+                .willReturn(createdUser.getAccount());
+        given(userRepository.findByRole_Name(Roles.CHAIR.getName()))
+                .willReturn(Collections.singletonList(createdUser));
+
+        User returned = userService.createUser(newUser);
+
+        assertEquals(createdUser, returned);
+        assertEquals(returned.getRole(), Roles.STANDARD_USER);
+        verify(accountService).getAccount(USERNAME);
+        verify(userRepository).findByRole_Name(Roles.CHAIR.getName());
         verify(userRepository).save(newUser);
     }
 
