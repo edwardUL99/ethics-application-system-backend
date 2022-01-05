@@ -17,9 +17,10 @@ public final class Roles {
     /**
      * The standard user that has the permissions CREATE_APPLICATION, EDIT_APPLICATION and VIEW_OWN_APPLICATIONS
      */
-    public static final Role STANDARD_USER =
-            new Role(null, "Standard User",
-                    "This role is the default role allocated to every new user",
+    public static final Role APPLICANT =
+            new Role(null, "Applicant",
+                    "This role is the default role allocated to every new user. New committee members are " +
+                            "upgraded from this role by the Chair",
                     Arrays.asList(
                     Permissions.CREATE_APPLICATION,
                     Permissions.EDIT_APPLICATION,
@@ -34,7 +35,9 @@ public final class Roles {
     public static final Role COMMITTEE_MEMBER =
             new Role(null, "Committee Member",
                     "This role is the role allocated to a committee member",
-                    Collections.emptyList()); // TODO create permissions for committee members
+                    List.of(
+                            Permissions.VIEW_OWN_APPLICATIONS
+                    )); // TODO create permissions for committee members
 
     /**
      * This role is a role that has all available permissions

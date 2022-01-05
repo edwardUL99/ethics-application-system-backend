@@ -67,7 +67,7 @@ public class UserServiceTest {
      * @return the test user
      */
     public static User createTestUser() {
-        return new User(NAME, createTestAccount(), DEPARTMENT, Roles.STANDARD_USER);
+        return new User(NAME, createTestAccount(), DEPARTMENT, Roles.APPLICANT);
     }
 
     /**
@@ -152,7 +152,7 @@ public class UserServiceTest {
         User returned = userService.createUser(newUser);
 
         assertEquals(createdUser, returned);
-        assertEquals(createdUser.getRole(), Roles.STANDARD_USER);
+        assertEquals(createdUser.getRole(), Roles.APPLICANT);
         verify(accountService).getAccount(USERNAME);
         verify(userRepository).save(newUser);
     }
@@ -202,7 +202,7 @@ public class UserServiceTest {
         User returned = userService.createUser(newUser);
 
         assertEquals(createdUser, returned);
-        assertEquals(returned.getRole(), Roles.STANDARD_USER);
+        assertEquals(returned.getRole(), Roles.APPLICANT);
         verify(accountService).getAccount(USERNAME);
         verify(userRepository).findByRole_Name(name);
         verify(userRepository).save(newUser);
@@ -228,7 +228,7 @@ public class UserServiceTest {
         User returned = userService.createUser(newUser);
 
         assertEquals(createdUser, returned);
-        assertEquals(returned.getRole(), Roles.STANDARD_USER);
+        assertEquals(returned.getRole(), Roles.APPLICANT);
         verify(accountService).getAccount(USERNAME);
         verify(userRepository).findByRole_Name(name);
         verify(userRepository).save(newUser);

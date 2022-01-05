@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
     private void checkUserRole(User user) {
         String email = user.getAccount().getEmail();
 
-        Role role = Roles.STANDARD_USER;
+        Role role = Roles.APPLICANT;
 
         if (email.equals(userPermissionsConfig.getChair())) {
             List<User> currentChairs = userRepository.findByRole_Name(Roles.CHAIR.getName());

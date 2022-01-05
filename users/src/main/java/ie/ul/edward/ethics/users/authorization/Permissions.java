@@ -30,10 +30,12 @@ public final class Permissions {
             new Permission(null, "Edit Application", "This permission allows a user to edit an application");
 
     /**
-     * This permission allows a role to view their own applications
+     * This permission allows a role to view their own applications if an applicant, else if a committee member, applications that may be assigned
+     * to them
      */
     public static final Permission VIEW_OWN_APPLICATIONS =
-            new Permission(null, "View Own Applications", "This permission allows a user to view applications submitted by them");
+            new Permission(null, "View Own Applications", "This permission allows a user to view applications submitted by them " +
+                    "or in the case of committee members, applications assigned to them");
 
     /**
      * This permission allows a role to view all submitted applications

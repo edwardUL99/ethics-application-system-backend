@@ -4,7 +4,7 @@ import ie.ul.edward.ethics.authentication.models.Account;
 import lombok.*;
 
 /**
- * This class represents a user response containing just user information without role
+ * This class represents a user response containing just user information with just role name
  */
 @Getter
 @Setter
@@ -28,6 +28,10 @@ public class UserResponseShortened {
      * The department the user is situated in
      */
     private String department;
+    /**
+     * The name of the user's role
+     */
+    private String role;
 
     /**
      * Creates the shortened response from the provided user
@@ -37,6 +41,7 @@ public class UserResponseShortened {
         this.username = user.getUsername();
         this.name = user.getName();
         this.department = user.getDepartment();
+        this.role = user.getRole().getName();
 
         Account account = user.getAccount();
 

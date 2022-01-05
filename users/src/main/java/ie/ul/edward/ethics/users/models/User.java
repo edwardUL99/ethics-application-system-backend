@@ -44,7 +44,7 @@ public class User {
      * Create a default user
      */
     public User() {
-        this(null, null, null, null, Roles.STANDARD_USER);
+        this(null, null, null, null, Roles.APPLICANT);
     }
 
     /**
@@ -67,7 +67,7 @@ public class User {
      * @param department the department the user is situated in
      */
     public User(String username, String name, String department) {
-        this(username, name, null, department, Roles.STANDARD_USER);
+        this(username, name, null, department, Roles.APPLICANT);
     }
 
     /**
