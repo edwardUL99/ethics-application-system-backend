@@ -25,13 +25,15 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
+import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
+
 /**
  * This class provides unit tests for the Account Service
  */
-@SpringBootTest(properties = {
-        "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
-        "auth.jwt.token.validity=2"
-        }, classes = {ie.ul.edward.ethics.test.utils.TestApplication.class})
+@SpringBootTest(classes = {
+        ie.ul.edward.ethics.test.utils.TestApplication.class,
+        ie.ul.edward.ethics.authentication.test.config.TestConfiguration.class
+})
 public class AccountServiceTest {
     /**
      * The mocked account repository
@@ -48,26 +50,6 @@ public class AccountServiceTest {
      */
     @Autowired
     private AccountService accountService;
-
-    /**
-     * The username for test accounts
-     */
-    public static final String USERNAME = "user";
-
-    /**
-     * The email for test accounts
-     */
-    public static final String EMAIL = "email@example.com";
-
-    /**
-     * The password for test accounts
-     */
-    public static final String PASSWORD = "user-password";
-
-    /**
-     * The encrypted password for testing
-     */
-    public static final String ENCRYPTED_PASSWORD = "hhsggfsf24552dyuhh&gdhdgg";
 
     /**
      * Creates an account for testing

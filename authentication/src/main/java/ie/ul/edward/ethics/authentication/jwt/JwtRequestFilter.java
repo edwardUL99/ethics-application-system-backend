@@ -1,7 +1,7 @@
 package ie.ul.edward.ethics.authentication.jwt;
 
 import ie.ul.edward.ethics.authentication.exceptions.AuthenticationException;
-import ie.ul.edward.ethics.authentication.models.Account;
+import ie.ul.edward.ethics.authentication.models.AuthenticatedAccount;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -32,6 +33,8 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * The authentication utility class providing Jwt authentication
      */
     private final JWT jwt;
+    @Resource(name="authenticationInformation")
+    private AuthenticationInformation authenticationInformation;
 
     /**
      * The authorization header
@@ -66,15 +69,15 @@ public class JwtRequestFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String tokenHeader = request.getHeader(AUTHORIZATION);
 
-        Account authenticated = null;
-        String token;
+        AuthenticatedAccount authenticated = null;
+        String token = null;
 
         if (tokenHeader != null && tokenHeader.startsWith(BEARER)) {
             token = tokenHeader.substring(BEARER.length());
 
             try {
                 if (!jwt.isTokenExpired(token))
-                    authenticated = jwt.getAuthenticatedAccount(token);
+                    authenticated = (AuthenticatedAccount) jwt.getAuthenticatedAccount(token);
                 else
                     log.error("Failed to authenticate with JWT due to an expired token");
             } catch (AuthenticationException ex) {
@@ -85,12 +88,18 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         }
 
         if (authenticated != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = accountService.loadUserByUsername(authenticated.getUsername());
+            String username = authenticated.getUsername();
+
+            UserDetails userDetails = accountService.loadUserByUsername(username);
 
             UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(userDetails, null,
                     userDetails.getAuthorities());
             userToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(userToken);
+
+            authenticationInformation.setToken(token);
+            authenticationInformation.setExpiry(authenticated.getExpiration());
+            authenticationInformation.setUsername(username);
         }
 
         filterChain.doFilter(request, response);

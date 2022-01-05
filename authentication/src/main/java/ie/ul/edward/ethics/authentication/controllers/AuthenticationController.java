@@ -3,6 +3,7 @@ package ie.ul.edward.ethics.authentication.controllers;
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
+import ie.ul.edward.ethics.authentication.jwt.AuthenticationInformation;
 import ie.ul.edward.ethics.authentication.jwt.JWT;
 import ie.ul.edward.ethics.authentication.models.*;
 import ie.ul.edward.ethics.authentication.services.AccountService;
@@ -16,6 +17,7 @@ import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
+import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,6 +45,11 @@ public class AuthenticationController {
      * The account service used for creating and retrieving accounts
      */
     private final AccountService accountService;
+    /**
+     * The authentication information object
+     */
+    @Resource(name = "authenticationInformation")
+    private AuthenticationInformation authenticationInformation;
 
     /**
      * Create an AuthenticationController
@@ -72,7 +79,7 @@ public class AuthenticationController {
 
             Account createdAccount = accountService.createAccount(username, email, account.getPassword());
 
-            return ResponseEntity.ok(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
         } catch (UsernameExistsException ex) {
             log.error(ex);
             response.put(ERROR, USERNAME_EXISTS);
@@ -86,7 +93,7 @@ public class AuthenticationController {
 
     /**
      * Looks up the account with username as email if useEmail is true.
-     * Otherwise returns an account with username and all other fields null.
+     * Otherwise, returns an account with username and all other fields null.
      * @param username the username/email
      * @param useEmail true if username is an email and to lookup the true username, else just use it as username
      * @return the created account
@@ -148,16 +155,25 @@ public class AuthenticationController {
     }
 
     /**
-     * This method updates the given account
-     * @param updated the account to update
-     * @return the updated account or an error if it occurs
+     * Performs the account update. This method assumes that authentication has been performed.
+     * Authentication should be done by the controller endpoints
+     * @param request the request to update
+     * @return the response entity associated with the account
      */
-    @PutMapping("/account")
-    public ResponseEntity<?> updateAccount(@RequestBody @Valid Account updated) {
+    private ResponseEntity<?> updateAccountInternal(UpdateAccountRequest request) {
         Map<String, Object> response = new HashMap<>();
 
         try {
-            accountService.updateAccount(updated);
+            String username = request.getUsername();
+
+            Account account = accountService.getAccount(username);
+
+            if (account == null)
+                throw new IllegalUpdateException(username, false);
+
+            account.setPassword(request.getPassword());
+
+            accountService.updateAccount(account);
 
             response.put(MESSAGE, ACCOUNT_UPDATED);
 
@@ -170,7 +186,38 @@ public class AuthenticationController {
         return ResponseEntity.badRequest().body(response);
     }
 
+    /**
+     * This method updates the given account. The account must belong to the username that has been authenticated
+     * @param updated the account to update
+     * @return the updated account or an error if it occurs
+     */
+    @PutMapping("/account")
+    public ResponseEntity<?> updateAccount(@RequestBody @Valid UpdateAccountRequest updated) {
+        Map<String, Object> response = new HashMap<>();
 
+        String authenticatedUsername = authenticationInformation.getUsername();
+
+        if (authenticatedUsername == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else if (!authenticatedUsername.equals(updated.getUsername())) {
+            response.put(ERROR, ILLEGAL_UPDATE);
+
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+        } else {
+            return updateAccountInternal(updated);
+        }
+    }
+
+    /**
+     * This endpoint is used by admins to update any account.
+     * It should be locked to users with only the ADMIN permission, see the users module for permissions authorization
+     * @param account the account to update
+     * @return the response body
+     */
+    @PutMapping("/admin/account")
+    public ResponseEntity<?> updateAccountAdmin(@RequestBody @Valid UpdateAccountRequest account) {
+        return updateAccountInternal(account);
+    }
 
     /**
      * Authenticates the username and password with the authentication manager

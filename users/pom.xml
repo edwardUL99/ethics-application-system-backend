@@ -16,6 +16,12 @@
     <dependencies>
         <dependency>
             <groupId>ie.ul.edward.ethics</groupId>
+            <artifactId>authentication</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>ie.ul.edward.ethics</groupId>
             <artifactId>common</artifactId>
             <version>${project.version}</version>
         </dependency>

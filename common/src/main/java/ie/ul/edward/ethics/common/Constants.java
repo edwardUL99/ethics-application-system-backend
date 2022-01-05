@@ -53,6 +53,22 @@ public final class Constants {
     public static final String ILLEGAL_UPDATE = "illegal_update";
 
     /**
+     * An error message for when a user does not have sufficient permissions to pass through permissions authorization
+     * for a resource
+     */
+    public static final String INSUFFICIENT_PERMISSIONS = "insufficient_permissions";
+
+    /**
+     * An error message for when a user is attempted to be created but the account doesn't exist for them
+     */
+    public static final String ACCOUNT_NOT_EXISTS = "account_not_exists";
+
+    /**
+     * An error message for when a role is not found
+     */
+    public static final String ROLE_NOT_FOUND = "role_not_found";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

@@ -1,0 +1,13 @@
+{
+  "paths": [
+    {
+      "path": "/api/users/user/role/",
+      "permissions": "GRANT_PERMISSIONS"
+    },
+    {
+      "path": "/api/**/admin/**",
+      "permissions": "ADMIN",
+      "requireAll": true
+    }
+  ]
+}
