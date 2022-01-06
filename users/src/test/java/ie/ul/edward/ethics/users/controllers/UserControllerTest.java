@@ -179,6 +179,8 @@ public class UserControllerTest {
         User user = new User(USERNAME, NAME, DEPARTMENT);
         User createdUser = createTestUser();
 
+        given(userService.loadUser(USERNAME))
+                .willReturn(null);
         given(userService.createUser(user))
                 .willReturn(createdUser);
         given(authenticationInformation.getUsername())
@@ -197,7 +199,38 @@ public class UserControllerTest {
                 .andExpect(content().contentType(MEDIA_TYPE))
                 .andExpect(content().json(result));
 
+        verify(userService).loadUser(USERNAME);
         verify(userService).createUser(user);
+        verify(authenticationInformation).getUsername();
+    }
+
+    /**
+     * This tests that if a user already exists when trying to create a user, a bad request will be thrown
+     */
+    @Test
+    public void shouldThrowBadRequestIfUserExistsOnCreateUser() throws Exception {
+        User createdUser = createTestUser();
+
+        given(userService.loadUser(USERNAME))
+                .willReturn(createdUser);
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+
+        CreateUpdateUserRequest createUpdateUserRequest = new CreateUpdateUserRequest(USERNAME, NAME, DEPARTMENT);
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, USER_EXISTS);
+
+        String json = JSON.convertJSON(createUpdateUserRequest);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.USERS, "user"))
+                        .contentType(MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(userService).loadUser(USERNAME);
         verify(authenticationInformation).getUsername();
     }
 
@@ -284,6 +317,37 @@ public class UserControllerTest {
                 .andExpect(content().json(result));
 
         verify(userService).createUser(user);
+        verifyNoInteractions(authenticationInformation);
+    }
+
+    /**
+     * This tests that when an admin creates a user that already exists, an error will be thrown
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void shouldThrowErrorIfUserExistsOnCreateUserAdmin() throws Exception {
+        User createdUser = createTestUser();
+
+        given(userService.loadUser(USERNAME))
+                .willReturn(createdUser);
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+
+        CreateUpdateUserRequest createUpdateUserRequest = new CreateUpdateUserRequest(USERNAME, NAME, DEPARTMENT);
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, USER_EXISTS);
+
+        String json = JSON.convertJSON(createUpdateUserRequest);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.USERS, "admin", "user"))
+                        .contentType(MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(userService).loadUser(USERNAME);
         verifyNoInteractions(authenticationInformation);
     }
 

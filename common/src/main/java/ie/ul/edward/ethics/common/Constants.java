@@ -33,6 +33,11 @@ public final class Constants {
     public static final String EMAIL_EXISTS = "email_exists";
 
     /**
+     * The error message for when a user is attempted to be created twice
+     */
+    public static final String USER_EXISTS = "user_exists";
+
+    /**
      * The user is disabled
      */
     public static final String USER_DISABLED = "user_disabled";

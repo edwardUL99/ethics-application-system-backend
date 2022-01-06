@@ -1,0 +1,1252 @@
+{
+	"info": {
+		"_postman_id": "a122e999-d560-48f9-9661-6787e19cf96d",
+		"name": "Ethics Backend",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Register an Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"email\": \"test@gmail.com\",\n    \"password\": \"testPass2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/register/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register chair account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"chair\");",
+									"    pm.expect(json.email).to.eql(\"chair@email.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"chair\",\n    \"email\": \"chair@email.com\",\n    \"password\": \"testPass2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/register/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login with an account and 2 weeks expiry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 Ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.token).not.eql(undefined);",
+									"    pm.environment.set(\"auth.token\", json.token);",
+									"",
+									"    json.expiry = new Date(json.expiry);",
+									"",
+									"    let numWeeks = 2;",
+									"    let now = new Date();",
+									"    now.setDate(now.getDate() + numWeeks * 7);",
+									"",
+									"    let difference = Math.abs(now - json.expiry) / 1000;",
+									"    pm.expect(difference).to.lt(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"password\": \"testPass2\",\n    \"expiry\": 336\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/login/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login with an account and 2 weeks expiry Chair",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 Ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"chair\");",
+									"    pm.expect(json.token).not.eql(undefined);",
+									"    pm.environment.set(\"auth.chair.token\", json.token);",
+									"",
+									"    json.expiry = new Date(json.expiry);",
+									"",
+									"    let numWeeks = 2;",
+									"    let now = new Date();",
+									"    now.setDate(now.getDate() + numWeeks * 7);",
+									"",
+									"    let difference = Math.abs(now - json.expiry) / 1000;",
+									"    pm.expect(difference).to.lt(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"chair\",\n    \"password\": \"testPass2\",\n    \"expiry\": 336\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/login/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Find an account using a username",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 Ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"    console.log(pm.request.headers.get('Authorization'));",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/auth/account?username=test",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"account"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "test"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update an account by changing its password",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 Ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.message).to.eql(\"account_updated\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"password\": \"testPass2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/account",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"account"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insufficient Admin Permissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response is 401 Unauthorized\", function() {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Error should be Insufficient permissions\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.error).to.be.eql(\"insufficient_permissions\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"password\": \"testPass2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/admin/account",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"admin",
+								"account"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Retrieve an account using email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 Ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/auth/account?username=test@gmail.com&email=true",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"account"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "test@gmail.com"
+								},
+								{
+									"key": "email",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login using email authentication and 2 hours expiry",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 Ok\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.token).not.eql(undefined);",
+									"    pm.collectionVariables.set(\"auth.token\", json.token);",
+									"",
+									"    json.expiry = new Date(json.expiry);",
+									"",
+									"    let numWeeks = 2;",
+									"    let now = new Date();",
+									"    now.setDate(now.getDate() + numWeeks * 7);",
+									"",
+									"    let difference = Math.abs(now - json.expiry) / 1000;",
+									"    pm.expect(difference).to.lt(5);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test@gmail.com\",\n    \"password\": \"testPass2\",\n    \"email\": true,\n    \"expiry\": 336\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/login/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create user profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.name).to.eql(\"Test Name\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"    pm.expect(json.department).to.eql(\"Test Department\");",
+									"    ",
+									"    let role = json.role;",
+									"",
+									"    pm.expect(role).to.have.property(\"id\");",
+									"    pm.expect(role.name).to.eql(\"Applicant\");",
+									"    pm.expect(role).to.have.property(\"description\");",
+									"    pm.expect(role.permissions).to.have.length.greaterThan(0);",
+									"    pm.expect(role.singleUser).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"name\": \"Test Name\",\n    \"department\": \"Test Department\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/users/user",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create user profile Chair",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"chair\");",
+									"    pm.expect(json.name).to.eql(\"Chair Person\");",
+									"    pm.expect(json.email).to.eql(\"chair@email.com\");",
+									"    pm.expect(json.department).to.eql(\"Test Department\");",
+									"    ",
+									"    let role = json.role;",
+									"",
+									"    pm.expect(role).to.have.property(\"id\");",
+									"    pm.expect(role.name).to.eql(\"Chair\");",
+									"    pm.expect(role).to.have.property(\"description\");",
+									"    pm.expect(role.permissions).to.have.length.greaterThan(0);",
+									"    pm.expect(role.singleUser).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.chair.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"chair\",\n    \"name\": \"Chair Person\",\n    \"department\": \"Test Department\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/users/user",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get the user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.name).to.eql(\"Test Name\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"    pm.expect(json.department).to.eql(\"Test Department\");",
+									"    ",
+									"    let role = json.role;",
+									"",
+									"    pm.expect(role).to.have.property(\"id\");",
+									"    pm.expect(role.name).to.eql(\"Applicant\");",
+									"    pm.expect(role).to.have.property(\"description\");",
+									"    pm.expect(role.permissions).to.have.length.greaterThan(0);",
+									"    pm.expect(role.singleUser).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/users/user?username=test",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "test"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create a user with an account that doesn't exist",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response is 401 Unauthorized\", function() {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Error should be Illegal Update\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.error).to.be.eql(\"illegal_update\")",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"not-exists\",\n    \"name\": \"Test Name\",\n    \"department\": \"Test Department\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/users/user",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Own User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.name).to.eql(\"New Name\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"    pm.expect(json.department).to.eql(\"Test Department\");",
+									"    ",
+									"    let role = json.role;",
+									"",
+									"    pm.expect(role).to.have.property(\"id\");",
+									"    pm.expect(role.name).to.eql(\"Applicant\");",
+									"    pm.expect(role).to.have.property(\"description\");",
+									"    pm.expect(role.permissions).to.have.length.greaterThan(0);",
+									"    pm.expect(role.singleUser).to.eql(false);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"name\": \"New Name\",\n    \"department\": \"Test Department\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/users/user",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Insufficient Admin Permissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response is 401 Unauthorized\", function() {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Error should be Insufficient permissions\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.error).to.be.eql(\"insufficient_permissions\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"name\": \"New Name\",\n    \"department\": \"Test Department\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/users/admin/user",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"admin",
+								"user"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Role to chair",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.name).to.eql(\"New Name\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"    pm.expect(json.department).to.eql(\"Test Department\");",
+									"    ",
+									"    let role = json.role;",
+									"",
+									"    pm.expect(role).to.have.property(\"id\");",
+									"    pm.expect(role.name).to.eql(\"Chair\");",
+									"    pm.expect(role).to.have.property(\"description\");",
+									"    pm.expect(role.permissions).to.have.length.greaterThan(0);",
+									"    pm.expect(role.singleUser).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.chair.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test\",\n    \"role\": 11\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/users/user/role",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user",
+								"role"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Roles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json).to.have.property(\"authorizations\");",
+									"",
+									"    let authorizations = json.authorizations;",
+									"",
+									"    for (authorization of authorizations) {",
+									"        pm.expect(authorization).to.have.property(\"id\");",
+									"        pm.expect(authorization).to.have.property(\"name\");",
+									"        pm.expect(authorization).to.have.property(\"description\");",
+									"        pm.expect(authorization).to.have.property(\"permissions\");",
+									"        pm.expect(authorization).to.have.property(\"singleUser\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/users/roles",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Permissions",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json).to.have.property(\"authorizations\");",
+									"",
+									"    let authorizations = json.authorizations;",
+									"",
+									"    for (authorization of authorizations) {",
+									"        pm.expect(authorization).to.have.property(\"id\");",
+									"        pm.expect(authorization).to.have.property(\"name\");",
+									"        pm.expect(authorization).to.have.property(\"description\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/users/permissions",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"permissions"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get all users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"",
+									"    for (user of json) {",
+									"        pm.expect(user).to.have.property(\"username\");",
+									"        pm.expect(user).to.have.property(\"email\");",
+									"        pm.expect(user).to.have.property(\"name\");",
+									"        pm.expect(user).to.have.property(\"department\");",
+									"        pm.expect(user).to.have.property(\"role\");",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/users",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get user by email",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test\");",
+									"    pm.expect(json.name).to.eql(\"New Name\");",
+									"    pm.expect(json.email).to.eql(\"test@gmail.com\");",
+									"    pm.expect(json.department).to.eql(\"Test Department\");",
+									"    ",
+									"    let role = json.role;",
+									"",
+									"    pm.expect(role).to.have.property(\"id\");",
+									"    pm.expect(role.name).to.eql(\"Chair\");",
+									"    pm.expect(role).to.have.property(\"description\");",
+									"    pm.expect(role.permissions).to.have.length.greaterThan(0);",
+									"    pm.expect(role.singleUser).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/users/user?username=test@gmail.com&email=true",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"user"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "test@gmail.com"
+								},
+								{
+									"key": "email",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{auth.token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "auth.token",
+			"value": ""
+		},
+		{
+			"key": "auth.chair.token",
+			"value": ""
+		},
+		{
+			"key": "api.path",
+			"value": "http://localhost:8080/api",
+			"type": "default"
+		}
+	]
+}

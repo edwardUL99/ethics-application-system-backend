@@ -42,6 +42,8 @@ tools/run.sh
 This script executes the executable JAR produced by the build script
 
 ## Testing
+
+### Python Script
 A Python script ``tools/apitest.py`` can be executed to make requests to the API backend. It is similar to using a tool
 like Postman. The arguments it supports are as follows:
 ```
@@ -84,6 +86,17 @@ You can also define a request in a JSON file to be passed in with the -f argumen
 ```
 
 Again, here `url` defaults to the same as command-line. Headers can be specified using `headers` and an object with the header name as the key
+
+### Postman
+[Postman](https://www.postman.com/) is an API platform used in this project to perform automated testing of the API by
+mocking requests and testing the responses.
+
+To test these for yourself, download and install Postman. Then, in the [postman](postman) folder, you will find a
+file called `EthicsBackend.postman_collection.json`. Import this file into your Postman installation by opening the app
+and click import. See this tutorial on [Importing Postman Collections](https://learning.postman.com/docs/getting-started/importing-and-exporting-data/).
+
+When imported, in the Collections tab (on the left of the window), you can click `Ethics Backend`. When you have that opened,
+you can then click `Run` on the top bar of the collection's tab and it will execute all the requests and tests.
 
 ## Configuration
 Each module provides its own `<module>/src/main/resources/<module>.ethics.properties` file and other configuration files which allow
