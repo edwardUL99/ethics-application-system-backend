@@ -6,6 +6,10 @@ import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.repositories.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +24,7 @@ import java.util.Optional;
  * The implementation of the AccountService interface
  */
 @Service
+@CacheConfig(cacheNames = "accounts")
 public class AccountServiceImpl implements AccountService {
     /**
      * The account repository used for interacting with the accounts database
@@ -51,6 +56,10 @@ public class AccountServiceImpl implements AccountService {
      * @return the created account
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "account", allEntries = true),
+            @CacheEvict(value = "userdetail", allEntries = true)
+    })
     public Account createAccount(String username, String email, String password) {
         if (getAccount(username, false) != null)
             throw new UsernameExistsException(username);
@@ -71,6 +80,10 @@ public class AccountServiceImpl implements AccountService {
      * @param account the account to delete
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "account", allEntries = true),
+            @CacheEvict(value = "userdetail", allEntries = true)
+    })
     public void deleteAccount(Account account) {
         accountRepository.delete(account);
     }
@@ -81,6 +94,10 @@ public class AccountServiceImpl implements AccountService {
      * @param account the account with updated details (other than username)
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "account", allEntries = true),
+            @CacheEvict(value = "userdetail", allEntries = true)
+    })
     public void updateAccount(Account account) {
         String username = account.getUsername();
         String email = account.getEmail();
@@ -103,8 +120,21 @@ public class AccountServiceImpl implements AccountService {
      * @return the account represented by the username, null if not found
      */
     @Override
+    @Cacheable(value = "account")
     public Account getAccount(String username) {
-        return getAccount(username, false);
+        return accountRepository.findByUsername(username).orElse(null);
+    }
+
+    /**
+     * Retrieve the account specified by the username or email if specified
+     * @param username the username/email of the account
+     * @param email true if username is an email, false if username
+     * @return the user if found, null if not
+     */
+    private Account getAccountInternal(String username, boolean email) {
+        Optional<Account> optional = (email) ? accountRepository.findByEmail(username):accountRepository.findByUsername(username);
+
+        return optional.orElse(null);
     }
 
     /**
@@ -116,9 +146,9 @@ public class AccountServiceImpl implements AccountService {
      * @return the found account, null if not found
      */
     @Override
+    @Cacheable(value = "account")
     public Account getAccount(String username, boolean email) {
-        Optional<Account> optional =
-                (email) ? accountRepository.findByEmail(username):accountRepository.findByUsername(username);
+        Optional<Account> optional = (email) ? accountRepository.findByEmail(username):accountRepository.findByUsername(username);
 
         return optional.orElse(null);
     }
@@ -130,6 +160,7 @@ public class AccountServiceImpl implements AccountService {
      * @throws UsernameNotFoundException if the user is not found
      */
     @Override
+    @Cacheable(value = "userdetail")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = getAccount(username);
 

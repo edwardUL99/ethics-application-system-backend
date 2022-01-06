@@ -10,6 +10,10 @@ import ie.ul.edward.ethics.users.repositories.UserRepository;
 import ie.ul.edward.ethics.users.authorization.Roles;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,6 +25,7 @@ import java.util.Optional;
  */
 @Service
 @Log4j2
+@CacheConfig(cacheNames = "users")
 public class UserServiceImpl implements UserService {
     /**
      * The account service for retrieving accounts
@@ -56,6 +61,7 @@ public class UserServiceImpl implements UserService {
      * @return the list of users
      */
     @Override
+    @Cacheable(value = "allusers")
     public List<User> getAllUsers() {
         Iterable<User> allUsers = userRepository.findAll();
         List<User> users = new ArrayList<>();
@@ -71,6 +77,7 @@ public class UserServiceImpl implements UserService {
      * @return the user if found, null if not
      */
     @Override
+    @Cacheable(value = "user")
     public User loadUser(String username) {
         return loadUser(username, false);
     }
@@ -83,6 +90,7 @@ public class UserServiceImpl implements UserService {
      * @return the user if found, null if not
      */
     @Override
+    @Cacheable(value = "user")
     public User loadUser(String username, boolean email) {
         Optional<User> optional = (email) ? userRepository.findByAccount_Email(username):userRepository.findByUsername(username);
         return optional.orElse(null);
@@ -118,6 +126,10 @@ public class UserServiceImpl implements UserService {
      * @throws IllegalStateException     if the account is not created using the {@link User#User(String, String, String)} constructor
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user", allEntries = true),
+            @CacheEvict(value = "allusers", allEntries = true)
+    })
     public User createUser(User user) {
         String username = user.getUsername();
         Account account = user.getAccount();
@@ -147,6 +159,10 @@ public class UserServiceImpl implements UserService {
      * @throws AccountNotExistsException if there is no saved account for this user
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user", allEntries = true),
+            @CacheEvict(value = "allusers", allEntries = true)
+    })
     public void updateUser(User user) {
         String username = user.getUsername();
 
@@ -186,6 +202,10 @@ public class UserServiceImpl implements UserService {
      * @param role the role to change
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "user", allEntries = true),
+            @CacheEvict(value = "allusers", allEntries = true)
+    })
     public void updateRole(User user, Role role) {
         if (role.isSingleUser()) {
             downgradeRoles(role);

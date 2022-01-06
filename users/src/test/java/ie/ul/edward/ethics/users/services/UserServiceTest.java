@@ -2,11 +2,13 @@ package ie.ul.edward.ethics.users.services;
 
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.services.AccountService;
+import ie.ul.edward.ethics.test.utils.Caching;
 import ie.ul.edward.ethics.users.exceptions.AccountNotExistsException;
 import ie.ul.edward.ethics.users.models.User;
 import ie.ul.edward.ethics.users.models.authorization.Role;
 import ie.ul.edward.ethics.users.repositories.UserRepository;
 import ie.ul.edward.ethics.users.authorization.Roles;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -53,6 +55,11 @@ public class UserServiceTest {
      */
     @Autowired
     private UserService userService;
+    /**
+     * The cache utilities so we can evict cache for testing
+     */
+    @Autowired
+    private Caching cache;
 
     /**
      * Creates a test account
@@ -68,6 +75,14 @@ public class UserServiceTest {
      */
     public static User createTestUser() {
         return new User(NAME, createTestAccount(), DEPARTMENT, Roles.APPLICANT);
+    }
+
+    /**
+     * Clear cache before each test
+     */
+    @BeforeEach
+    private void clearCache() {
+        cache.clearCache();
     }
 
     /**
@@ -93,6 +108,30 @@ public class UserServiceTest {
     }
 
     /**
+     * Tests that the response from retrieving all users should be cached
+     */
+    @Test
+    public void shouldGetAllUsersCached() {
+        List<User> users = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            User user = createTestUser();
+            user.setName("User " + i);
+            users.add(user);
+        }
+
+        given(userRepository.findAll())
+                .willReturn(users);
+
+        userService.getAllUsers();
+        userService.getAllUsers();
+        userService.getAllUsers();
+        userService.getAllUsers();
+
+        verify(userRepository, times(1)).findAll();
+    }
+
+    /**
      * This method tests that a user should be loaded successfully
      */
     @Test
@@ -109,6 +148,23 @@ public class UserServiceTest {
     }
 
     /**
+     * This method tests that a user should be loaded successfully from cache
+     */
+    @Test
+    public void shouldLoadUserSuccessfullyCached() {
+        User user = createTestUser();
+
+        given(userRepository.findByUsername(USERNAME))
+                .willReturn(Optional.of(user));
+
+        userService.loadUser(USERNAME);
+        userService.loadUser(USERNAME);
+        userService.loadUser(USERNAME);
+
+        verify(userRepository, times(1)).findByUsername(USERNAME);
+    }
+
+    /**
      * This method tests that a user should be loaded by email successfully
      */
     @Test
@@ -122,6 +178,24 @@ public class UserServiceTest {
 
         assertEquals(user, returned);
         verify(userRepository).findByAccount_Email(EMAIL);
+    }
+
+    /**
+     * This method tests that a user should be loaded by email successfully from the cache
+     */
+    @Test
+    public void shouldLoadUserByEmailCached() {
+        User user = createTestUser();
+
+        given(userRepository.findByAccount_Email(EMAIL))
+                .willReturn(Optional.of(user));
+
+        userService.loadUser(EMAIL, true);
+        userService.loadUser(EMAIL, true);
+        userService.loadUser(EMAIL, true);
+        userService.loadUser(EMAIL, true);
+
+        verify(userRepository, times(1)).findByAccount_Email(EMAIL);
     }
 
     /**
@@ -178,33 +252,6 @@ public class UserServiceTest {
         assertEquals(returned.getRole(), Roles.CHAIR);
         verify(accountService).getAccount(USERNAME);
         verify(userRepository).findByRole_Name(Roles.CHAIR.getName());
-        verify(userRepository).save(newUser);
-    }
-
-    /**
-     * Perform testing where if a user with the provided role on create user already exists but is configured to be set,
-     * e.g. set initial chair and administrator, test that it doesn't get set as that role
-     * @param role the role that should not be set
-     * @param email the email of chair or admin
-     */
-    private void testNotSetRoleIfUserExists(Role role, String email) {
-        String name = role.getName();
-
-        User newUser = new User(USERNAME, NAME, DEPARTMENT);
-        User createdUser = createTestUser();
-        createdUser.getAccount().setEmail(email);
-
-        given(accountService.getAccount(USERNAME))
-                .willReturn(createdUser.getAccount());
-        given(userRepository.findByRole_Name(name))
-                .willReturn(Collections.singletonList(createdUser));
-
-        User returned = userService.createUser(newUser);
-
-        assertEquals(createdUser, returned);
-        assertEquals(returned.getRole(), Roles.APPLICANT);
-        verify(accountService).getAccount(USERNAME);
-        verify(userRepository).findByRole_Name(name);
         verify(userRepository).save(newUser);
     }
 
