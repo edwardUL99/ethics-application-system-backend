@@ -13,12 +13,4 @@
     <name>Ethics Application System Backend Common</name>
     <description>Common resources for all the ethics system backend</description>
 
-    <dependencies>
-        <dependency>
-            <groupId>ie.ul.edward.ethics</groupId>
-            <artifactId>test-utils</artifactId>
-            <version>${project.version}</version>
-            <scope>test</scope>
-        </dependency>
-    </dependencies>
 </project>

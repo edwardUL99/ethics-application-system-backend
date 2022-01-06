@@ -5,6 +5,8 @@ import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.repositories.AccountRepository;
+import ie.ul.edward.ethics.test.utils.Caching;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,10 +24,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
+import static org.mockito.Mockito.*;
 
 /**
  * This class provides unit tests for the Account Service
@@ -50,6 +51,19 @@ public class AccountServiceTest {
      */
     @Autowired
     private AccountService accountService;
+    /**
+     * The cache utilities so we can evict cache for testing
+     */
+    @Autowired
+    private Caching cache;
+
+    /**
+     * Clear cache before each test
+     */
+    @BeforeEach
+    private void clearCache() {
+        cache.clearCache();
+    }
 
     /**
      * Creates an account for testing
@@ -193,6 +207,24 @@ public class AccountServiceTest {
     }
 
     /**
+     * Tests that an account should be retrieved by username from cache
+     */
+    @Test
+    public void shouldGetAccountByUsernameCached() {
+        Account account = createTestAccount();
+
+        given(accountRepository.findByUsername(USERNAME))
+                .willReturn(Optional.of(account));
+
+        accountService.getAccount(USERNAME);
+        accountService.getAccount(USERNAME);
+        accountService.getAccount(USERNAME);
+        accountService.getAccount(USERNAME);
+
+        verify(accountRepository, times(1)).findByUsername(USERNAME);
+    }
+
+    /**
      * Tests that null should be returned if a username does not exist
      */
     @Test
@@ -220,6 +252,24 @@ public class AccountServiceTest {
 
         assertEquals(account, returned);
         verify(accountRepository).findByEmail(EMAIL);
+    }
+
+    /**
+     * Tests that an account should be retrieved by email
+     */
+    @Test
+    public void shouldGetAccountByEmailCached() {
+        Account account = createTestAccount();
+
+        given(accountRepository.findByEmail(EMAIL))
+                .willReturn(Optional.of(account));
+
+        accountService.getAccount(EMAIL, true);
+        accountService.getAccount(EMAIL, true);
+        accountService.getAccount(EMAIL, true);
+        accountService.getAccount(EMAIL, true);
+
+        verify(accountRepository, times(1)).findByEmail(EMAIL);
     }
 
     /**

@@ -3,6 +3,7 @@ package ie.ul.edward.ethics.test.utils;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 @SpringBootApplication(scanBasePackages = "ie.ul.edward.ethics")
 @EnableJpaRepositories(basePackages = "ie.ul.edward.ethics")
 @EntityScan(basePackages = "ie.ul.edward.ethics")
+@EnableCaching
 public class TestApplication {
     public static void main(String[] args) {
         SpringApplication.run(TestApplication.class, args);
