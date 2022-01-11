@@ -71,8 +71,6 @@ public class AuthenticationController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid Account account) {
-        Map<String, Object> response = new HashMap<>();
-
         try {
             String username = account.getUsername();
             String email = account.getEmail();
@@ -82,13 +80,11 @@ public class AuthenticationController {
             return ResponseEntity.status(HttpStatus.CREATED).body(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
         } catch (UsernameExistsException ex) {
             log.error(ex);
-            response.put(ERROR, USERNAME_EXISTS);
+            return respondError(USERNAME_EXISTS);
         } catch (EmailExistsException ex) {
             log.error(ex);
-            response.put(ERROR, EMAIL_EXISTS);
+            return respondError(EMAIL_EXISTS);
         }
-
-        return ResponseEntity.badRequest().body(response);
     }
 
     /**
@@ -112,15 +108,13 @@ public class AuthenticationController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> authenticate(@RequestBody @Valid  AuthenticationRequest request) {
-        Map<String, Object> response = new HashMap<>();
-
         String username = request.getUsername();
         String password = request.getPassword();
 
         Account account = accountLookup(username, request.isEmail());
 
         if (account == null) {
-            response.put(ERROR, INVALID_CREDENTIALS);
+            return respondError(INVALID_CREDENTIALS);
         } else {
             username = account.getUsername();
 
@@ -134,11 +128,9 @@ public class AuthenticationController {
                 return ResponseEntity.ok(new AuthenticationResponse(authenticatedAccount.getUsername(),
                         authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration()));
             } else {
-                response.put(ERROR, errorMsg);
+                return respondError(errorMsg);
             }
         }
-
-        return ResponseEntity.badRequest().body(response);
     }
 
     /**
@@ -180,10 +172,8 @@ public class AuthenticationController {
             return ResponseEntity.ok(response);
         } catch (IllegalUpdateException ex) {
             ex.printStackTrace();
-            response.put(ERROR, ILLEGAL_UPDATE);
+            return respondError(ILLEGAL_UPDATE);
         }
-
-        return ResponseEntity.badRequest().body(response);
     }
 
     /**

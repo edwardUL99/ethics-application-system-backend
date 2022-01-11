@@ -24,7 +24,7 @@ The modules are outlined as follows:
 | [exporter](exporter)             | Provides the backend functionality for exporting applications to other file formats                                                                                           |
 | [test-utils](test-utils)         | Provides utility classes for testing in the other modules                                                                                                                     |
 | [users](users)                   | Provides the backend functionality for details surrounding the system's user and the management and authorization of their roles, e.g., standard user, committee member, etc. |
-
+| [files](files)                   | Provides a means of uploading and downloading files to and from the backend server                                                                                            |
 
 ## Build
 To build the backend, from the project root, simply run the following command:

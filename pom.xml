@@ -30,6 +30,7 @@
         <module>users</module>
         <module>exporter</module>
         <module>test-utils</module>
+        <module>files</module>
     </modules>
 
     <dependencies>

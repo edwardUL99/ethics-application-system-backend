@@ -1202,6 +1202,276 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Files",
+			"item": [
+				{
+					"name": "404 file not found",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 404 Not Found\", function() {",
+									"    pm.response.to.have.status(404);",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/files/download/uploaded-file1.png",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"download",
+								"uploaded-file1.png"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload file",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"})",
+									"",
+									"pm.test(\"Response is as expected\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.fileName).to.eql(\"uploaded-file.png\");",
+									"    pm.expect(json.downloadUri).to.eql(\"/api/files/download/uploaded-file.png\");",
+									"    pm.expect(json).to.have.property(\"type\");",
+									"    pm.expect(json).to.have.property(\"size\");",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "target",
+									"value": "uploaded-file.png",
+									"type": "default"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "20180826_150823.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{api.path}}/files/upload",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload file Directory",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"})",
+									"",
+									"pm.test(\"Response is as expected\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.fileName).to.eql(\"uploaded-file.png\");",
+									"    pm.expect(json.downloadUri).to.eql(\"/api/files/download/uploaded-file.png?directory=pictures\");",
+									"    pm.expect(json).to.have.property(\"type\");",
+									"    pm.expect(json).to.have.property(\"size\");",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "target",
+									"value": "uploaded-file.png",
+									"type": "default"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "20180826_150823.jpg"
+								},
+								{
+									"key": "directory",
+									"value": "pictures",
+									"type": "default"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{api.path}}/files/upload",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Upload unsupported file type",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 400\", function() {",
+									"    pm.response.to.have.status(400);",
+									"})",
+									"",
+									"pm.test(\"Response is as suspected\", function() {",
+									"    pm.expect(pm.response.json().error).to.eql(\"unsupported_file_type\");",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "target",
+									"value": "uploaded-file.png",
+									"type": "default"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "illegal.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{api.path}}/files/upload",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download file",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/files/download/uploaded-file.png",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"download",
+								"uploaded-file.png"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Download file directory",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/files/download/uploaded-file.png?directory=pictures",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"download",
+								"uploaded-file.png"
+							],
+							"query": [
+								{
+									"key": "directory",
+									"value": "pictures"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"auth": {

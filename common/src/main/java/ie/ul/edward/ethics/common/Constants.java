@@ -1,6 +1,10 @@
 package ie.ul.edward.ethics.common;
 
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This class provides constant values for the back-end
@@ -74,6 +78,16 @@ public final class Constants {
     public static final String ROLE_NOT_FOUND = "role_not_found";
 
     /**
+     * An error message for when file upload/download fails
+     */
+    public static final String FILE_ERROR = "file_error";
+
+    /**
+     * An error thrown when the file type is not supported by the files module
+     */
+    public static final String UNSUPPORTED_FILE_TYPE = "unsupported_file_type";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */
@@ -133,5 +147,17 @@ public final class Constants {
         }
 
         return url;
+    }
+
+    /**
+     * Respond with a 400 bad request error
+     * @param message the message to respond with
+     * @return the response entity representing the error body
+     */
+    public static ResponseEntity<?> respondError(String message) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, message);
+
+        return ResponseEntity.badRequest().body(response);
     }
 }

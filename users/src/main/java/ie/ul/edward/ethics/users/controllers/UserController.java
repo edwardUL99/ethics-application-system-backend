@@ -81,8 +81,6 @@ public class UserController {
      * @return the response body
      */
     private ResponseEntity<?> createUserInternal(CreateUpdateUserRequest request, boolean update) {
-        Map<String, Object> response = new HashMap<>();
-
         try {
             User user = userService.loadUser(request.getUsername());
 
@@ -98,8 +96,7 @@ public class UserController {
                 return ResponseEntity.ok(new UserResponse(user));
             } else {
                 if (user != null) {
-                    response.put(ERROR, USER_EXISTS);
-                    return ResponseEntity.badRequest().body(response);
+                    return respondError(USER_EXISTS);
                 }
 
                 user = new User(request.getUsername(), request.getName(), request.getDepartment());
@@ -108,8 +105,7 @@ public class UserController {
                 return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponse(user));
             }
         } catch (AccountNotExistsException ex) {
-            response.put(ERROR, ACCOUNT_NOT_EXISTS);
-            return ResponseEntity.badRequest().body(response);
+            return respondError(ACCOUNT_NOT_EXISTS);
         }
     }
 
@@ -163,12 +159,8 @@ public class UserController {
                 .filter(r -> r.getId().equals(request.getRole()))
                 .findFirst().orElse(null);
 
-        Map<String, Object> response = new HashMap<>();
-
         if (role == null) {
-            response.put(ERROR, ROLE_NOT_FOUND);
-
-            return ResponseEntity.badRequest().body(response);
+            return respondError(ROLE_NOT_FOUND);
         } else {
             userService.updateRole(user, role);
 
