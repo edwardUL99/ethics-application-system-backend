@@ -74,6 +74,11 @@ public final class Constants {
     public static final String ROLE_NOT_FOUND = "role_not_found";
 
     /**
+     * An error message for when file upload/download fails
+     */
+    public static final String FILE_ERROR = "file_error";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */
