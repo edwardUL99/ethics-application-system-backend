@@ -1,6 +1,5 @@
 package ie.ul.edward.ethics.users.authorization;
 
-import ie.ul.edward.ethics.users.config.PermissionsConfiguration;
 import ie.ul.edward.ethics.users.config.UserPermissionsConfig;
 import ie.ul.edward.ethics.users.models.User;
 import org.junit.jupiter.api.BeforeAll;

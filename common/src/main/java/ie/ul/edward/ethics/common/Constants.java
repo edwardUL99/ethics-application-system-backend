@@ -88,6 +88,11 @@ public final class Constants {
     public static final String UNSUPPORTED_FILE_TYPE = "unsupported_file_type";
 
     /**
+     * An error thrown when a virus is found in an uploaded file
+     */
+    public static final String VIRUS_FOUND_FILE = "virus_found_file";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

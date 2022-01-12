@@ -34,7 +34,13 @@ public class FileServiceImpl implements FileService {
     public FileServiceImpl(FilesConfigurationProperties properties) {
         this.storageLocation = Paths.get(properties.getStorageDir())
                 .toAbsolutePath().normalize();
+        createStorageLocation();
+    }
 
+    /**
+     * Create the storage location if it does not exist
+     */
+    private void createStorageLocation() {
         try {
             Files.createDirectories(this.storageLocation);
         } catch (Exception ex) {
@@ -64,6 +70,8 @@ public class FileServiceImpl implements FileService {
             throw new FileException("You cannot include .. in the file path", null);
 
         try {
+            createStorageLocation();
+
             Path targetFile;
             String targetPath;
 
