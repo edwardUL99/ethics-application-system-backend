@@ -1,5 +1,6 @@
 package ie.ul.edward.ethics.files.controllers;
 
+import ie.ul.edward.ethics.files.antivirus.AntivirusScanner;
 import ie.ul.edward.ethics.files.config.FilesConfigurationProperties;
 import ie.ul.edward.ethics.files.exceptions.FileException;
 import ie.ul.edward.ethics.files.models.UploadFileRequest;
@@ -7,25 +8,26 @@ import static ie.ul.edward.ethics.common.Constants.*;
 
 import ie.ul.edward.ethics.files.models.UploadFileResponse;
 import ie.ul.edward.ethics.files.services.FileService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import xyz.capybara.clamav.ClamavException;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * This controller represents the controller for uploading and downloading files
  */
 @RestController
 @RequestMapping("/api/files")
+@Log4j2
 public class FileController {
     /**
      * The file service for uploading and downloading files
@@ -35,15 +37,28 @@ public class FileController {
      * The list of supported MIME types
      */
     private final List<String> supportedTypes;
+    /**
+     * The scanner for antivirus in uploaded files
+     */
+    private final AntivirusScanner antivirusScanner;
 
     /**
      * Create the controller with the provided file service
      * @param fileService the file service for uploading and downloading files
      * @param properties the configuration properties for the files module
+     * @param antivirusScanner the scanner for antivirus in uploaded files
      */
-    public FileController(FileService fileService, FilesConfigurationProperties properties) {
+    public FileController(FileService fileService, FilesConfigurationProperties properties, AntivirusScanner antivirusScanner) {
         this.fileService = fileService;
         this.supportedTypes = properties.getSupportedTypes();
+        this.antivirusScanner = antivirusScanner;
+
+        if (!antivirusScanner.isEnabled())
+            log.warn("Antivirus scanning is disabled. Uploaded files will not be scanned for viruses. This is dangerous and " +
+                    "not recommended!");
+        else
+            log.info("Antivirus scanning provided by {}. Uploaded files will be scanned for viruses and rejected if they contain any",
+                    antivirusScanner);
     }
 
     /**
@@ -83,7 +98,9 @@ public class FileController {
         try {
             MultipartFile file = request.getFile();
 
-            if (!supportedTypes.contains(file.getContentType())) {
+            if (!antivirusScanner.isFileSafe(file.getInputStream())) {
+                return respondError(VIRUS_FOUND_FILE);
+            } else if (!supportedTypes.contains(file.getContentType())) {
                 return respondError(UNSUPPORTED_FILE_TYPE);
             }
 
@@ -98,7 +115,8 @@ public class FileController {
                 uri += "?directory=" + directory;
 
             return ResponseEntity.ok(new UploadFileResponse(fileName, uri, file.getContentType(), file.getSize()));
-        } catch (FileException ex) {
+        } catch (FileException | IOException | ClamavException ex) {
+            ex.printStackTrace();
             return respondError(FILE_ERROR);
         }
     }

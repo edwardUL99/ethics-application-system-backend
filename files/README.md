@@ -15,3 +15,18 @@ The configuration properties for this module are defined in [files.ethics.proper
 The `files.upload-dir` is the name of the directory where files should be uploaded to on the server. This is also where
 files are retrieved from. The `files.supported-types` is a comma-separated list of supported MIME-types that can be uploaded
 through the API.
+
+### Antivirus
+This module uses ClamAV to provide antivirus scanning of uploaded files. To install the antivirus, run the following steps:
+```bash
+sudo tools/clamav-install.sh
+sudo cp tools/clamd.conf /etc/clamav/
+sudo tools/clamav-update.sh
+sudo tools/clamav-start.sh
+```
+
+In the properties file for the module, there are `files.antivirus.*` properties.
+* enabled: Determines if antivirus scanning is enabled or disabled
+* host: The hostname the ClamAV daemon is running on (default localhost)
+* port: The port the ClamAV daemon is running on (default 3310)
+* platform: The platform the ClamAV daemon is running on (default UNIX, can choose from WINDOWS or JVM_PLATFORM)

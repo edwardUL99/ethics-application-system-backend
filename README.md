@@ -8,6 +8,7 @@ The project requires the following tools installed on your local machine:
 * Java 11 for runtime, JDK 11 for development
 * Apache Maven 3.6.3
 * Python 3. **optional** - only required if you wish to use the `tools/apitest.py` tool for testing the backend API
+* The files module requires **ClamAV**. See [Files README.md](files/README.md) for instructions on setting it up
 
 ## Modules
 The backend is defined as a set of Maven modules, each providing their own functionality and endpoints. See the
