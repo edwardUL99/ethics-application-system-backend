@@ -26,7 +26,7 @@ public class AuthenticatedAccount extends Account {
      * @param expiration the date the token expires
      */
     public AuthenticatedAccount(String username, String jwtToken, LocalDateTime expiration) {
-        super(username, null, null);
+        super(username, null, null, false);
         this.jwtToken = jwtToken;
         this.expiration = expiration;
     }

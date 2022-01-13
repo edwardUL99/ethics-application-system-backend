@@ -1,13 +1,16 @@
 package ie.ul.edward.ethics.authentication.jwt;
 
 import ie.ul.edward.ethics.authentication.exceptions.AuthenticationException;
+import ie.ul.edward.ethics.authentication.models.Account;
 import ie.ul.edward.ethics.authentication.models.AuthenticatedAccount;
+import ie.ul.edward.ethics.authentication.services.AccountService;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -18,6 +21,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 
 /**
  * This filter provides the required processing for JWT processing
@@ -26,9 +30,9 @@ import java.io.IOException;
 @Log4j2
 public class JwtRequestFilter extends OncePerRequestFilter {
     /**
-     * The service for accessing accounts
+     * The service for accessing Accounts
      */
-    private final UserDetailsService accountService;
+    private final AccountService accountService;
     /**
      * The authentication utility class providing Jwt authentication
      */
@@ -52,7 +56,7 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * @param jwt the authentication object for JWT utilities
      */
     @Autowired
-    public JwtRequestFilter(UserDetailsService accountService, JWT jwt) {
+    public JwtRequestFilter(AccountService accountService, JWT jwt) {
         this.accountService = accountService;
         this.jwt = jwt;
     }
@@ -90,16 +94,23 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         if (authenticated != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             String username = authenticated.getUsername();
 
-            UserDetails userDetails = accountService.loadUserByUsername(username);
+            Account account = accountService.getAccount(username);
 
-            UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(userDetails, null,
-                    userDetails.getAuthorities());
-            userToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(userToken);
+            if (account == null)
+                throw new UsernameNotFoundException(username);
 
-            authenticationInformation.setToken(token);
-            authenticationInformation.setExpiry(authenticated.getExpiration());
-            authenticationInformation.setUsername(username);
+            if (account.isConfirmed()) {
+                UserDetails userDetails = new User(username, account.getPassword(), new ArrayList<>());
+
+                UsernamePasswordAuthenticationToken userToken = new UsernamePasswordAuthenticationToken(userDetails, null,
+                        userDetails.getAuthorities());
+                userToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                SecurityContextHolder.getContext().setAuthentication(userToken);
+
+                authenticationInformation.setToken(token);
+                authenticationInformation.setExpiry(authenticated.getExpiration());
+                authenticationInformation.setUsername(username);
+            }
         }
 
         filterChain.doFilter(request, response);

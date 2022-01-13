@@ -66,7 +66,7 @@ public class UserServiceTest {
      * @return the test account
      */
     public static Account createTestAccount() {
-        return new Account(USERNAME, EMAIL, PASSWORD);
+        return new Account(USERNAME, EMAIL, PASSWORD, false);
     }
 
     /**

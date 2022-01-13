@@ -4,7 +4,9 @@ import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.models.Account;
+import ie.ul.edward.ethics.authentication.models.ConfirmationToken;
 import ie.ul.edward.ethics.authentication.repositories.AccountRepository;
+import ie.ul.edward.ethics.authentication.repositories.ConfirmationTokenRepository;
 import ie.ul.edward.ethics.test.utils.Caching;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,10 +21,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.util.ArrayList;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
 
 import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
@@ -41,6 +40,11 @@ public class AccountServiceTest {
      */
     @MockBean
     private AccountRepository accountRepository;
+    /**
+     * The mocked token repository
+     */
+    @MockBean
+    private ConfirmationTokenRepository tokenRepository;
     /**
      * The mocked password encoder
      */
@@ -70,7 +74,7 @@ public class AccountServiceTest {
      * @return the account for testing
      */
     public static Account createTestAccount() {
-        return new Account(USERNAME, EMAIL, PASSWORD);
+        return new Account(USERNAME, EMAIL, PASSWORD, false);
     }
 
     /**
@@ -85,11 +89,36 @@ public class AccountServiceTest {
         given(accountRepository.findByEmail(EMAIL))
                 .willReturn(Optional.empty());
 
-        Account account = accountService.createAccount(USERNAME, EMAIL, PASSWORD);
+        Account account = accountService.createAccount(USERNAME, EMAIL, PASSWORD, false);
 
         assertEquals(account.getUsername(), USERNAME);
         assertEquals(account.getEmail(), EMAIL);
         assertEquals(account.getPassword(), ENCRYPTED_PASSWORD);
+        assertFalse(account.isConfirmed());
+
+        verify(passwordEncoder).encode(PASSWORD);
+        verify(accountRepository).findByUsername(USERNAME);
+        verify(accountRepository).findByEmail(EMAIL);
+    }
+
+    /**
+     * Tests that an account should be created successfully and be already confirmed
+     */
+    @Test
+    public void shouldCreateAccountConfirmed() {
+        given(passwordEncoder.encode(PASSWORD))
+                .willReturn(ENCRYPTED_PASSWORD);
+        given(accountRepository.findByUsername(USERNAME))
+                .willReturn(Optional.empty());
+        given(accountRepository.findByEmail(EMAIL))
+                .willReturn(Optional.empty());
+
+        Account account = accountService.createAccount(USERNAME, EMAIL, PASSWORD, true);
+
+        assertEquals(account.getUsername(), USERNAME);
+        assertEquals(account.getEmail(), EMAIL);
+        assertEquals(account.getPassword(), ENCRYPTED_PASSWORD);
+        assertTrue(account.isConfirmed());
 
         verify(passwordEncoder).encode(PASSWORD);
         verify(accountRepository).findByUsername(USERNAME);
@@ -104,7 +133,7 @@ public class AccountServiceTest {
         given(accountRepository.findByUsername(USERNAME))
                 .willReturn(Optional.of(createTestAccount()));
 
-        assertThrows(UsernameExistsException.class, () -> accountService.createAccount(USERNAME, EMAIL, PASSWORD));
+        assertThrows(UsernameExistsException.class, () -> accountService.createAccount(USERNAME, EMAIL, PASSWORD, false));
 
         verify(accountRepository).findByUsername(USERNAME);
         verifyNoMoreInteractions(accountRepository);
@@ -120,7 +149,7 @@ public class AccountServiceTest {
         given(accountRepository.findByEmail(EMAIL))
                 .willReturn(Optional.of(createTestAccount()));
 
-        assertThrows(EmailExistsException.class, () -> accountService.createAccount(USERNAME, EMAIL, PASSWORD));
+        assertThrows(EmailExistsException.class, () -> accountService.createAccount(USERNAME, EMAIL, PASSWORD, false));
 
         verify(accountRepository).findByUsername(USERNAME);
         verify(accountRepository).findByEmail(EMAIL);
@@ -310,5 +339,72 @@ public class AccountServiceTest {
 
         assertThrows(UsernameNotFoundException.class, () -> accountService.loadUserByUsername(USERNAME));
         verify(accountRepository).findByUsername(USERNAME);
+    }
+
+    /**
+     * Tests that a confirmation token should be generated
+     */
+    @Test
+    public void shouldGenerateConfirmationToken() {
+        ConfirmationToken token = accountService.generateConfirmationToken(createTestAccount());
+        assertEquals(token.getEmail(), EMAIL);
+        assertNotNull(token.getToken());
+        verify(tokenRepository).save(token);
+    }
+
+    /**
+     * Tests that an account should be confirmed successfully
+     */
+    @Test
+    public void shouldConfirmAccount() {
+        Account account = createTestAccount();
+        account.setConfirmed(false);
+        ConfirmationToken token = new ConfirmationToken(EMAIL);
+
+        given(tokenRepository.findByEmail(EMAIL))
+                .willReturn(Optional.of(token));
+
+        boolean confirmed = accountService.confirmAccount(account, token.getToken());
+
+        assertTrue(confirmed);
+        assertTrue(account.isConfirmed());
+        verify(accountRepository).save(account);
+    }
+
+    /**
+     * Tests that confirmation should not take place if there is no token for the account
+     */
+    @Test
+    public void shouldNotConfirmIfNoToken() {
+        Account account = createTestAccount();
+        account.setConfirmed(false);
+
+        given(tokenRepository.findByEmail(EMAIL))
+                .willReturn(Optional.empty());
+
+        boolean confirmed = accountService.confirmAccount(account, new ConfirmationToken(EMAIL).getToken());
+
+        assertFalse(confirmed);
+        assertFalse(account.isConfirmed());
+        verifyNoInteractions(accountRepository);
+    }
+
+    /**
+     * Tests that confirmation does not take place if the token does not match
+     */
+    @Test
+    public void shouldNotConfirmIfInvalidToken() {
+        Account account = createTestAccount();
+        account.setConfirmed(false);
+        ConfirmationToken token = new ConfirmationToken(EMAIL);
+
+        given(tokenRepository.findByEmail(EMAIL))
+                .willReturn(Optional.of(token));
+
+        boolean confirmed = accountService.confirmAccount(account, new ConfirmationToken(EMAIL).getToken());
+
+        assertFalse(confirmed);
+        assertFalse(account.isConfirmed());
+        verifyNoInteractions(accountRepository);
     }
 }

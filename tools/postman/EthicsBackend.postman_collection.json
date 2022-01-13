@@ -37,7 +37,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"test\",\n    \"email\": \"test@gmail.com\",\n    \"password\": \"testPass2\"\n}",
+							"raw": "{\n    \"username\": \"test\",\n    \"email\": \"test@gmail.com\",\n    \"password\": \"testPass2\",\n    \"confirmationKey\": \"always-confirm-ethics-key\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -53,6 +53,52 @@
 								"auth",
 								"register",
 								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Check if account is confirmed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is as expected\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.confirmed).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/auth/account/confirmed?username=test",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"account",
+								"confirmed"
+							],
+							"query": [
+								{
+									"key": "username",
+									"value": "test"
+								}
 							]
 						}
 					},
@@ -87,7 +133,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"chair\",\n    \"email\": \"chair@email.com\",\n    \"password\": \"testPass2\"\n}",
+							"raw": "{\n    \"username\": \"chair\",\n    \"email\": \"chair@email.com\",\n    \"password\": \"testPass2\",\n    \"confirmationKey\": \"always-confirm-ethics-key\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1293,6 +1339,57 @@
 					"response": []
 				},
 				{
+					"name": "Upload file virus",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 400\", function() {",
+									"    pm.response.to.have.status(400);",
+									"})",
+									"",
+									"pm.test(\"Response is as expected\", function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.error).to.eql(\"virus_found_file\");",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "target",
+									"value": "uploaded-file.png",
+									"type": "default"
+								},
+								{
+									"key": "file",
+									"type": "file",
+									"src": "virus.txt"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{api.path}}/files/upload",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"files",
+								"upload"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Upload file Directory",
 					"event": [
 						{
@@ -1517,6 +1614,10 @@
 			"key": "api.path",
 			"value": "http://localhost:8080/api",
 			"type": "default"
+		},
+		{
+			"key": "confirmationToken",
+			"value": ""
 		}
 	]
 }

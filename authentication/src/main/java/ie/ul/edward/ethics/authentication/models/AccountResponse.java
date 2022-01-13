@@ -12,11 +12,11 @@ public class AccountResponse {
     /**
      * The username for the account
      */
-    private String username;
+    protected String username;
     /**
      * The email for the account
      */
-    private String email;
+    protected String email;
 
     /**
      * Create a default account response

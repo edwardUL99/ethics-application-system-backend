@@ -15,9 +15,11 @@ All endpoints in this module begin with the path `/api/auth`. The endpoints are 
 | /login         | POST   | This endpoint allows authentication of an account to generate a JWT token                                                                         |
 | /account       | GET    | This endpoint allows the retrieval of an account                                                                                                  |
 |                | PUT    | This endpoint allows a user to update the password of their own account.                                                                          |
+| /account/confirmed | GET | This endpoint allows a user to check if their account is confirmed |
+| /account/confirm | POST | This endpoint allows a user to confirm their account |
 | /admin/account | PUT    | This endpoint allows an admin to update the account of any user in the system. This should be locked by the users module with an Admin permission |
 
-Note that all endpoints in the system (except for register and login) require the following header:
+Note that all endpoints in the system (except for register, login, /account/confirmed and /account/confirm/) require the following header:
 ```
 Authorization: Bearer <jwt-token>
 ```
@@ -30,4 +32,8 @@ file:
     at least 35 characters long. It should not be changed after the system is started, since JWT tokens will not be able
     to be parsed
 * `auth.jwt.token.validity`: The number of hours the JWT tokens should be valid for
+* `auth.always-confirm`: If true, new accounts are always confirmed and no requirement for email confirmation. Recommended to keep it false. Can be true for testing
+* `auth.confirmation-key`: If this key is passed in with a registration request, the account is automatically confirmed. This key is used to facilitate testing if confirmation is enabled
 
+Requires email confirmation messages to be sent if confirmation is enabled. See [common module's properties](../common/src/main/resources/common.ethics.properties)
+for properties to enter the details of the email server account to send emails from

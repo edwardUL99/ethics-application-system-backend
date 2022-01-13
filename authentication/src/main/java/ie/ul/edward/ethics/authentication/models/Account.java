@@ -3,8 +3,6 @@ package ie.ul.edward.ethics.authentication.models;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 /**
@@ -24,20 +22,21 @@ public class Account {
      * The account's email address
      */
     @Column(unique=true)
-    @Email
-    @NotNull(message = "An email must be provided with an account")
     protected String email;
     /**
      * The account's password
      */
-    @NotNull
     protected String password;
+    /**
+     * Determines if this account has been confirmed
+     */
+    protected boolean confirmed;
 
     /**
      * Create a default Account object
      */
     public Account() {
-        this(null, null, null);
+        this(null, null, null, false);
     }
 
     /**
@@ -45,11 +44,13 @@ public class Account {
      * @param username the username to associate with the account
      * @param email the email to associate with the account
      * @param password the account's password
+     * @param confirmed true if confirmed, false if not
      */
-    public Account(String username, String email, String password) {
+    public Account(String username, String email, String password, boolean confirmed) {
         this.username = username;
         this.email = email;
         this.password = password;
+        this.confirmed = confirmed;
     }
 
     /**
@@ -101,6 +102,22 @@ public class Account {
     }
 
     /**
+     * Determines if this account is confirmed or not
+     * @return true if the account is confirmed, false if not
+     */
+    public boolean isConfirmed() {
+        return confirmed;
+    }
+
+    /**
+     * Set the value for the account being confirmed
+     * @param confirmed the new value for confirmed
+     */
+    public void setConfirmed(boolean confirmed) {
+        this.confirmed = confirmed;
+    }
+
+    /**
      * Determine if object o is equal to this object
      * @param o the object to check equality
      * @return true if equal, false if not
@@ -110,7 +127,8 @@ public class Account {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Account account = (Account) o;
-        return Objects.equals(username, account.username) && Objects.equals(email, account.email) && Objects.equals(password, account.password);
+        return Objects.equals(username, account.username) && Objects.equals(email, account.email) && Objects.equals(password, account.password)
+                && Objects.equals(confirmed, account.confirmed);
     }
 
     /**
@@ -119,6 +137,6 @@ public class Account {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(username, email, password);
+        return Objects.hash(username, email, password, confirmed);
     }
 }

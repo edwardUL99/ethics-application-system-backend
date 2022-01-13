@@ -37,6 +37,11 @@ public final class Constants {
     public static final String EMAIL_EXISTS = "email_exists";
 
     /**
+     * An error message for when registration failed and the account was not registered
+     */
+    public static final String REGISTRATION_FAILED = "registration_failed";
+
+    /**
      * The error message for when a user is attempted to be created twice
      */
     public static final String USER_EXISTS = "user_exists";

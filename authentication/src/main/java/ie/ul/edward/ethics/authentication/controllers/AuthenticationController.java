@@ -1,5 +1,6 @@
 package ie.ul.edward.ethics.authentication.controllers;
 
+import ie.ul.edward.ethics.authentication.config.AuthenticationConfiguration;
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
@@ -7,6 +8,8 @@ import ie.ul.edward.ethics.authentication.jwt.AuthenticationInformation;
 import ie.ul.edward.ethics.authentication.jwt.JWT;
 import ie.ul.edward.ethics.authentication.models.*;
 import ie.ul.edward.ethics.authentication.services.AccountService;
+import ie.ul.edward.ethics.common.email.EmailSender;
+import ie.ul.edward.ethics.common.email.exceptions.EmailException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -50,40 +53,126 @@ public class AuthenticationController {
      */
     @Resource(name = "authenticationInformation")
     private AuthenticationInformation authenticationInformation;
+    /**
+     * The configuration object for the authentication module
+     */
+    private final AuthenticationConfiguration authenticationConfiguration;
+    /**
+     * The email sender implementation for sending emails
+     */
+    private final EmailSender emailSender;
 
     /**
      * Create an AuthenticationController
      * @param authenticationManager authentication manager for authenticating requests
      * @param jwt utilities for JWT token authentication
      * @param accountService the service used for creating and retrieving accounts
+     * @param authenticationConfiguration the configuration for the authentication module
+     * @param emailSender the email sender implementation for sending emails
      */
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, JWT jwt, AccountService accountService) {
+    public AuthenticationController(AuthenticationManager authenticationManager, JWT jwt, AccountService accountService,
+                                    AuthenticationConfiguration authenticationConfiguration, EmailSender emailSender) {
         this.authenticationManager = authenticationManager;
         this.jwt = jwt;
         this.accountService = accountService;
+        this.authenticationConfiguration = authenticationConfiguration;
+
+        if (authenticationConfiguration.isAlwaysConfirm())
+            log.warn("The system is configured to automatically confirm any new account. This is dangerous and should only be used for testing");
+
+        this.emailSender = emailSender;
+    }
+
+    /**
+     * Checks if the account should be confirmed straight away
+     * @param confirmationKey the confirmation key from the request
+     * @return the response of this registration request
+     */
+    private boolean alwaysConfirm(String confirmationKey) {
+        boolean alwaysConfirm = authenticationConfiguration.isAlwaysConfirm();
+        boolean keyMatch = authenticationConfiguration.getConfirmationKey().equals(confirmationKey);
+
+        if (!alwaysConfirm && keyMatch)
+            log.warn("Registration request contained a valid confirmation key, so account will be confirmed automatically");
+
+        return alwaysConfirm || keyMatch;
+    }
+
+    /**
+     * Send the confirmation email to the email specified in the account
+     * @param account the account to sent the email to
+     * @param confirmationToken the token for confirmation
+     */
+    private void sendConfirmationEmail(Account account, ConfirmationToken confirmationToken) {
+        // TODO update the email with correct links and styling etc
+        String content = "<h2>Confirm Account</h2>"
+                + "<p>Hello %s,<br>We have received a registration request for an account. You will need to confirm" +
+                " the email address before we can proceed with registration</p>"
+                + "<br>"
+                + "<p>Your username is: <b>%s</b></p>"
+                + "<p>Follow this link to confirm your account: <a href=\"%s\">Reset Password</a></p>"
+                + "<br>"
+                + "<p>If for some reason, the link doesn't work, go to the <a href=\"http://localhost:8080/ethics-app/confirm-account\">confirm account</a> page"
+                + " and enter the following details in the first 2 fields:</p>"
+                + "<ul>"
+                + "<li><b>E-mail:</b> %s</li>"
+                + "<li><b>Confirmation Token:</b> %s</li>"
+                + "</ul>"
+                + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
+                + "<br>"
+                + "<p>If you did not request an account, you can safely ignore this e-mail</p>"
+                + "<br>"
+                + "<p>Thank You,<p>"
+                + "<p>The Team</p>";
+
+        String username = account.getUsername();
+        String email = account.getEmail();
+        String token = confirmationToken.getToken();
+        content = String.format(content, username, username,
+                String.format("http://localhost:8080/ethics-app/confirm-account?email=%s&token=%s", email, token),
+                email, token);
+
+        emailSender.sendEmail(email, "Confirm Account Registration", content);
     }
 
     /**
      * This endpoint provides the registration endpoint
-     * @param account the account to register
+     * @param request the registration request
      * @return the JSON response
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid Account account) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegistrationRequest request) {
+        Account createdAccount = null;
         try {
-            String username = account.getUsername();
-            String email = account.getEmail();
+            String username = request.getUsername();
+            String email = request.getEmail();
 
-            Account createdAccount = accountService.createAccount(username, email, account.getPassword());
+            createdAccount = accountService.createAccount(username, email, request.getPassword(), alwaysConfirm(request.getConfirmationKey()));
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
+            AccountResponse response;
+            if (createdAccount.isConfirmed()) {
+                response = new AccountResponse(username, email);
+            } else {
+                ConfirmationToken token = accountService.generateConfirmationToken(createdAccount);
+                sendConfirmationEmail(createdAccount, token);
+                response = new AccountResponse(username, email);
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (UsernameExistsException ex) {
             log.error(ex);
             return respondError(USERNAME_EXISTS);
         } catch (EmailExistsException ex) {
             log.error(ex);
             return respondError(EMAIL_EXISTS);
+        } catch (EmailException ex) {
+            log.error(ex);
+
+            if (createdAccount != null)
+                accountService.deleteAccount(createdAccount);
+
+            return respondError(REGISTRATION_FAILED);
         }
     }
 
@@ -98,7 +187,7 @@ public class AuthenticationController {
         if (useEmail)
             return accountService.getAccount(username, true);
         else
-            return new Account(username, null, null);
+            return new Account(username, null, null, false);
     }
 
     /**
@@ -224,6 +313,50 @@ public class AuthenticationController {
         } catch (BadCredentialsException ex) {
             log.error(ex);
             error.set(INVALID_CREDENTIALS);
+        }
+    }
+
+    /**
+     * This endpoint checks if an account is confirmed
+     * @param username the username of the account. Can be an email
+     * @param email true if the username is an email, false if not
+     * @return response body
+     */
+    @GetMapping("/account/confirmed")
+    public ResponseEntity<?> isConfirmed(@RequestParam String username, @RequestParam(required = false) boolean email) {
+        Account account = accountService.getAccount(username, email);
+
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("confirmed", account.isConfirmed());
+
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * This endpoint confirms the account if it is a valid confirmation request
+     * @param request the request to confirm the account
+     * @return the response body
+     */
+    @PostMapping("/account/confirm")
+    public ResponseEntity<?> confirmAccount(@RequestBody @Valid ConfirmationRequest request) {
+        String email = request.getEmail();
+        String token = request.getToken();
+
+        Account account = accountService.getAccount(email, true);
+
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            boolean confirmed = accountService.confirmAccount(account, token);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("confirmed", confirmed);
+
+            return ResponseEntity.ok(response);
         }
     }
 }
