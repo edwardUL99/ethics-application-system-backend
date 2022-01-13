@@ -79,10 +79,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        String confirmedPath = createApiPath(Endpoint.AUTHENTICATION, "account", "confirmed");
+        confirmedPath = confirmedPath.substring(0, confirmedPath.length() - 1);
+
         http.csrf().disable()
                 .authorizeRequests().antMatchers(
                         createApiPath(Endpoint.AUTHENTICATION, "register"),
-                        createApiPath(Endpoint.AUTHENTICATION, "login")
+                        createApiPath(Endpoint.AUTHENTICATION, "login"),
+                        confirmedPath,
+                        createApiPath(Endpoint.AUTHENTICATION, "account", "confirm")
                 ).permitAll()
                 .anyRequest().authenticated().and()
                 .exceptionHandling().authenticationEntryPoint(entrypoint)

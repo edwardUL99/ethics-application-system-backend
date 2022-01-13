@@ -4,6 +4,7 @@ import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.models.Account;
+import ie.ul.edward.ethics.authentication.models.ConfirmationToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
@@ -15,11 +16,12 @@ public interface AccountService extends UserDetailsService {
      * @param username the username to be associated with the account
      * @param email the email associated with the account
      * @param password the plain text password to be encrypted
+     * @param confirm true to confirm the account straight away, false if not
      * @return the created account
      * @throws UsernameExistsException if an account already exists with the provided username
      * @throws EmailExistsException if an account already exists with the provided email
      */
-    Account createAccount(String username, String email, String password) throws UsernameExistsException, EmailExistsException;
+    Account createAccount(String username, String email, String password, boolean confirm) throws UsernameExistsException, EmailExistsException;
 
     /**
      * Delete the provided account from the system
@@ -50,4 +52,21 @@ public interface AccountService extends UserDetailsService {
      * @return the found account, null if not found
      */
     Account getAccount(String username, boolean email);
+
+    /**
+     * Generate a confirmation token for the provided account
+     * @param account the account to generate the token for
+     * @return the created confirmation token
+     */
+    ConfirmationToken generateConfirmationToken(Account account);
+
+    /**
+     * Attempt to confirm the provided account. If a ConfirmationToken exists for the account and it equals the provided
+     * token, the account will be confirmed and the token deleted. Otherwise, false will be returned. Account.confirmed
+     * will be set to true
+     * @param account the account to confirm
+     * @param token the token to confirm
+     * @return true if confirmed, false if not
+     */
+    boolean confirmAccount(Account account, String token);
 }

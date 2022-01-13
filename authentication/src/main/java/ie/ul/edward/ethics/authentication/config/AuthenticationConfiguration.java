@@ -13,6 +13,14 @@ public class AuthenticationConfiguration {
      * The JWT config object
      */
     private Jwt jwt;
+    /**
+     * This variable determines if new accounts should always be confirmed
+     */
+    private boolean alwaysConfirm = false;
+    /**
+     * This variable allows a user to send a key/password with their registration request to automatically confirm them if confirmation is enabled
+     */
+    private String confirmationKey;
 
     /**
      * Create a default authentication configuration object
@@ -35,6 +43,38 @@ public class AuthenticationConfiguration {
      */
     public void setJwt(Jwt jwt) {
         this.jwt = jwt;
+    }
+
+    /**
+     * True to always confirm new accounts without email confirmation, false otherwise
+     * @return the value for always confirm
+     */
+    public boolean isAlwaysConfirm() {
+        return alwaysConfirm;
+    }
+
+    /**
+     * Set a new value for always confirm
+     * @param alwaysConfirm true to always confirm without sending an email new accounts
+     */
+    public void setAlwaysConfirm(boolean alwaysConfirm) {
+        this.alwaysConfirm = alwaysConfirm;
+    }
+
+    /**
+     * Retrieve the confirmation key
+     * @return the confirmation key
+     */
+    public String getConfirmationKey() {
+        return confirmationKey;
+    }
+
+    /**
+     * Set the confirmation key
+     * @param confirmationKey the new confirmation key
+     */
+    public void setConfirmationKey(String confirmationKey) {
+        this.confirmationKey = confirmationKey;
     }
 
     /**

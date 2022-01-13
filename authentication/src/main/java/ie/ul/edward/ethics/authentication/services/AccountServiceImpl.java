@@ -4,7 +4,9 @@ import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
 import ie.ul.edward.ethics.authentication.models.Account;
+import ie.ul.edward.ethics.authentication.models.ConfirmationToken;
 import ie.ul.edward.ethics.authentication.repositories.AccountRepository;
+import ie.ul.edward.ethics.authentication.repositories.ConfirmationTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,14 +39,21 @@ public class AccountServiceImpl implements AccountService {
     private final PasswordEncoder passwordEncoder;
 
     /**
+     * The repository for retrieving and creating tokens
+     */
+    private final ConfirmationTokenRepository tokenRepository;
+
+    /**
      * Instantiate an AccountServiceImpl with the provided dependencies
      * @param accountRepository the account repository to access accounts with
      * @param passwordEncoder the encoder for encoding passwords
+     * @param tokenRepository the repository used for creating and retrieving tokens
      */
     @Autowired
-    public AccountServiceImpl(AccountRepository accountRepository, @Lazy PasswordEncoder passwordEncoder) {
+    public AccountServiceImpl(AccountRepository accountRepository, @Lazy PasswordEncoder passwordEncoder, ConfirmationTokenRepository tokenRepository) {
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
+        this.tokenRepository = tokenRepository;
     }
 
     /**
@@ -53,6 +62,7 @@ public class AccountServiceImpl implements AccountService {
      * @param username the username to be associated with the account
      * @param email    the email associated with the account
      * @param password the plain text password to be encrypted
+     * @param confirm true to confirm the account, false if not
      * @return the created account
      */
     @Override
@@ -60,7 +70,7 @@ public class AccountServiceImpl implements AccountService {
             @CacheEvict(value = "account", allEntries = true),
             @CacheEvict(value = "userdetail", allEntries = true)
     })
-    public Account createAccount(String username, String email, String password) {
+    public Account createAccount(String username, String email, String password, boolean confirm) {
         if (getAccount(username, false) != null)
             throw new UsernameExistsException(username);
         else if (getAccount(email, true) != null)
@@ -68,7 +78,8 @@ public class AccountServiceImpl implements AccountService {
 
         password = passwordEncoder.encode(password);
 
-        Account account = new Account(username, email, password);
+        Account account = new Account(username, email, password, false);
+        account.setConfirmed(confirm);
         accountRepository.save(account);
 
         return account;
@@ -126,18 +137,6 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Retrieve the account specified by the username or email if specified
-     * @param username the username/email of the account
-     * @param email true if username is an email, false if username
-     * @return the user if found, null if not
-     */
-    private Account getAccountInternal(String username, boolean email) {
-        Optional<Account> optional = (email) ? accountRepository.findByEmail(username):accountRepository.findByUsername(username);
-
-        return optional.orElse(null);
-    }
-
-    /**
      * Get the account represented by the username. If email is true, the account's email
      * will be treated as the username
      *
@@ -168,5 +167,43 @@ public class AccountServiceImpl implements AccountService {
             throw new UsernameNotFoundException(username);
 
         return new User(username, account.getPassword(), new ArrayList<>());
+    }
+
+    /**
+     * Generate a confirmation token for the provided account
+     *
+     * @param account the account to generate the token for
+     * @return the created confirmation token
+     */
+    @Override
+    public ConfirmationToken generateConfirmationToken(Account account) {
+        // TODO send the confirmation email here when that is implemented
+        ConfirmationToken token = new ConfirmationToken(account.getEmail());
+        tokenRepository.save(token);
+
+        return token;
+    }
+
+    /**
+     * Attempt to confirm the provided account. If a ConfirmationToken exists for the account and it equals the provided
+     * token, the account will be confirmed and the token deleted. Otherwise, false will be returned. Account.confirmed
+     * will be set to true
+     *
+     * @param account the account to confirm
+     * @param token   the token to confirm
+     * @return true if confirmed, false if not
+     */
+    @Override
+    public boolean confirmAccount(Account account, String token) {
+        ConfirmationToken confirmationToken = tokenRepository.findByEmail(account.getEmail()).orElse(null);
+
+        if (confirmationToken != null && confirmationToken.getToken().equals(token)) {
+            account.setConfirmed(true);
+            accountRepository.save(account); // update the confirmation status
+
+            return true;
+        }
+
+        return false;
     }
 }

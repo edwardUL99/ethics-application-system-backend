@@ -1,5 +1,6 @@
 package ie.ul.edward.ethics.authentication.controllers;
 
+import ie.ul.edward.ethics.authentication.config.AuthenticationConfiguration;
 import ie.ul.edward.ethics.authentication.exceptions.EmailExistsException;
 import ie.ul.edward.ethics.authentication.exceptions.IllegalUpdateException;
 import ie.ul.edward.ethics.authentication.exceptions.UsernameExistsException;
@@ -50,34 +51,67 @@ public class AuthenticationController {
      */
     @Resource(name = "authenticationInformation")
     private AuthenticationInformation authenticationInformation;
+    /**
+     * The configuration object for the authentication module
+     */
+    private final AuthenticationConfiguration authenticationConfiguration;
 
     /**
      * Create an AuthenticationController
      * @param authenticationManager authentication manager for authenticating requests
      * @param jwt utilities for JWT token authentication
      * @param accountService the service used for creating and retrieving accounts
+     * @param authenticationConfiguration the configuration for the authentication module
      */
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, JWT jwt, AccountService accountService) {
+    public AuthenticationController(AuthenticationManager authenticationManager, JWT jwt, AccountService accountService,
+                                    AuthenticationConfiguration authenticationConfiguration) {
         this.authenticationManager = authenticationManager;
         this.jwt = jwt;
         this.accountService = accountService;
+        this.authenticationConfiguration = authenticationConfiguration;
+
+        if (authenticationConfiguration.isAlwaysConfirm())
+            log.warn("The system is configured to automatically confirm any new account. This is dangerous and should only be used for testing");
+    }
+
+    /**
+     * Checks if the account should be confirmed straight away
+     * @param confirmationKey the confirmation key from the request
+     * @return the response of this registration request
+     */
+    private boolean alwaysConfirm(String confirmationKey) {
+        boolean alwaysConfirm = authenticationConfiguration.isAlwaysConfirm();
+        boolean keyMatch = authenticationConfiguration.getConfirmationKey().equals(confirmationKey);
+
+        if (!alwaysConfirm && keyMatch)
+            log.warn("Registration request contained a valid confirmation key, so account will be confirmed automatically");
+
+        return alwaysConfirm || keyMatch;
     }
 
     /**
      * This endpoint provides the registration endpoint
-     * @param account the account to register
+     * @param request the registration request
      * @return the JSON response
      */
     @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody @Valid Account account) {
+    public ResponseEntity<?> register(@RequestBody @Valid RegistrationRequest request) {
         try {
-            String username = account.getUsername();
-            String email = account.getEmail();
+            String username = request.getUsername();
+            String email = request.getEmail();
 
-            Account createdAccount = accountService.createAccount(username, email, account.getPassword());
+            Account createdAccount = accountService.createAccount(username, email, request.getPassword(), alwaysConfirm(request.getConfirmationKey()));
+            RegistrationResponse response;
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(new AccountResponse(createdAccount.getUsername(), createdAccount.getEmail()));
+            if (createdAccount.isConfirmed()) {
+                response = new RegistrationResponse(username, email, RegistrationResponse.CONFIRMED_TOKEN);
+            } else {
+                ConfirmationToken token = accountService.generateConfirmationToken(createdAccount);
+                response = new RegistrationResponse(username, email, token.getToken());
+            }
+
+            return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (UsernameExistsException ex) {
             log.error(ex);
             return respondError(USERNAME_EXISTS);
@@ -98,7 +132,7 @@ public class AuthenticationController {
         if (useEmail)
             return accountService.getAccount(username, true);
         else
-            return new Account(username, null, null);
+            return new Account(username, null, null, false);
     }
 
     /**
@@ -224,6 +258,50 @@ public class AuthenticationController {
         } catch (BadCredentialsException ex) {
             log.error(ex);
             error.set(INVALID_CREDENTIALS);
+        }
+    }
+
+    /**
+     * This endpoint checks if an account is confirmed
+     * @param username the username of the account. Can be an email
+     * @param email true if the username is an email, false if not
+     * @return response body
+     */
+    @GetMapping("/account/confirmed")
+    public ResponseEntity<?> isConfirmed(@RequestParam String username, @RequestParam(required = false) boolean email) {
+        Account account = accountService.getAccount(username, email);
+
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            Map<String, Object> response = new HashMap<>();
+            response.put("confirmed", account.isConfirmed());
+
+            return ResponseEntity.ok(response);
+        }
+    }
+
+    /**
+     * This endpoint confirms the account if it is a valid confirmation request
+     * @param request the request to confirm the account
+     * @return the response body
+     */
+    @PostMapping("/account/confirm")
+    public ResponseEntity<?> confirmAccount(@RequestBody @Valid ConfirmationRequest request) {
+        String email = request.getEmail();
+        String token = request.getToken();
+
+        Account account = accountService.getAccount(email, true);
+
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            boolean confirmed = accountService.confirmAccount(account, token);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("confirmed", confirmed);
+
+            return ResponseEntity.ok(response);
         }
     }
 }
