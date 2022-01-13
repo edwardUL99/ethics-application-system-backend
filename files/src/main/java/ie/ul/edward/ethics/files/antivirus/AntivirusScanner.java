@@ -19,6 +19,7 @@ public interface AntivirusScanner {
      * If {@link #isEnabled()} returns false, this should return true
      * @param inputStream the stream representing the file
      * @return true if the file is virus-free, false if it contains viruses
+     * @throws AntivirusException if an error occurs that prevents scanning for viruses
      */
-    boolean isFileSafe(InputStream inputStream);
+    boolean isFileSafe(InputStream inputStream) throws AntivirusException;
 }

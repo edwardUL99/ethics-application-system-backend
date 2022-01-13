@@ -2,6 +2,7 @@ package ie.ul.edward.ethics.files.antivirus;
 
 import lombok.Getter;
 import xyz.capybara.clamav.ClamavClient;
+import xyz.capybara.clamav.ClamavException;
 import xyz.capybara.clamav.Platform;
 import xyz.capybara.clamav.commands.scan.result.ScanResult;
 
@@ -48,12 +49,17 @@ public class ClamAvAntivirusScanner implements AntivirusScanner {
      * If {@link #isEnabled()} returns false, this should return true
      * @param inputStream the stream representing the file
      * @return true if the file is virus-free, false if it contains viruses
+     * @throws AntivirusException if an error occurs that prevents scanning for viruses
      */
-    public boolean isFileSafe(InputStream inputStream) {
+    public boolean isFileSafe(InputStream inputStream) throws AntivirusException {
         if (enabled) {
-            ScanResult result = client.scan(inputStream);
+            try {
+                ScanResult result = client.scan(inputStream);
 
-            return result instanceof ScanResult.OK;
+                return result instanceof ScanResult.OK;
+            } catch (ClamavException ex) {
+                throw new AntivirusException("An error occurred while scanning for viruses", ex);
+            }
         } else {
             return true;
         }
