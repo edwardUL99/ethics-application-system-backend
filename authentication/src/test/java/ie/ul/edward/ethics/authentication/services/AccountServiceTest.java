@@ -166,6 +166,22 @@ public class AccountServiceTest {
     }
 
     /**
+     * Tests that an account should be authenticated
+     */
+    @Test
+    public void shouldAuthenticateAccount() {
+        Account account = createTestAccount();
+
+        given(passwordEncoder.matches(PASSWORD, account.getPassword()))
+                .willReturn(true);
+
+        boolean auth = accountService.authenticateAccount(account, PASSWORD);
+
+        assertTrue(auth);
+        verify(passwordEncoder).matches(PASSWORD, account.getPassword());
+    }
+
+    /**
      * Tests that an account should be updated
      */
     @Test

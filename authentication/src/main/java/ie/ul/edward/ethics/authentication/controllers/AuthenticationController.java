@@ -14,10 +14,6 @@ import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -36,10 +32,6 @@ import static ie.ul.edward.ethics.common.Constants.*;
 @RequestMapping("/api/auth")
 @Log4j2
 public class AuthenticationController {
-    /**
-     * The authentication manager for authenticating requests
-     */
-    private final AuthenticationManager authenticationManager;
     /**
      * The authentication utilities for JWT tokens
      */
@@ -64,16 +56,14 @@ public class AuthenticationController {
 
     /**
      * Create an AuthenticationController
-     * @param authenticationManager authentication manager for authenticating requests
      * @param jwt utilities for JWT token authentication
      * @param accountService the service used for creating and retrieving accounts
      * @param authenticationConfiguration the configuration for the authentication module
      * @param emailSender the email sender implementation for sending emails
      */
     @Autowired
-    public AuthenticationController(AuthenticationManager authenticationManager, JWT jwt, AccountService accountService,
+    public AuthenticationController(JWT jwt, AccountService accountService,
                                     AuthenticationConfiguration authenticationConfiguration, EmailSender emailSender) {
-        this.authenticationManager = authenticationManager;
         this.jwt = jwt;
         this.accountService = accountService;
         this.authenticationConfiguration = authenticationConfiguration;
@@ -151,13 +141,11 @@ public class AuthenticationController {
             createdAccount = accountService.createAccount(username, email, request.getPassword(), alwaysConfirm(request.getConfirmationKey()));
 
             AccountResponse response;
-            if (createdAccount.isConfirmed()) {
-                response = new AccountResponse(username, email);
-            } else {
+            if (!createdAccount.isConfirmed()) {
                 ConfirmationToken token = accountService.generateConfirmationToken(createdAccount);
                 sendConfirmationEmail(createdAccount, token);
-                response = new AccountResponse(username, email);
             }
+            response = new AccountResponse(username, email);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (UsernameExistsException ex) {
@@ -196,7 +184,7 @@ public class AuthenticationController {
             username = account.getUsername();
 
             AtomicReference<String> error = new AtomicReference<>();
-            authenticateInternal(username, password, error);
+            authenticateInternal(account, password, error);
             String errorMsg = error.get();
 
             if (errorMsg == null) {
@@ -287,19 +275,13 @@ public class AuthenticationController {
     }
 
     /**
-     * Authenticates the username and password with the authentication manager
-     * @param username the username to authenticate with
+     * Authenticates the username and password
+     * @param account the account to authenticate with
      * @param password the password to authenticate with
      * @param error if this is not null, an error occurred
      */
-    private void authenticateInternal(String username, String password, AtomicReference<String> error) {
-        try {
-            authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password));
-        } catch (DisabledException ex) {
-            log.error(ex);
-            error.set(USER_DISABLED);
-        } catch (BadCredentialsException ex) {
-            log.error(ex);
+    private void authenticateInternal(Account account, String password, AtomicReference<String> error) {
+        if (!accountService.authenticateAccount(account, password)) {
             error.set(INVALID_CREDENTIALS);
         }
     }

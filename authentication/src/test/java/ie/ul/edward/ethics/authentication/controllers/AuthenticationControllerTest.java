@@ -24,11 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpHeaders;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.DisabledException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -67,12 +62,6 @@ public class AuthenticationControllerTest {
      */
     @MockBean
     private EmailSender emailSender;
-
-    /**
-     * The mock used for authentication
-     */
-    @MockBean
-    private AuthenticationManager authenticationManager;
 
     /**
      * The mock used for JWT
@@ -241,16 +230,14 @@ public class AuthenticationControllerTest {
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
         String json = JSON.convertJSON(authenticationRequest);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
-
         AuthenticatedAccount authenticatedAccount = createAuthenticatedAccount();
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(), authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
         String resultJson = JSON.convertJSON(authenticationResponse);
 
+        given(accountService.authenticateAccount(account, PASSWORD))
+                .willReturn(true);
         given(accountService.getAccount(USERNAME, false))
                 .willReturn(account);
-        given(authenticationManager.authenticate(authentication))
-                .willReturn(authentication);
         given(jwt.generateToken(account, -1L))
                 .willReturn(JWT_TOKEN);
         given(jwt.getAuthenticatedAccount(JWT_TOKEN))
@@ -263,6 +250,7 @@ public class AuthenticationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
 
+        verify(accountService).authenticateAccount(account, PASSWORD);
         verify(accountService).getAccount(USERNAME, false);
     }
 
@@ -276,19 +264,10 @@ public class AuthenticationControllerTest {
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
         String json = JSON.convertJSON(authenticationRequest);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
-
-        AuthenticatedAccount authenticatedAccount = createAuthenticatedAccount();
         Map<String, Object> authenticationResponse = new HashMap<>();
         authenticationResponse.put(ERROR, ACCOUNT_NOT_CONFIRMED);
         String resultJson = JSON.convertJSON(authenticationResponse);
 
-        given(authenticationManager.authenticate(authentication))
-                .willReturn(authentication);
-        given(jwt.generateToken(account, -1L))
-                .willReturn(JWT_TOKEN);
-        given(jwt.getAuthenticatedAccount(JWT_TOKEN))
-                .willReturn(authenticatedAccount);
         given(accountService.getAccount(USERNAME, false))
                 .willReturn(account);
 
@@ -314,14 +293,12 @@ public class AuthenticationControllerTest {
                 new AuthenticationRequest(account.getEmail(), account.getPassword(), true, null);
         String json = JSON.convertJSON(authenticationRequest);
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
-
         AuthenticatedAccount authenticatedAccount = createAuthenticatedAccount();
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(), authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
         String resultJson = JSON.convertJSON(authenticationResponse);
 
-        given(authenticationManager.authenticate(authentication))
-                .willReturn(authentication);
+        given(accountService.authenticateAccount(account, PASSWORD))
+                .willReturn(true);
         given(accountService.getAccount(EMAIL, true))
                 .willReturn(account);
         given(jwt.generateToken(account, -1L))
@@ -336,6 +313,7 @@ public class AuthenticationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
 
+        verify(accountService).authenticateAccount(account, PASSWORD);
         verify(accountService).getAccount(EMAIL, true);
     }
 
@@ -353,17 +331,14 @@ public class AuthenticationControllerTest {
         String json = JSON.convertJSON(authenticationRequest);
 
         LocalDateTime expiry = LocalDateTime.now().plusHours(24L);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
-
         AuthenticatedAccount authenticatedAccount = new AuthenticatedAccount(USERNAME, JWT_TOKEN, expiry);
 
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(),
                 authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
         String resultJson = JSON.convertJSON(authenticationResponse);
 
-        given(authenticationManager.authenticate(authentication))
-                .willReturn(authentication);
+        given(accountService.authenticateAccount(account, PASSWORD))
+                .willReturn(true);
         given(jwt.generateToken(account, 24L))
                 .willReturn(JWT_TOKEN);
         given(jwt.getAuthenticatedAccount(JWT_TOKEN))
@@ -379,37 +354,7 @@ public class AuthenticationControllerTest {
                 .andExpect(content().json(resultJson));
 
         verify(jwt).generateToken(account, 24L); // verify the correct expiry value was passed in
-        verify(accountService).getAccount(USERNAME, false);
-    }
-
-    /**
-     * This method tests that an error message should be returned if a user is disabled
-     * @throws Exception if an error occurs
-     */
-    @Test
-    public void shouldThrowDisabledErrorOnAuthenticate() throws Exception {
-        Account account = createTestAccount();
-        account.setConfirmed(true);
-        AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
-        String json = JSON.convertJSON(authenticationRequest);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put(ERROR, USER_DISABLED);
-        String resultJson = JSON.convertJSON(response);
-
-        given(accountService.getAccount(USERNAME, false))
-                .willReturn(account);
-        doThrow(DisabledException.class).when(authenticationManager).authenticate(authentication);
-
-        mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
-                .contentType(JSON.MEDIA_TYPE)
-                .content(json))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(JSON.MEDIA_TYPE))
-                .andExpect(content().json(resultJson));
-
+        verify(accountService).authenticateAccount(account, PASSWORD);
         verify(accountService).getAccount(USERNAME, false);
     }
 
@@ -420,16 +365,19 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldThrowInvalidCredentialsErrorOnAuthenticate() throws Exception {
         Account account = createTestAccount();
-        account.setEmail(null);
-        String json = JSON.convertJSON(account);
-
-        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+        account.setConfirmed(true);
+        AuthenticationRequest authenticationRequest =
+                new AuthenticationRequest(account.getUsername(), account.getPassword(), null, 24L);
+        String json = JSON.convertJSON(authenticationRequest);
 
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INVALID_CREDENTIALS);
         String resultJson = JSON.convertJSON(response);
 
-        doThrow(BadCredentialsException.class).when(authenticationManager).authenticate(authentication);
+        given(accountService.authenticateAccount(account, PASSWORD))
+                .willReturn(false);
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(account);
 
         mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
                         .contentType(JSON.MEDIA_TYPE)
@@ -437,6 +385,9 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
+
+        verify(accountService).authenticateAccount(account, PASSWORD);
+        verify(accountService).getAccount(USERNAME, false);
     }
 
     /**

@@ -1,14 +1,16 @@
-package ie.ul.edward.ethics.common.email;
+package ie.ul.edward.ethics.common.email.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 /**
  * This class provides configuration properties for email
  */
 @Configuration
 @ConfigurationProperties(prefix="email")
+@Order(1)
 @Data
 public class EmailConfigurationProperties {
     /**

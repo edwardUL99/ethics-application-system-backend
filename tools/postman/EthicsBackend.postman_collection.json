@@ -59,6 +59,56 @@
 					"response": []
 				},
 				{
+					"name": "Register an Unconfirmed Account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201 Created\", function() {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.username).to.eql(\"test1\");",
+									"    pm.expect(json.email).to.eql(\"test1@gmail.com\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test1\",\n    \"email\": \"test1@gmail.com\",\n    \"password\": \"testPass2\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/register/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"register",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Check if account is confirmed",
 					"event": [
 						{
@@ -194,6 +244,55 @@
 						"body": {
 							"mode": "raw",
 							"raw": "{\n    \"username\": \"test\",\n    \"password\": \"testPass2\",\n    \"expiry\": 336\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/auth/login/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"auth",
+								"login",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login with an unconfirmed account",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 400 Bad Request\", function() {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Response is expected\", function() {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json.error).to.eql(\"account_not_confirmed\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"test1\",\n    \"password\": \"testPass2\"\n}",
 							"options": {
 								"raw": {
 									"language": "json"

@@ -99,6 +99,18 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
+     * Authenticates the account with the provided password
+     *
+     * @param account  the account to authenticate
+     * @param password the password to authenticate with. Should be a raw password
+     * @return true if valid credentials, false otherwise
+     */
+    @Override
+    public boolean authenticateAccount(Account account, String password) {
+        return passwordEncoder.matches(password, account.getPassword());
+    }
+
+    /**
      * Update the account. The provided account should only have the email or password changed and not the username
      *
      * @param account the account with updated details (other than username)

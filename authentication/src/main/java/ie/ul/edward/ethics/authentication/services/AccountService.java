@@ -30,6 +30,14 @@ public interface AccountService extends UserDetailsService {
     void deleteAccount(Account account);
 
     /**
+     * Authenticates the account with the provided password
+     * @param account the account to authenticate
+     * @param password the password to authenticate with. Should be a raw password
+     * @return true if valid credentials, false otherwise
+     */
+    boolean authenticateAccount(Account account, String password);
+
+    /**
      * Update the account. The provided account should only have the email or password changed and not the username
      * @param account the account with updated details (other than username)
      * @throws IllegalUpdateException if the update results in the username or email being one that does not exist
