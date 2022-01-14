@@ -237,11 +237,9 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldAuthenticate() throws Exception {
         Account account = createTestAccount();
+        account.setConfirmed(true);
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
         String json = JSON.convertJSON(authenticationRequest);
-
-        account.setPassword(null); // don't need the password anymore
-        account.setEmail(null); // also don't need the email
 
         Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
 
@@ -249,6 +247,8 @@ public class AuthenticationControllerTest {
         AuthenticationResponse authenticationResponse = new AuthenticationResponse(authenticatedAccount.getUsername(), authenticatedAccount.getJwtToken(), authenticatedAccount.getExpiration());
         String resultJson = JSON.convertJSON(authenticationResponse);
 
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(account);
         given(authenticationManager.authenticate(authentication))
                 .willReturn(authentication);
         given(jwt.generateToken(account, -1L))
@@ -262,6 +262,44 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
+
+        verify(accountService).getAccount(USERNAME, false);
+    }
+
+    /**
+     * This method tests that a registered account is not authenticated if it is not confirmed
+     * @throws Exception if an error occurs
+     */
+    @Test
+    public void shouldNotAuthenticateIfNotConfirmed() throws Exception {
+        Account account = createTestAccount();
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
+        String json = JSON.convertJSON(authenticationRequest);
+
+        Authentication authentication = new UsernamePasswordAuthenticationToken(USERNAME, PASSWORD);
+
+        AuthenticatedAccount authenticatedAccount = createAuthenticatedAccount();
+        Map<String, Object> authenticationResponse = new HashMap<>();
+        authenticationResponse.put(ERROR, ACCOUNT_NOT_CONFIRMED);
+        String resultJson = JSON.convertJSON(authenticationResponse);
+
+        given(authenticationManager.authenticate(authentication))
+                .willReturn(authentication);
+        given(jwt.generateToken(account, -1L))
+                .willReturn(JWT_TOKEN);
+        given(jwt.getAuthenticatedAccount(JWT_TOKEN))
+                .willReturn(authenticatedAccount);
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(account);
+
+        mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(resultJson));
+
+        verify(accountService).getAccount(USERNAME, false);
     }
 
     /**
@@ -271,6 +309,7 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldAuthenticateUsingEmail() throws Exception {
         Account account = createTestAccount();
+        account.setConfirmed(true);
         AuthenticationRequest authenticationRequest =
                 new AuthenticationRequest(account.getEmail(), account.getPassword(), true, null);
         String json = JSON.convertJSON(authenticationRequest);
@@ -307,13 +346,11 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldAuthenticateWithExpiry() throws Exception {
         Account account = createTestAccount();
+        account.setConfirmed(true);
 
         AuthenticationRequest authenticationRequest =
                 new AuthenticationRequest(account.getUsername(), account.getPassword(), null, 24L);
         String json = JSON.convertJSON(authenticationRequest);
-
-        account.setPassword(null); // don't need the password anymore
-        account.setEmail(null); // also don't need the email
 
         LocalDateTime expiry = LocalDateTime.now().plusHours(24L);
 
@@ -331,6 +368,8 @@ public class AuthenticationControllerTest {
                 .willReturn(JWT_TOKEN);
         given(jwt.getAuthenticatedAccount(JWT_TOKEN))
                 .willReturn(authenticatedAccount);
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(account);
 
         mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
                         .contentType(JSON.MEDIA_TYPE)
@@ -339,7 +378,8 @@ public class AuthenticationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
 
-        verify(jwt).generateToken(account, 24L); // verify the correct expory value was passed in
+        verify(jwt).generateToken(account, 24L); // verify the correct expiry value was passed in
+        verify(accountService).getAccount(USERNAME, false);
     }
 
     /**
@@ -349,6 +389,7 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldThrowDisabledErrorOnAuthenticate() throws Exception {
         Account account = createTestAccount();
+        account.setConfirmed(true);
         AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
         String json = JSON.convertJSON(authenticationRequest);
 
@@ -358,6 +399,8 @@ public class AuthenticationControllerTest {
         response.put(ERROR, USER_DISABLED);
         String resultJson = JSON.convertJSON(response);
 
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(account);
         doThrow(DisabledException.class).when(authenticationManager).authenticate(authentication);
 
         mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
@@ -366,6 +409,8 @@ public class AuthenticationControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(resultJson));
+
+        verify(accountService).getAccount(USERNAME, false);
     }
 
     /**

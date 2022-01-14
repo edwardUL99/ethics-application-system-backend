@@ -3,7 +3,9 @@ package ie.ul.edward.ethics.common.email;
 import ie.ul.edward.ethics.common.email.exceptions.EmailException;
 
 /**
- * This interface represents an object that can send emails
+ * This interface represents an object that can send emails.
+ *
+ * Email sending should be disabled if the system property email.disable is set
  */
 public interface EmailSender {
     /**

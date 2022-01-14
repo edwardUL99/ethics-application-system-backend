@@ -177,20 +177,6 @@ public class AuthenticationController {
     }
 
     /**
-     * Looks up the account with username as email if useEmail is true.
-     * Otherwise, returns an account with username and all other fields null.
-     * @param username the username/email
-     * @param useEmail true if username is an email and to lookup the true username, else just use it as username
-     * @return the created account
-     */
-    private Account accountLookup(String username, boolean useEmail) {
-        if (useEmail)
-            return accountService.getAccount(username, true);
-        else
-            return new Account(username, null, null, false);
-    }
-
-    /**
      * The endpoint for authentication
      * @param request the authentication request object
      * @return the response of the request
@@ -200,10 +186,12 @@ public class AuthenticationController {
         String username = request.getUsername();
         String password = request.getPassword();
 
-        Account account = accountLookup(username, request.isEmail());
+        Account account = accountService.getAccount(username, request.isEmail());
 
         if (account == null) {
             return respondError(INVALID_CREDENTIALS);
+        } else if (!account.isConfirmed()) {
+            return respondError(ACCOUNT_NOT_CONFIRMED);
         } else {
             username = account.getUsername();
 

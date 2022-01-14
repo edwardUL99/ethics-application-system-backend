@@ -57,6 +57,11 @@ public final class Constants {
     public static final String INVALID_CREDENTIALS = "invalid_credentials";
 
     /**
+     * An error message for when attempting to authenticate with an account that is not confirmed
+     */
+    public static final String ACCOUNT_NOT_CONFIRMED = "account_not_confirmed";
+
+    /**
      * A constant used for when an account is updated correctly
      */
     public static final String ACCOUNT_UPDATED = "account_updated";

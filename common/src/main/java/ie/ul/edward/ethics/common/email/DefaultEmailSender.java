@@ -1,6 +1,7 @@
 package ie.ul.edward.ethics.common.email;
 
 import ie.ul.edward.ethics.common.email.exceptions.EmailException;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -15,6 +16,7 @@ import java.util.Properties;
  * This provides the default implementation of the EmailSender interface
  */
 @Component
+@Log4j2
 public class DefaultEmailSender implements EmailSender {
     /**
      * Configuration properties for the email package
@@ -33,22 +35,27 @@ public class DefaultEmailSender implements EmailSender {
     public DefaultEmailSender(EmailConfigurationProperties configurationProperties) {
         this.configurationProperties = configurationProperties;
 
-        Properties properties = System.getProperties();
-        properties.put("mail.smtp.host", configurationProperties.getHost());
-        properties.put("mail.smtp.port", configurationProperties.getPort());
-        properties.put("mail.smtp.ssl.enable", "true");
-        properties.put("mail.smtp.auth", "true");
-        properties.put("mail.smtp.ssl.protocols", "TLSv1.2");
+        if (System.getProperty("email.disable") != null) {
+            this.session = null;
+            log.info("System property email.disable is set, so sendEmail will be a no-op");
+        } else {
+            Properties properties = System.getProperties();
+            properties.put("mail.smtp.host", configurationProperties.getHost());
+            properties.put("mail.smtp.port", configurationProperties.getPort());
+            properties.put("mail.smtp.ssl.enable", "true");
+            properties.put("mail.smtp.auth", "true");
+            properties.put("mail.smtp.ssl.protocols", "TLSv1.2");
 
-        Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
-            protected PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(configurationProperties.getFrom(), configurationProperties.getPassword());
-            }
-        });
+            Session session = Session.getInstance(properties, new javax.mail.Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(configurationProperties.getFrom(), configurationProperties.getPassword());
+                }
+            });
 
-        session.setDebug(configurationProperties.isDebug());
+            session.setDebug(configurationProperties.isDebug());
 
-        this.session = session;
+            this.session = session;
+        }
     }
 
     /**
@@ -61,6 +68,9 @@ public class DefaultEmailSender implements EmailSender {
      */
     @Override
     public void sendEmail(String to, String subject, String email) throws EmailException {
+        if (this.session == null)
+            return;
+
         try {
             MimeMessage message = new MimeMessage(session);
             message.setFrom(new InternetAddress(configurationProperties.getFrom()));
