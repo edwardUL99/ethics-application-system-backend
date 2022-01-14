@@ -14,19 +14,19 @@ public class EmailConfigurationProperties {
     /**
      * The sender email
      */
-    private String from;
+    private String from = "";
     /**
      * The host of the email server
      */
-    private String host;
+    private String host = "";
     /**
      * The port of the email server
      */
-    private String port;
+    private String port = "";
     /**
      * The password of the email account
      */
-    private String password;
+    private String password = "";
     /**
      * Enables/Disables email debug
      */
