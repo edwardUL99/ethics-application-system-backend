@@ -13,7 +13,7 @@ import java.util.Map;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-public class MultipartQuestionComponent extends ApplicationComponent {
+public class MultipartQuestionComponent extends QuestionComponent {
     /**
      * Determines if this question is conditional. If not, all branches are disabled and all question parts shown regardless
      * of a condition being met
@@ -23,21 +23,22 @@ public class MultipartQuestionComponent extends ApplicationComponent {
      * The mapping of part ID/number to the QuestionPart object
      */
     private Map<String, QuestionPart> parts;
-
     /**
      * Create a default MultipartQuestionComponent
      */
     public MultipartQuestionComponent() {
-        this(true, new HashMap<>());
+        this(null, DEFAULT_REQUIRED,true, new HashMap<>());
     }
 
     /**
-     * Create a MultipartQuestionBranch
+     * Create a MultipartQuestionComponent
+     * @param title the title of the question, default null
+     * @param required true if required, false if not
      * @param conditional true if its conditional, false if not
      * @param parts the map of part IDs to parts
      */
-    public MultipartQuestionComponent(boolean conditional, Map<String, QuestionPart> parts) {
-        super(ComponentTypes.MULTIPART_QUESTION, null);
+    public MultipartQuestionComponent(String title, boolean required, boolean conditional, Map<String, QuestionPart> parts) {
+        super(ComponentTypes.MULTIPART_QUESTION, title, null, null, required);
         this.conditional = conditional;
         this.parts = parts;
     }

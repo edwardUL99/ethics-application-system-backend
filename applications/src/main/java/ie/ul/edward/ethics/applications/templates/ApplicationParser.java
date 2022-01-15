@@ -9,12 +9,11 @@ import java.io.InputStream;
  */
 public interface ApplicationParser {
     /**
-     * Parse the provided resource into application(s). If the resource represents multiple applications (for example, an
-     * expedited and full application form), the applications will be returned in the array, otherwise, it will be an
+     * Parse the provided input streams into application(s). The applications will be returned in the array, otherwise, it will be an
      * array with one element
-     * @param inputStream the input stream of the application file to parse
+     * @param inputStreams the input streams of the application files to parse
      * @return the array of parsed applications
      * @throws ApplicationParseException if the application being parsed is not valid or another exception occurs
      */
-    ApplicationTemplate[] parse(InputStream inputStream) throws ApplicationParseException;
+    ApplicationTemplate[] parse(InputStream...inputStreams) throws ApplicationParseException;
 }

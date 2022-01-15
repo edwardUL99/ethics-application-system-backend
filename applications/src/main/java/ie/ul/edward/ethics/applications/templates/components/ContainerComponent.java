@@ -14,7 +14,7 @@ import java.util.List;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-public class ContainerComponent extends ApplicationComponent {
+public class ContainerComponent extends CompositeComponent {
     /**
      * The ID of the container
      */
@@ -38,6 +38,7 @@ public class ContainerComponent extends ApplicationComponent {
      */
     public ContainerComponent(String id, List<ApplicationComponent> components) {
         super(ComponentTypes.CONTAINER, null);
+        this.id = id;
         this.components = components;
     }
 

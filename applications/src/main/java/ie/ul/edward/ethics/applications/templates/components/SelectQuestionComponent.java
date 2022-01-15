@@ -31,20 +31,21 @@ public class SelectQuestionComponent extends QuestionComponent {
      * Create a default select question component
      */
     public SelectQuestionComponent() {
-        this(null, null, false, false, new ArrayList<>(), false);
+        this(null, null, null, DEFAULT_REQUIRED, false, new ArrayList<>(), false);
     }
 
     /**
      * Create a SelectQuestionComponent
      * @param title the title of the question
+     * @param name the name to give to the question
      * @param description the description of the question
      * @param required true if the question requires an answer, false if not
      * @param multiple true if multiple responses are allowed
      * @param options the list of options to add to the question
      * @param addOther true if an 'Other' text field should be added
      */
-    public SelectQuestionComponent(String title, String description, boolean required, boolean multiple, List<Option> options, boolean addOther) {
-        super(ComponentTypes.SELECT_QUESTION, title, description, required);
+    public SelectQuestionComponent(String title, String name, String description, boolean required, boolean multiple, List<Option> options, boolean addOther) {
+        super(ComponentTypes.SELECT_QUESTION, title, name, description, required);
         this.multiple = multiple;
         this.options = options;
         this.addOther = addOther;

@@ -38,15 +38,15 @@ public final class ComponentTypes {
     /**
      * This type is used for replacement branches
      */
-    public static final String REPLACEMENT_BRANCH = "replacement-branch";
+    public static final String REPLACEMENT_BRANCH = "replacement";
     /**
      * This type is used for action branches
      */
-    public static final String ACTION_BRANCH = "action-branch";
+    public static final String ACTION_BRANCH = "action";
     /**
      * This type is used for question branches
      */
-    public static final String QUESTION_BRANCH = "question-branch";
+    public static final String QUESTION_BRANCH = "question";
     /**
      * This type is used for a question that is a checkbox
      */

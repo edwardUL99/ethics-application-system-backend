@@ -20,13 +20,7 @@ public class ContainerConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("id", "components"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The container component is missing keys");
+        Converters.validateKeys(ComponentTypes.CONTAINER, map.keySet(), "id", "components");
 
         if (!List.class.isAssignableFrom(map.get("components").getClass()))
             throw new ApplicationParseException("components is expected to be a list but it is not");

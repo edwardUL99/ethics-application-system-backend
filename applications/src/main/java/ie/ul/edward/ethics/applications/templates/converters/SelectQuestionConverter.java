@@ -2,6 +2,7 @@ package ie.ul.edward.ethics.applications.templates.converters;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
 import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.QuestionComponent;
 import ie.ul.edward.ethics.applications.templates.components.SelectQuestionComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
@@ -20,13 +21,7 @@ public class SelectQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("title", "multiple", "options"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The select question component is missing keys");
+        Converters.validateKeys(ComponentTypes.SELECT_QUESTION, map.keySet(), "title", "name", "multiple", "options");
 
         if (!List.class.isAssignableFrom(map.get("options").getClass()))
             throw new ApplicationParseException("The options field must map to a List");
@@ -57,7 +52,9 @@ public class SelectQuestionConverter implements ComponentConverter {
             }
         }
 
-        return new SelectQuestionComponent((String)map.get("title"), (String)map.getOrDefault("description", null), (boolean)map.getOrDefault("required", false),
+        return new SelectQuestionComponent((String)map.get("title"), (String)map.get("name"),
+                Converters.parseLongString(ComponentTypes.SELECT_QUESTION, "description", map.getOrDefault("description", null)),
+                (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED),
                 (boolean)map.get("multiple"), options, (boolean)map.getOrDefault("addOther", false));
     }
 }

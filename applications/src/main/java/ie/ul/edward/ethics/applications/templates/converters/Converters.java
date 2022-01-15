@@ -5,9 +5,7 @@ import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseExc
 import lombok.extern.log4j.Log4j2;
 import org.reflections.Reflections;
 
-import java.lang.reflect.Modifier;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static org.reflections.scanners.Scanners.TypesAnnotated;
 
@@ -65,5 +63,51 @@ public final class Converters {
             throw new ApplicationParseException("The application does not know how to convert a component of type " + type);
 
         return converter;
+    }
+
+    /**
+     * Validate that the provided keys provide all the required keys
+     * @param componentType the type of the component being validated
+     * @param keys the keys to validate
+     * @param required the required keys
+     * @throws ApplicationParseException if required keys are missing
+     */
+    public static void validateKeys(String componentType, Set<String> keys, String...required) throws ApplicationParseException {
+        Set<String> requiredKeys = new TreeSet<>(List.of(required));
+        Set<String> difference = new TreeSet<>(requiredKeys);
+        difference.retainAll(keys);
+
+        if (difference.size() != requiredKeys.size())
+            throw new ApplicationParseException("The " + componentType + " component is missing keys, required keys are: " + requiredKeys);
+    }
+
+    /**
+     * This method parses a string that may be a single string or broken into an array and needs concatenation
+     * @param componentType the component type being converted
+     * @param field the name of the field being parsed
+     * @param string the string to process
+     */
+    @SuppressWarnings("unchecked")
+    public static String parseLongString(String componentType, String field, Object string) {
+        if (string == null)
+            return null;
+
+        String text;
+        if (string instanceof String) {
+            text = (String)string;
+        } else if (string instanceof List) {
+            StringBuilder builder = new StringBuilder();
+
+            for (String s : (List<String>)string) {
+                builder.append(s);
+            }
+
+            text = builder.toString();
+        } else {
+            throw new ApplicationParseException("Illegal value of the " + field + " field in the " + componentType + " element. The only allowed types is" +
+                    " a single string or an array of strings");
+        }
+
+        return text;
     }
 }

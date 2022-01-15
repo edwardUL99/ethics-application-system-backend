@@ -5,10 +5,7 @@ import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
 import ie.ul.edward.ethics.applications.templates.components.SignatureQuestionComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * This class converts maps into signature questions
@@ -23,13 +20,7 @@ public class SignatureQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("title", "description"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The signature question component is missing keys");
+        Converters.validateKeys(ComponentTypes.SIGNATURE, map.keySet(), "title", "name", "label");
     }
 
     /**
@@ -44,6 +35,8 @@ public class SignatureQuestionConverter implements ComponentConverter {
     public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
         validate(map);
 
-        return new SignatureQuestionComponent((String)map.get("title"), (String)map.get("description"));
+        return new SignatureQuestionComponent((String)map.get("title"), (String)map.get("name"),
+                Converters.parseLongString(ComponentTypes.SIGNATURE, "description", map.getOrDefault("description", null)),
+                (String)map.get("label"));
     }
 }

@@ -22,22 +22,29 @@ public abstract class ApplicationComponent {
      * The component title
      */
     protected String title;
+    /**
+     * This field indicates a component that can contain other components if true
+     */
+    @Setter(AccessLevel.NONE)
+    private boolean composite;
 
     /**
      * Create a default ApplicationComponent
      */
     public ApplicationComponent() {
-        this(null, null);
+        this(null, null, false);
     }
 
     /**
      * Create an ApplicationComponent with the provided type, title and description
      * @param type the type of the component
      * @param title the component title
+     * @param composite true if a composite component (i.e. has a getComponents() method), false if not
      */
-    public ApplicationComponent(String type, String title) {
+    public ApplicationComponent(String type, String title, boolean composite) {
         this.setType(type);
         this.title = title;
+        this.composite = composite;
     }
 
     /**

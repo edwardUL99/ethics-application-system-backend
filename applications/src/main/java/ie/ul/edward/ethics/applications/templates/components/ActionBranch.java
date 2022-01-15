@@ -24,7 +24,7 @@ public class ActionBranch extends Branch {
      * Create a default ActionBranch
      */
     public ActionBranch() {
-
+        this(null, null);
     }
 
     /**

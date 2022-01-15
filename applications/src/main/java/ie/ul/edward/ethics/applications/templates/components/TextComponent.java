@@ -10,7 +10,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-public class TextComponent extends ApplicationComponent {
+public class TextComponent extends SimpleComponent {
     /**
      * The text content to display
      */

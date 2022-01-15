@@ -12,7 +12,7 @@ import java.util.List;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-public class CheckboxGroupComponent extends ApplicationComponent {
+public class CheckboxGroupComponent extends SimpleComponent {
     /**
      * The default branch to execute
      */
@@ -21,12 +21,16 @@ public class CheckboxGroupComponent extends ApplicationComponent {
      * The list of checkboxes in the group
      */
     private List<Checkbox> checkboxes;
+    /**
+     * Determines if multiple options can be chosen in the group, the default is false
+     */
+    private boolean multiple;
 
     /**
      * Create a default CheckboxGroupComponent
      */
     public CheckboxGroupComponent() {
-        this(null, null, new ArrayList<>());
+        this(null, null, new ArrayList<>(), false);
     }
 
     /**
@@ -34,11 +38,13 @@ public class CheckboxGroupComponent extends ApplicationComponent {
      * @param title the title of the component
      * @param defaultBranch the default branch to execute
      * @param checkboxes the list of checkboxes in the group
+     * @param multiple true if multiple can be chosen, false if not
      */
-    public CheckboxGroupComponent(String title, Branch defaultBranch, List<Checkbox> checkboxes) {
+    public CheckboxGroupComponent(String title, Branch defaultBranch, List<Checkbox> checkboxes, boolean multiple) {
         super(ComponentTypes.CHECKBOX_GROUP, title);
         this.defaultBranch  = defaultBranch;
         this.checkboxes = checkboxes;
+        this.multiple = multiple;
     }
 
     /**

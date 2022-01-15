@@ -20,13 +20,7 @@ public class SectionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("type", "title", "description", "components"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The section component is missing keys");
+        Converters.validateKeys(ComponentTypes.SECTION, map.keySet(), "title", "components");
 
         if (!List.class.isAssignableFrom(map.get("components").getClass()))
             throw new ApplicationParseException("components is expected to be a list but it is not");
@@ -48,6 +42,7 @@ public class SectionConverter implements ComponentConverter {
         for (Map<String, Object> sub : (List<Map<String, Object>>)map.get("components"))
             subComponents.add(Converters.getConverter((String)sub.get("type")).convert(sub));
 
-        return new SectionComponent((String)map.get("title"), (String)map.get("description"), subComponents);
+        return new SectionComponent((String)map.get("title"),
+                Converters.parseLongString(ComponentTypes.SECTION, "description", map.getOrDefault("description", null)), subComponents);
     }
 }

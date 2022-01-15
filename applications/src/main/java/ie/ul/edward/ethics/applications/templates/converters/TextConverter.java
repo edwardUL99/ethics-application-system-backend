@@ -5,10 +5,7 @@ import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
 import ie.ul.edward.ethics.applications.templates.components.TextComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
 
 /**
  * This converter converts the map to a text component
@@ -23,13 +20,7 @@ public class TextConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("title", "content"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The container component is missing keys");
+        Converters.validateKeys(ComponentTypes.TEXT, map.keySet(), "title", "content");
     }
 
     /**
@@ -44,6 +35,9 @@ public class TextConverter implements ComponentConverter {
     public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
         validate(map);
 
-        return new TextComponent((String)map.get("title"), (String)map.get("content"));
+        Object contentObj = map.get("content");
+        String content = Converters.parseLongString(ComponentTypes.TEXT, "content", contentObj);
+
+        return new TextComponent((String)map.get("title"), content);
     }
 }

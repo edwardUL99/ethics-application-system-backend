@@ -13,7 +13,7 @@ import java.util.List;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-public class SectionComponent extends ApplicationComponent {
+public class SectionComponent extends CompositeComponent {
     /**
      * The section's description
      */

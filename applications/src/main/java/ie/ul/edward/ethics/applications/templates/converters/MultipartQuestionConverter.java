@@ -18,13 +18,7 @@ public class MultipartQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("title", "conditional", "parts"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The multipart question component is missing keys");
+        Converters.validateKeys(ComponentTypes.MULTIPART_QUESTION, map.keySet(), "conditional", "parts");
 
         if (!Map.class.isAssignableFrom(map.get("parts").getClass()))
             throw new ApplicationParseException("The parts field must map to a map");
@@ -64,7 +58,7 @@ public class MultipartQuestionConverter implements ComponentConverter {
                 throw new ApplicationParseException("A question part needs to contain a branches list");
 
             Map<String, Object> question = (Map<String, Object>)partMap.get("question");
-            QuestionComponent questionComponent = (QuestionComponent)Converters.getConverter((String)question.get("type"));
+            QuestionComponent questionComponent = (QuestionComponent)Converters.getConverter((String)question.get("type")).convert(question);
             List<MultipartQuestionComponent.QuestionBranch> branches = new ArrayList<>();
 
             for (Map<String, Object> branch : (List<Map<String, Object>>)partMap.get("branches")) {
@@ -74,6 +68,6 @@ public class MultipartQuestionConverter implements ComponentConverter {
             parts.put(part, new MultipartQuestionComponent.QuestionPart(questionComponent, branches));
         }
 
-        return new MultipartQuestionComponent((boolean)map.get("conditional"), parts);
+        return new MultipartQuestionComponent((String)map.getOrDefault("title", null), (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), (boolean)map.get("conditional"), parts);
     }
 }

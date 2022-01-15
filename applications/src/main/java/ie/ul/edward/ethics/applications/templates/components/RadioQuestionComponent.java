@@ -14,17 +14,19 @@ public class RadioQuestionComponent extends SelectQuestionComponent {
      * Create a default RadioQuestionComponent
      */
     public RadioQuestionComponent() {
-        this(null, false, new ArrayList<>());
+        this(null, null, null, QuestionComponent.DEFAULT_REQUIRED, new ArrayList<>());
     }
 
     /**
      * Create a RadioQuestionComponent
      * @param title the title of the component
+     * @param description the question description
+     * @param name the name to give to the question
      * @param required true if required or not
      * @param options the options for the checkbox
      */
-    public RadioQuestionComponent(String title, boolean required, List<SelectQuestionComponent.Option> options) {
-        super(title, null, required, false, options, false);
+    public RadioQuestionComponent(String title, String name, String description, boolean required, List<SelectQuestionComponent.Option> options) {
+        super(title, name, description, required, false, options, false);
         setType(ComponentTypes.RADIO_QUESTION);
     }
 }

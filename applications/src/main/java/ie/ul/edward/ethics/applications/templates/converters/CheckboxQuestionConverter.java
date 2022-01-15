@@ -1,9 +1,6 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
-import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import ie.ul.edward.ethics.applications.templates.components.CheckboxQuestionComponent;
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
-import ie.ul.edward.ethics.applications.templates.components.SelectQuestionComponent;
+import ie.ul.edward.ethics.applications.templates.components.*;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
 import java.util.*;
@@ -21,13 +18,7 @@ public class CheckboxQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("title", "options"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The checkbox question component is missing keys");
+        Converters.validateKeys(ComponentTypes.CHECKBOX_QUESTION, map.keySet(), "title", "name", "options");
 
         if (!List.class.isAssignableFrom(map.get("options").getClass()))
             throw new ApplicationParseException("The options field must map to a List");
@@ -58,6 +49,8 @@ public class CheckboxQuestionConverter implements ComponentConverter {
             }
         }
 
-        return new CheckboxQuestionComponent((String)map.get("title"), (boolean)map.getOrDefault("required", false), options);
+        return new CheckboxQuestionComponent((String)map.get("title"), (String)map.get("name"),
+                Converters.parseLongString(ComponentTypes.CHECKBOX_QUESTION, "description", map.getOrDefault("description", null)),
+                (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), options);
     }
 }

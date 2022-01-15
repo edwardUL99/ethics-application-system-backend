@@ -58,32 +58,27 @@ public class JSONApplicationParser implements ApplicationParser {
     }
 
     /**
-     * Parse the provided resource into application(s). If the resource represents multiple applications (for example, an
-     * expedited and full application form), the applications will be returned in the array, otherwise, it will be an
+     * Parse the provided input streams into application(s). The applications will be returned in the array, otherwise, it will be an
      * array with one element
-     *
-     * @param inputStream the input stream of the json to parse
+     * @param inputStreams the input streams of the application files to parse
      * @return the array of parsed applications
      * @throws ApplicationParseException if the application being parsed is not valid or another exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationTemplate[] parse(InputStream inputStream) throws ApplicationParseException {
+    public ApplicationTemplate[] parse(InputStream...inputStreams) throws ApplicationParseException {
         List<ApplicationTemplate> applications = new ArrayList<>();
 
-        try {
-            Object jsonObject = objectMapper.readValue(inputStream, Object.class);
-            Map<String, Object> map = (Map<String, Object>) jsonObject;
+        for (InputStream stream : inputStreams) {
+            try {
+                Object jsonObject = objectMapper.readValue(stream, Object.class);
+                Map<String, Object> map = (Map<String, Object>) jsonObject;
 
-            if (!map.containsKey("applications"))
-                throw new ApplicationParseException("The applications file needs to be a JSON object with a key applications mapping to application objects");
-
-            for (Map.Entry<String, Map<String, Object>> e : ((Map<String, Map<String, Object>>)map.get("applications")).entrySet()) {
-                applications.add(parseApplication(e.getValue()));
+                applications.add(parseApplication(map));
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                throw new ApplicationParseException("Failed to parse application JSON", ex);
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            throw new ApplicationParseException("Failed to parse application JSON", ex);
         }
 
         ApplicationTemplate[] applications1 = new ApplicationTemplate[applications.size()];

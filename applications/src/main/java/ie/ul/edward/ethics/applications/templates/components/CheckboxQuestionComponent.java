@@ -14,17 +14,19 @@ public class CheckboxQuestionComponent extends SelectQuestionComponent {
      * Create a default CheckboxQuestionComponent
      */
     public CheckboxQuestionComponent() {
-        this(null, false, new ArrayList<>());
+        this(null, null, null, DEFAULT_REQUIRED, new ArrayList<>());
     }
 
     /**
      * Create a CheckboxQuestionComponent
      * @param title the title of the component
+     * @param name the name to give to the question
+     * @param description question description
      * @param required true if required or not
      * @param options the options for the checkbox
      */
-    public CheckboxQuestionComponent(String title, boolean required, List<Option> options) {
-        super(title, null, required, true, options, false);
+    public CheckboxQuestionComponent(String title, String name, String description, boolean required, List<Option> options) {
+        super(title, name, description, required, true, options, false);
         setType(ComponentTypes.CHECKBOX_QUESTION);
     }
 }

@@ -18,13 +18,7 @@ public class CheckboxGroupConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Set<String> keys = map.keySet();
-        Set<String> requiredKeys = new TreeSet<>(List.of("title", "defaultBranch", "checkboxes"));
-        Set<String> difference = new TreeSet<>(requiredKeys);
-        difference.retainAll(keys);
-
-        if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The checkbox group component is missing keys");
+        Converters.validateKeys(ComponentTypes.CHECKBOX_GROUP, map.keySet(), "title", "defaultBranch", "checkboxes");
 
         if (!Map.class.isAssignableFrom(map.get("defaultBranch").getClass()))
             throw new ApplicationParseException("The defaultBranch field must be a map");
@@ -43,7 +37,7 @@ public class CheckboxGroupConverter implements ComponentConverter {
         String type = (String)branch.get("type");
 
         if (ComponentTypes.ACTION_BRANCH.equals(type)) {
-            return new ActionBranch((String)branch.get("action"), (String)branch.getOrDefault("reason", null));
+            return new ActionBranch((String)branch.get("action"), (String)branch.getOrDefault("comment", null));
         } else if (ComponentTypes.REPLACEMENT_BRANCH.equals(type)) {
             List<ReplacementBranch.Replacement> replacements = new ArrayList<>();
 
@@ -80,6 +74,6 @@ public class CheckboxGroupConverter implements ComponentConverter {
             checkboxes.add(new CheckboxGroupComponent.Checkbox(title, branch));
         }
 
-        return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes);
+        return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false));
     }
 }
