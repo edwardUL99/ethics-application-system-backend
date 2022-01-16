@@ -14,7 +14,7 @@
           "name": "principal_investigator_name",
           "singleLine": true,
           "questionType": "text",
-          "_comment": "A Text Question represents a standard HTML input/textarea. It is a textarea if singleLine if false. True is default"
+          "_comment": "A Text Question represents a standard HTML input/textarea. It is a textarea if singleLine is false. True is default"
         },
         {
           "type": "text-question",
@@ -107,8 +107,13 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full-body"
+                    "expedited-body": "full.full-body"
                   }
+                ],
+                "_comment": [
+                  "This branch replaces the container with ID on the left side with the container of the ID on the right side. ",
+                  "If the ID isn't within this template, put <application>.<container> where application is the template's id field and container is the container ID in that template.",
+                  " Example: full is the ID of the full.json template, and full-body is the ID of the full-body container"
                 ]
               },
               "checkboxes": [

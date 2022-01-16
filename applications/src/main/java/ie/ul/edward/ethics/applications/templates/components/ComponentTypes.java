@@ -64,6 +64,10 @@ public final class ComponentTypes {
      */
     public static final String CHECKBOX_GROUP = "checkbox-group";
     /**
+     * This type is used for a component that contains columns and rows of inputs giving answers to those inputs
+     */
+    public static final String QUESTION_TABLE = "question-table";
+    /**
      * List of all the registered types in this class
      */
     private static final List<String> COMPONENT_TYPES = new ArrayList<>();

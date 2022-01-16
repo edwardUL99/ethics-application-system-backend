@@ -14,7 +14,7 @@
           "name": "principal_investigator_name",
           "singleLine": true,
           "questionType": "text",
-          "_comment": "A Text Question represents a standard HTML input/textarea. It is a textarea if singleLine if false. True is default"
+          "_comment": "A Text Question represents a standard HTML input/textarea. It is a textarea if singleLine is false. True is default"
         },
         {
           "type": "text-question",
@@ -27,10 +27,7 @@
           "title": "",
           "name": "supervisor_review_confirmation",
           "options": [
-            {
-              "label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review",
-              "value": "agree"
-            }
+            {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "agree"}
           ]
         },
         {

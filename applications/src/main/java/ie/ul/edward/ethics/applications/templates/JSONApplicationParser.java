@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
 import ie.ul.edward.ethics.applications.templates.converters.Converters;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -14,6 +15,7 @@ import java.util.*;
  * Implementation of the application parser interface
  */
 @Component
+@Log4j2
 public class JSONApplicationParser implements ApplicationParser {
     /**
      * The mapper for mapping JSON
@@ -74,7 +76,9 @@ public class JSONApplicationParser implements ApplicationParser {
                 Object jsonObject = objectMapper.readValue(stream, Object.class);
                 Map<String, Object> map = (Map<String, Object>) jsonObject;
 
-                applications.add(parseApplication(map));
+                ApplicationTemplate parsed = parseApplication(map);
+                log.info("Parsed application template with id: {}, and name: {}", parsed.getId(), parsed.getName());
+                applications.add(parsed);
             } catch (IOException ex) {
                 ex.printStackTrace();
                 throw new ApplicationParseException("Failed to parse application JSON", ex);

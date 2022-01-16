@@ -24,7 +24,7 @@ public class TextQuestionComponent extends QuestionComponent {
      * Create a default TextQuestionComponent
      */
     public TextQuestionComponent() {
-        this(null, null, null, DEFAULT_REQUIRED, false, "text");
+        this(null, null, null, DEFAULT_REQUIRED, true, "text");
     }
 
     /**

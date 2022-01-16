@@ -46,7 +46,7 @@ public final class Converters {
             }
         }
 
-        log.info("Registered {} ComponentConverters successfully", converters.size());
+        log.info("Registered {} Application Template ComponentConverters successfully", converters.size());
     }
 
     /**
@@ -56,6 +56,10 @@ public final class Converters {
      * @throws ApplicationParseException if it cannot be found
      */
     public static ComponentConverter getConverter(String type) throws ApplicationParseException {
+        if (type == null)
+            throw new ApplicationParseException("A null type value has been passed into Converters#getConverter. " +
+                    "Has a key type with the component type been defined in the JSON component object?");
+
         type = type.toLowerCase();
         ComponentConverter converter = converters.get(type);
 

@@ -20,7 +20,9 @@ public class CheckboxGroupConverter implements ComponentConverter {
     public void validate(Map<String, Object> map) throws ApplicationParseException {
         Converters.validateKeys(ComponentTypes.CHECKBOX_GROUP, map.keySet(), "title", "defaultBranch", "checkboxes");
 
-        if (!Map.class.isAssignableFrom(map.get("defaultBranch").getClass()))
+        Object defaultBranch = map.get("defaultBranch");
+
+        if (defaultBranch != null && !Map.class.isAssignableFrom(defaultBranch.getClass()))
             throw new ApplicationParseException("The defaultBranch field must be a map");
 
         if (!List.class.isAssignableFrom(map.get("checkboxes").getClass()))
@@ -34,6 +36,9 @@ public class CheckboxGroupConverter implements ComponentConverter {
      */
     @SuppressWarnings("unchecked")
     private Branch parseBranch(Map<String, Object> branch) {
+        if (branch == null)
+            return null;
+
         String type = (String)branch.get("type");
 
         if (ComponentTypes.ACTION_BRANCH.equals(type)) {
