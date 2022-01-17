@@ -59,7 +59,7 @@ public class QuestionTableConverter implements ComponentConverter {
         Map<String, Map<String, Object>> columns = (Map<String, Map<String, Object>>) map.get("columns");
         int numRows = (int) map.get("numRows");
 
-        Map<String, List<QuestionComponent>> columnsMap = new HashMap<>();
+        Map<String, QuestionTableComponent.Cells> columnsMap = new HashMap<>();
 
         for (Map.Entry<String, Map<String, Object>> e : columns.entrySet()) {
             String column = e.getKey();
@@ -77,10 +77,11 @@ public class QuestionTableConverter implements ComponentConverter {
                 QuestionComponent questionComponent = (QuestionComponent) applicationComponent;
 
                 questionComponent.setName(questionComponent.getName() + "_" + (i+1));
+                questionComponent.setComponentId(questionComponent.getName());
                 questionComponents.add(questionComponent);
             }
 
-            columnsMap.put(column, questionComponents);
+            columnsMap.put(column, new QuestionTableComponent.Cells(null, column, questionComponents));
         }
 
         return new QuestionTableComponent(columnsMap);

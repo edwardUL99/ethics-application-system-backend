@@ -1,19 +1,26 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.Entity;
+import javax.persistence.Lob;
+import java.util.Objects;
 
 /**
  * This component represents a simple text item
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class TextComponent extends SimpleComponent {
     /**
      * The text content to display
      */
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
     private String content;
 
     /**
@@ -31,5 +38,24 @@ public class TextComponent extends SimpleComponent {
     public TextComponent(String title, String content) {
         super(ComponentTypes.TEXT, title);
         this.content = content;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        TextComponent that = (TextComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

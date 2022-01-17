@@ -4,6 +4,10 @@ import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseExc
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.*;
+import java.util.UUID;
 
 /**
  * This class represents an abstract application component. Any component that can be added to a ApplicationTemplate must extend
@@ -12,7 +16,15 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public abstract class ApplicationComponent {
+    /**
+     * The ID of the component in the database
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.TABLE)
+    protected Long databaseId;
     /**
      * The type of the component
      */
@@ -21,12 +33,18 @@ public abstract class ApplicationComponent {
     /**
      * The component title
      */
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
     protected String title;
     /**
      * This field indicates a component that can contain other components if true
      */
     @Setter(AccessLevel.NONE)
     private boolean composite;
+    /**
+     * The ID of the component that will be mapped to the ID of the html element
+     */
+    private String componentId;
 
     /**
      * Create a default ApplicationComponent
@@ -45,6 +63,7 @@ public abstract class ApplicationComponent {
         this.setType(type);
         this.title = title;
         this.composite = composite;
+        this.componentId = UUID.randomUUID().toString();
     }
 
     /**

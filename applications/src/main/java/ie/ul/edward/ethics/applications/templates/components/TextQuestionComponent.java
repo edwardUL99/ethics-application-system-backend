@@ -1,15 +1,18 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
+
+import javax.persistence.Entity;
+import java.util.Objects;
 
 /**
  * This component represents a question that allows a text answer
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class TextQuestionComponent extends QuestionComponent {
     /**
      * True if a single line is allowed for the question, false for multiple line
@@ -40,5 +43,24 @@ public class TextQuestionComponent extends QuestionComponent {
         super(ComponentTypes.TEXT_QUESTION, title, name, description, required);
         this.singleLine = singleLine;
         this.questionType = questionType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        TextQuestionComponent that = (TextQuestionComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

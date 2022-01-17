@@ -1,18 +1,17 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
 import lombok.*;
+import org.hibernate.Hibernate;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import javax.persistence.*;
+import java.util.*;
 
 /**
  * This component represents a question that has multiple parts and they may be conditional
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class MultipartQuestionComponent extends QuestionComponent {
     /**
      * Determines if this question is conditional. If not, all branches are disabled and all question parts shown regardless
@@ -22,7 +21,13 @@ public class MultipartQuestionComponent extends QuestionComponent {
     /**
      * The mapping of part ID/number to the QuestionPart object
      */
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "part_names_mapping",
+            joinColumns = {@JoinColumn(name = "database_ID", referencedColumnName = "databaseId")},
+            inverseJoinColumns = {@JoinColumn(name = "parts_id", referencedColumnName = "id")})
+    @MapKey(name = "partName")
     private Map<String, QuestionPart> parts;
+
     /**
      * Create a default MultipartQuestionComponent
      */
@@ -50,16 +55,47 @@ public class MultipartQuestionComponent extends QuestionComponent {
     @AllArgsConstructor
     @Getter
     @Setter
-    @EqualsAndHashCode
+    @Entity
     public static class QuestionPart {
+        /**
+         * The database ID
+         */
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        /**
+         * The name of the part
+         */
+        private String partName;
         /**
          * The question component that represents the question
          */
+        @OneToOne(cascade = CascadeType.ALL)
         private QuestionComponent question;
         /**
          * The list of branches from this part
          */
+        @OneToMany(cascade = CascadeType.ALL)
         private List<QuestionBranch> branches = new ArrayList<>();
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            QuestionPart that = (QuestionPart) o;
+            return Objects.equals(id, that.id) && Objects.equals(question, that.question) && Objects.equals(branches, that.branches);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, question, branches);
+        }
     }
 
     /**
@@ -67,7 +103,7 @@ public class MultipartQuestionComponent extends QuestionComponent {
      */
     @Getter
     @Setter
-    @EqualsAndHashCode(callSuper = false)
+    @Entity
     public static class QuestionBranch extends Branch {
         /**
          * The part of the question to branch to
@@ -85,10 +121,53 @@ public class MultipartQuestionComponent extends QuestionComponent {
             this(null, null);
         }
 
+        /**
+         * Create a QuestionBranch component
+         * @param part the name of the part the branch should branch to
+         * @param value the value of the current part that determines part should be branched to
+         */
         public QuestionBranch(String part, String value) {
             super(ComponentTypes.QUESTION_BRANCH);
             this.part = part;
             this.value = value;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            QuestionBranch that = (QuestionBranch) o;
+            return Objects.equals(part, that.part) && Objects.equals(value, that.value);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return Objects.hash(part, value);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        MultipartQuestionComponent that = (MultipartQuestionComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

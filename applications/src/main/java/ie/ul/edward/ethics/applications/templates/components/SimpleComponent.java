@@ -1,9 +1,12 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
+import javax.persistence.Entity;
+
 /**
  * This class represents a simple component that does not contain any other ApplicationComponents and is in of itself,
  * only an ApplicationComponent. A multi-part question is not considered composite as it has no getComponents method
  */
+@Entity
 public abstract class SimpleComponent extends ApplicationComponent {
     /**
      * Create a default simple component

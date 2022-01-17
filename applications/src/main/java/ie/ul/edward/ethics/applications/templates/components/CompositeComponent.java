@@ -1,11 +1,13 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
+import javax.persistence.Entity;
 import java.util.List;
 
 /**
  * This class is the base class for any application component that recursively contains other ApplicationComponent,
  * e.g. a container or section
  */
+@Entity
 public abstract class CompositeComponent extends ApplicationComponent {
     /**
      * Create a default composite component

@@ -51,6 +51,7 @@ public class JSONApplicationParser implements ApplicationParser {
         }
 
         return new ApplicationTemplate(
+                null,
                 (String)map.get("id"),
                 (String)map.get("name"),
                 (String)map.get("description"),

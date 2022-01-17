@@ -48,7 +48,7 @@ public class CheckboxGroupConverter implements ComponentConverter {
 
             for (Map<String, Object> replacement : (List<Map<String, Object>>)branch.get("replacements")) {
                 String key = replacement.keySet().stream().findFirst().orElse(null);
-                replacements.add(new ReplacementBranch.Replacement(key, (String)replacement.get(key)));
+                replacements.add(new ReplacementBranch.Replacement(null, key, (String)replacement.get(key)));
             }
 
             return new ReplacementBranch(replacements);
@@ -76,7 +76,7 @@ public class CheckboxGroupConverter implements ComponentConverter {
             String title = (String)checkbox.get("title");
             Branch branch = (checkbox.containsKey("branch")) ? parseBranch((Map<String, Object>) checkbox.get("branch")):null;
 
-            checkboxes.add(new CheckboxGroupComponent.Checkbox(title, branch));
+            checkboxes.add(new CheckboxGroupComponent.Checkbox(null, title, branch));
         }
 
         return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false));

@@ -1,9 +1,12 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
 import lombok.*;
+import org.hibernate.Hibernate;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents a component that represents a group of checkboxes which each execute a default
@@ -11,15 +14,17 @@ import java.util.List;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class CheckboxGroupComponent extends SimpleComponent {
     /**
      * The default branch to execute
      */
+    @OneToOne(cascade = CascadeType.ALL)
     private Branch defaultBranch;
     /**
      * The list of checkboxes in the group
      */
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<Checkbox> checkboxes;
     /**
      * Determines if multiple options can be chosen in the group, the default is false
@@ -54,8 +59,14 @@ public class CheckboxGroupComponent extends SimpleComponent {
     @NoArgsConstructor
     @Getter
     @Setter
-    @EqualsAndHashCode
+    @Entity
     public static class Checkbox {
+        /**
+         * The database ID
+         */
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
         /**
          * The title of the checkbox
          */
@@ -63,6 +74,45 @@ public class CheckboxGroupComponent extends SimpleComponent {
         /**
          * The branch to override default branch with
          */
+        @OneToOne(cascade = CascadeType.ALL)
         private Branch branch;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Checkbox checkbox = (Checkbox) o;
+            return Objects.equals(id, checkbox.id) && Objects.equals(title, checkbox.title) && Objects.equals(branch, checkbox.branch);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, title, branch);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        CheckboxGroupComponent that = (CheckboxGroupComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

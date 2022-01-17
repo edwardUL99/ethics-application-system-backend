@@ -46,7 +46,9 @@ public class MultipartQuestionConverter implements ComponentConverter {
     public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
         validate(map);
         Map<String, MultipartQuestionComponent.QuestionPart> parts = new HashMap<>();
+        MultipartQuestionComponent multipart = new MultipartQuestionComponent();
 
+        int sequenceId = 0;
         for (Map.Entry<String, Map<String, Object>> e : ((Map<String, Map<String, Object>>)map.get("parts")).entrySet()) {
             String part = e.getKey();
             Map<String, Object> partMap = e.getValue();
@@ -65,9 +67,15 @@ public class MultipartQuestionConverter implements ComponentConverter {
                 branches.add(convertBranch(branch));
             }
 
-            parts.put(part, new MultipartQuestionComponent.QuestionPart(questionComponent, branches));
+            questionComponent.setComponentId(multipart.getComponentId() + "_" + ++sequenceId);
+            parts.put(part, new MultipartQuestionComponent.QuestionPart(null, part, questionComponent, branches));
         }
 
-        return new MultipartQuestionComponent((String)map.getOrDefault("title", null), (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), (boolean)map.get("conditional"), parts);
+        multipart.setTitle((String)map.getOrDefault("title", null));
+        multipart.setRequired((boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED));
+        multipart.setConditional((boolean)map.get("conditional"));
+        multipart.setParts(parts);
+
+        return multipart;
     }
 }

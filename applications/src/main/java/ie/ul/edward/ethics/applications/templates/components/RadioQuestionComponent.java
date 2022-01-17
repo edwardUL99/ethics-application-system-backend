@@ -1,14 +1,16 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
+import org.hibernate.Hibernate;
 
+import javax.persistence.Entity;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
- * This component represents a question that has radios that can have only one answe
+ * This component represents a question that has radios that can have only one answer
  */
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class RadioQuestionComponent extends SelectQuestionComponent {
     /**
      * Create a default RadioQuestionComponent
@@ -28,5 +30,24 @@ public class RadioQuestionComponent extends SelectQuestionComponent {
     public RadioQuestionComponent(String title, String name, String description, boolean required, List<SelectQuestionComponent.Option> options) {
         super(title, name, description, required, false, options, false);
         setType(ComponentTypes.RADIO_QUESTION);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        RadioQuestionComponent that = (RadioQuestionComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

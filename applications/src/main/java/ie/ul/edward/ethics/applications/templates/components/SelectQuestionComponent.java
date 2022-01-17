@@ -1,18 +1,21 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This component represents a component that has options to choose from as the answer
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class SelectQuestionComponent extends QuestionComponent {
     /**
      * True if multiple answers are allowed
@@ -21,6 +24,7 @@ public class SelectQuestionComponent extends QuestionComponent {
     /**
      * The list of options for this question
      */
+    @OneToMany(cascade = CascadeType.ALL)
     private List<Option> options;
     /**
      * Determines if this question should add a field to allow the specification of another answer that's not provided
@@ -54,10 +58,17 @@ public class SelectQuestionComponent extends QuestionComponent {
     /**
      * This class represents an option for the select question
      */
+    @NoArgsConstructor
     @Getter
     @Setter
-    @EqualsAndHashCode
+    @Entity
     public static class Option {
+        /**
+         * The database ID
+         */
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
         /**
          * The label for the option to display
          */
@@ -84,5 +95,43 @@ public class SelectQuestionComponent extends QuestionComponent {
             this.label = label;
             this.value = value;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Option option = (Option) o;
+            return Objects.equals(id, option.id) && Objects.equals(label, option.label) && Objects.equals(value, option.value);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, label, value);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        SelectQuestionComponent that = (SelectQuestionComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

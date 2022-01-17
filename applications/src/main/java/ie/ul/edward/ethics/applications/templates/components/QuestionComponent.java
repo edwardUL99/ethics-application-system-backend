@@ -1,8 +1,11 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
+
+import javax.persistence.Entity;
+import javax.persistence.Lob;
 
 /**
  * A QuestionComponent represents a component that an answer is provided for it.
@@ -11,11 +14,13 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public abstract class QuestionComponent extends SimpleComponent {
     /**
      * The description of the component
      */
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
     protected String description;
     /**
      * The name of the question

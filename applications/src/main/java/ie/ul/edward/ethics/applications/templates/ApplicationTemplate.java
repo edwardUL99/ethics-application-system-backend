@@ -1,10 +1,16 @@
 package ie.ul.edward.ethics.applications.templates;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import org.hibernate.Hibernate;
 
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents a parsed application. It is merely a representational class with no inherent application functionality,
@@ -12,10 +18,16 @@ import java.util.List;
  */
 @Getter
 @Setter
-@EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
+@Entity
 public class ApplicationTemplate {
+    /**
+     * The database ID
+     */
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long databaseId;
     /**
      * The ID of the parsed application
      */
@@ -35,5 +47,25 @@ public class ApplicationTemplate {
     /**
      * The application components
      */
+    @OneToMany(cascade = CascadeType.ALL)
     private List<ApplicationComponent> components = new ArrayList<>();
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        ApplicationTemplate that = (ApplicationTemplate) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 }

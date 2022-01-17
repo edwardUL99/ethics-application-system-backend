@@ -1,26 +1,35 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
+import org.hibernate.annotations.Type;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Lob;
+import javax.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents a section component that can contain other components within the section
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class SectionComponent extends CompositeComponent {
     /**
      * The section's description
      */
+    @Lob
+    @Type(type = "org.hibernate.type.TextType")
     private String description;
     /**
      * The sub-components of this section
      */
+    @OneToMany(cascade = CascadeType.ALL)
     private List<ApplicationComponent> components;
 
     /**
@@ -40,5 +49,24 @@ public class SectionComponent extends CompositeComponent {
         super(ComponentTypes.SECTION, title);
         this.description = description;
         this.components = components;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        SectionComponent that = (SectionComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

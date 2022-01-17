@@ -28,6 +28,12 @@
         </dependency>
 
         <dependency>
+            <groupId>ie.ul.edward.ethics</groupId>
+            <artifactId>users</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>org.reflections</groupId>
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>

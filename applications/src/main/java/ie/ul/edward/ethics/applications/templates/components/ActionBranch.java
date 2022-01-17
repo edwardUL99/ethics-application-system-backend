@@ -1,15 +1,18 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
+
+import javax.persistence.Entity;
+import java.util.Objects;
 
 /**
  * This branch executes a specified action when triggered
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class ActionBranch extends Branch {
     /**
      * The name of the action to execute
@@ -36,5 +39,24 @@ public class ActionBranch extends Branch {
         super(ComponentTypes.ACTION_BRANCH);
         this.action = action;
         this.comment = comment;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        ActionBranch that = (ActionBranch) o;
+        return branchId != null && Objects.equals(branchId, that.branchId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }

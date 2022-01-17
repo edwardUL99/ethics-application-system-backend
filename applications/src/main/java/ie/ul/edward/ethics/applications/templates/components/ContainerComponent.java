@@ -1,11 +1,16 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.Hibernate;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.OneToMany;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * This class represents a container that wraps other components in a container.
@@ -13,7 +18,7 @@ import java.util.List;
  */
 @Getter
 @Setter
-@EqualsAndHashCode(callSuper = false)
+@Entity
 public class ContainerComponent extends CompositeComponent {
     /**
      * The ID of the container
@@ -22,6 +27,7 @@ public class ContainerComponent extends CompositeComponent {
     /**
      * The list of components contained within the container
      */
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ApplicationComponent> components;
 
     /**
@@ -48,5 +54,24 @@ public class ContainerComponent extends CompositeComponent {
     @Override
     public void setTitle(String title) {
         throw new IllegalStateException("You cannot set a title on a ContainerComponent");
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+        ContainerComponent that = (ContainerComponent) o;
+        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
     }
 }
