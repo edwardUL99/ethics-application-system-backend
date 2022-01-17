@@ -20,7 +20,7 @@ public class JSONApplicationParser implements ApplicationParser {
     /**
      * The mapper for mapping JSON
      */
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * Parse the application map
@@ -78,7 +78,7 @@ public class JSONApplicationParser implements ApplicationParser {
                 Map<String, Object> map = (Map<String, Object>) jsonObject;
 
                 ApplicationTemplate parsed = parseApplication(map);
-                log.info("Parsed application template with id: {}, and name: {}", parsed.getId(), parsed.getName());
+                log.debug("Parsed application template with id: {}, and name: {}", parsed.getId(), parsed.getName());
                 applications.add(parsed);
             } catch (IOException ex) {
                 ex.printStackTrace();

@@ -5,7 +5,8 @@ import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseExc
 import java.io.InputStream;
 
 /**
- * This interface provides a means of parsing and validating a JSON application into a map
+ * This interface provides a means of parsing and validating input streams into application templates. It can parse multiple
+ * streams at one time.
  */
 public interface ApplicationParser {
     /**

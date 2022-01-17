@@ -21,7 +21,7 @@ public class MultipartQuestionComponent extends QuestionComponent {
     /**
      * The mapping of part ID/number to the QuestionPart object
      */
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(name = "part_names_mapping",
             joinColumns = {@JoinColumn(name = "database_ID", referencedColumnName = "databaseId")},
             inverseJoinColumns = {@JoinColumn(name = "parts_id", referencedColumnName = "id")})
@@ -75,7 +75,7 @@ public class MultipartQuestionComponent extends QuestionComponent {
         /**
          * The list of branches from this part
          */
-        @OneToMany(cascade = CascadeType.ALL)
+        @ManyToMany(cascade = CascadeType.ALL)
         private List<QuestionBranch> branches = new ArrayList<>();
 
         /**

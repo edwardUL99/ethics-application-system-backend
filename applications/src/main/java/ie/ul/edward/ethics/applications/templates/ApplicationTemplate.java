@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * This class represents a parsed application. It is merely a representational class with no inherent application functionality,
- * intended to be transmitted to the front-end where the functionality of form generation will take place
+ * intended to be transmitted to the front-end where the functionality of form generation will take place.
  */
 @Getter
 @Setter
@@ -47,7 +47,7 @@ public class ApplicationTemplate {
     /**
      * The application components
      */
-    @OneToMany(cascade = CascadeType.ALL)
+    @ManyToMany(cascade = CascadeType.ALL)
     private List<ApplicationComponent> components = new ArrayList<>();
 
     /**

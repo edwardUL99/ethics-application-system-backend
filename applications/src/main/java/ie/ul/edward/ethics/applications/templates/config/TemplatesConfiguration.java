@@ -2,8 +2,8 @@ package ie.ul.edward.ethics.applications.templates.config;
 
 import ie.ul.edward.ethics.applications.templates.ApplicationParser;
 import ie.ul.edward.ethics.applications.templates.ApplicationTemplate;
+import ie.ul.edward.ethics.applications.templates.ApplicationTemplateLoader;
 import ie.ul.edward.ethics.applications.templates.converters.Converters;
-import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -13,8 +13,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -46,6 +44,8 @@ public class TemplatesConfiguration {
         this.applicationParser = applicationParser;
 
         log.info("Using ApplicationParser {} to parse application templates", applicationParser);
+
+        Converters.register(); // register all the converters
     }
 
     /**
@@ -71,28 +71,18 @@ public class TemplatesConfiguration {
     }
 
     /**
-     * The bean registering the parsed applications
-     * @return the bean of parsed applications
+     * The bean used to load application templates
+     * @return the template loader
      */
     @Bean
-    public ApplicationTemplate[] parsedApplications() {
-        Converters.register(); // register all the converters
-
+    public ApplicationTemplateLoader applicationTemplateLoader() {
         Resource[] resources = getApplicationResources();
-        try {
-            InputStream[] inputStreams = new InputStream[resources.length];
+        ApplicationTemplateLoader loader = new ApplicationTemplateLoader(Arrays.asList(resources), applicationParser);
 
-            for (int i = 0; i < resources.length; i++) {
-                inputStreams[i] = resources[i].getInputStream();
-            }
+        ApplicationTemplate[] applications = loader.loadTemplates();
 
-            ApplicationTemplate[] applications = applicationParser.parse(inputStreams);
+        log.info("{} application(s) loaded from resources {}", applications.length, Arrays.toString(resources));
 
-            log.info("{} application(s) loaded from resources {}", applications.length, Arrays.toString(resources));
-
-            return applications;
-        } catch (IOException ex) {
-            throw new ApplicationParseException("Failed to parse application JSON", ex);
-        }
+        return loader;
     }
 }

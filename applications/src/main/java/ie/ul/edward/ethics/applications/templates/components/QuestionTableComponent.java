@@ -80,7 +80,7 @@ public class QuestionTableComponent extends SimpleComponent {
         /**
          * The list of components for this cell
          */
-        @OneToMany(cascade = CascadeType.ALL)
+        @ManyToMany(cascade = CascadeType.ALL)
         private List<QuestionComponent> components;
 
         /**
@@ -120,7 +120,7 @@ public class QuestionTableComponent extends SimpleComponent {
         /**
          * The mapping of column names to its cells
          */
-        @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+        @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
         @JoinTable(name = "column_names_mapping",
                 joinColumns = {@JoinColumn(name = "database_ID", referencedColumnName = "databaseId")},
                 inverseJoinColumns = {@JoinColumn(name = "cells_id", referencedColumnName = "databaseId")})
