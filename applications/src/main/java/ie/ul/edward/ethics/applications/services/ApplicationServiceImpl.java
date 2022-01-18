@@ -5,6 +5,7 @@ import ie.ul.edward.ethics.applications.models.applications.ApplicationStatus;
 import ie.ul.edward.ethics.applications.models.applications.DraftApplication;
 import ie.ul.edward.ethics.applications.repositories.ApplicationRepository;
 import ie.ul.edward.ethics.applications.templates.ApplicationTemplate;
+import ie.ul.edward.ethics.applications.templates.ApplicationTemplateLoader;
 import ie.ul.edward.ethics.applications.templates.repositories.ApplicationTemplateRepository;
 import ie.ul.edward.ethics.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,16 +32,22 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The repository for saving and loading applications
      */
     private final ApplicationRepository applicationRepository;
+    /**
+     * The loader for loading application templates
+     */
+    private final ApplicationTemplateLoader templateLoader;
 
     /**
      * Create an ApplicationServiceImpl
      * @param templateRepository the template repository for saving application templates
      * @param applicationRepository the repository for saving and loading applications
+     * @param templateLoader the loader for application template loading
      */
     @Autowired
-    public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository) {
+    public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository, ApplicationTemplateLoader templateLoader) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
+        this.templateLoader = templateLoader;
     }
 
     /**
@@ -136,5 +143,15 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Cacheable(value = "template")
     public ApplicationTemplate getApplicationTemplate(Long id) {
         return templateRepository.findById(id).orElse(null);
+    }
+
+    /**
+     * Get all the application templates loaded into the system
+     *
+     * @return array of loaded templates
+     */
+    @Override
+    public ApplicationTemplate[] getApplicationTemplates() {
+        return templateLoader.loadTemplates();
     }
 }

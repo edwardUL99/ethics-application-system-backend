@@ -1,8 +1,12 @@
 package ie.ul.edward.ethics.applications.templates.config;
 
+import com.fasterxml.jackson.databind.Module;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import ie.ul.edward.ethics.applications.templates.ApplicationParser;
 import ie.ul.edward.ethics.applications.templates.ApplicationTemplate;
 import ie.ul.edward.ethics.applications.templates.ApplicationTemplateLoader;
+import ie.ul.edward.ethics.applications.templates.ComponentDeserializer;
+import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
 import ie.ul.edward.ethics.applications.templates.converters.Converters;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,5 +88,20 @@ public class TemplatesConfiguration {
         log.info("{} application(s) loaded from resources {}", applications.length, Arrays.toString(resources));
 
         return loader;
+    }
+
+    /**
+     * Create the module for deserializing application components
+     * @return the application components module
+     */
+    @Bean
+    public Module applicationComponentModule() {
+        ComponentDeserializer deserializer = new ComponentDeserializer();
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(ApplicationComponent.class, deserializer);
+
+        log.info("Registering custom JSON Deserializer {} to deserialize application components", deserializer);
+
+        return module;
     }
 }

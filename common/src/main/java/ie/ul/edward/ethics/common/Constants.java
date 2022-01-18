@@ -47,9 +47,9 @@ public final class Constants {
     public static final String USER_EXISTS = "user_exists";
 
     /**
-     * The user is disabled
+     * The user cannot be found
      */
-    public static final String USER_DISABLED = "user_disabled";
+    public static final String USER_NOT_FOUND = "user_not_found";
 
     /**
      * Invalid login credentials given
@@ -103,6 +103,16 @@ public final class Constants {
     public static final String VIRUS_FOUND_FILE = "virus_found_file";
 
     /**
+     * The message for when an application is updated
+     */
+    public static final String APPLICATION_UPDATED = "application_updated";
+
+    /**
+     * The error message for when an application that is not a draft is attempted to be updated
+     */
+    public static final String APPLICATION_NOT_DRAFT = "application_not_draft";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */
@@ -154,6 +164,18 @@ public final class Constants {
      * @return the created path
      */
     public static String createApiPath(Endpoint endpoint, String...additionalArgs) {
+        return createApiPath(endpoint, false, additionalArgs);
+    }
+
+    /**
+     * Creates the API path for the provided endpoint. Additional args can be passed in, for example, AUTHENTICATION endpoint.
+     * If the URL requires parameters like ?param1=value, pass in true for urlParams as this will remove the trailing slash
+     * can take login which results in /api/auth/login/
+     * @param endpoint the endpoint to create the api path for
+     * @param additionalArgs the additional path arguments to add
+     * @return the created path
+     */
+    public static String createApiPath(Endpoint endpoint, boolean urlParams, String...additionalArgs) {
         String url = String.format("/%s/%s/", API_BASE, endpoint.endpoint());
 
         if (additionalArgs.length > 0) {
@@ -161,7 +183,7 @@ public final class Constants {
             url += additional + "/";
         }
 
-        return url;
+        return (urlParams) ? url.substring(0, url.length() - 1):url;
     }
 
     /**

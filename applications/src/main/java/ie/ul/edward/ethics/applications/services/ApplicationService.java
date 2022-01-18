@@ -59,4 +59,10 @@ public interface ApplicationService {
      * @return the saved template or null if not found
      */
     ApplicationTemplate getApplicationTemplate(Long id);
+
+    /**
+     * Get all the application templates loaded into the system
+     * @return array of loaded templates
+     */
+    ApplicationTemplate[] getApplicationTemplates();
 }

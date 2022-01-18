@@ -18,6 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
@@ -64,6 +65,11 @@ public class ApplicationServiceTest {
     @Autowired
     private Caching cache;
     /**
+     * The mock loader bean
+     */
+    @MockBean
+    private ApplicationTemplateLoader loader;
+    /**
      * The array of templates to be used for testing
      */
     private final ApplicationTemplate[] templates;
@@ -71,25 +77,24 @@ public class ApplicationServiceTest {
     /**
      * The test application database ID
      */
-    private static final Long APPLICATION_DB_ID = 1L;
+    public static final Long APPLICATION_DB_ID = 1L;
 
     /**
      * The test ethics application ID
      */
-    private static final String APPLICATION_ID = "app_id";
+    public static final String APPLICATION_ID = "app_id";
 
     /**
      * The test template database ID
      */
-    private static final Long TEMPLATE_DB_ID = 2L;
+    public static final Long TEMPLATE_DB_ID = 2L;
 
     /**
      * Create the test class and load the templates
-     * @param templateLoader the loader to load the templates with
      */
-    @Autowired
-    public ApplicationServiceTest(ApplicationTemplateLoader templateLoader) {
-        this.templates = templateLoader.loadTemplates();
+    public ApplicationServiceTest() {
+        ApplicationTemplate template = new ApplicationTemplate(null, "test", "test app", "description", "1.0", new ArrayList<>());
+        this.templates = new ApplicationTemplate[]{template};
     }
 
     /**
@@ -128,7 +133,7 @@ public class ApplicationServiceTest {
      * Create a test application. We will use a DraftApplication for testing
      * @return the test application
      */
-    public Application createDraftApplication() {
+    public static Application createDraftApplication(ApplicationTemplate applicationTemplate) {
         HashMap<String, DraftApplication.Value> values = new HashMap<>();
         String[] components = {"component1", "component2", "component3", "component4"};
         String[] answers = {"answer1", "answer2", "answer3", "answer4"};
@@ -138,7 +143,7 @@ public class ApplicationServiceTest {
             values.put(id, new DraftApplication.Value(null, id, answers[i], DraftApplication.ValueType.TEXT));
         }
 
-        return new DraftApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(), getTemplate(), values);
+        return new DraftApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(), applicationTemplate, values);
     }
 
     /**
@@ -146,7 +151,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplication() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
 
         given(applicationRepository.findById(APPLICATION_DB_ID))
                 .willReturn(Optional.of(application));
@@ -162,7 +167,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationCache() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
 
         given(applicationRepository.findById(APPLICATION_DB_ID))
                 .willReturn(Optional.of(application));
@@ -195,7 +200,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetUserApplications() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
         User user = application.getUser();
         List<Application> applications = List.of(application);
 
@@ -213,7 +218,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetUserApplicationsCache() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
         User user = application.getUser();
         List<Application> applications = List.of(application);
 
@@ -234,7 +239,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationsWithStatus() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
         ApplicationStatus status = ApplicationStatus.DRAFT;
         List<Application> applications = List.of(application);
 
@@ -252,7 +257,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationsByStatusCache() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
         ApplicationStatus status = ApplicationStatus.DRAFT;
         List<Application> applications = List.of(application);
 
@@ -273,7 +278,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldCreateApplication() {
-        Application application = createDraftApplication();
+        Application application = createDraftApplication(getTemplate());
 
         Application created = applicationService.createApplication(application);
 
@@ -287,7 +292,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldCreateDraftApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
 
         Application created = applicationService.createDraftApplication(draftApplication, false);
 
@@ -302,7 +307,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldUpdateDraftApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
         LocalDateTime now = LocalDateTime.now();
         draftApplication.setLastUpdated(now);
 
@@ -319,7 +324,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIllegalStateOnDraftUpdateNoId() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
         draftApplication.setId(null);
 
         assertThrows(IllegalStateException.class, () -> applicationService.createDraftApplication(draftApplication, true));
@@ -333,7 +338,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationTemplate() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
@@ -351,7 +356,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationTemplateCached() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
@@ -379,5 +384,19 @@ public class ApplicationServiceTest {
 
         assertNull(returned);
         verify(templateRepository).findById(TEMPLATE_DB_ID);
+    }
+
+    /**
+     * Tests that all application templates should be retrieved
+     */
+    @Test
+    public void shouldGetApplicationTemplates() {
+        given(loader.loadTemplates())
+                .willReturn(templates);
+
+        ApplicationTemplate[] returned = applicationService.getApplicationTemplates();
+
+        assertEquals(templates, returned);
+        verify(loader).loadTemplates();
     }
 }

@@ -3,6 +3,7 @@ package ie.ul.edward.ethics.applications.models.mapping;
 import ie.ul.edward.ethics.applications.models.CreateDraftApplicationRequest;
 import ie.ul.edward.ethics.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.edward.ethics.applications.models.applications.Application;
+import ie.ul.edward.ethics.applications.models.applications.ApplicationStatus;
 import ie.ul.edward.ethics.applications.models.applications.DraftApplication;
 import ie.ul.edward.ethics.applications.services.ApplicationService;
 import ie.ul.edward.ethics.applications.templates.ApplicationTemplate;
@@ -176,17 +177,52 @@ public class ApplicationRequestMapperTest {
     }
 
     /**
+     * A "hack" to set not draft status on draft application TODO remove this when other application types are implemented
+     * @return the application that is a draft but different status
+     */
+    private Application getStatusChangeableDraftApplication() {
+        DraftApplication temp = (DraftApplication) createDraftApplication();
+
+        return new DraftApplication(temp.getId(), temp.getApplicationId(),
+                temp.getUser(), temp.getApplicationTemplate(), temp.getValues()) {
+            @Override
+            public void setStatus(ApplicationStatus status) {
+                this.status = status;;
+            }
+        };
+    }
+
+    /**
      * Tests that an IllegalStateException should be thrown if the given application ID is not a draft application
      */
     @Test
     public void shouldThrowIllegalStateIfIDNotDraft() {
+        Application changeable = getStatusChangeableDraftApplication();
+        changeable.setStatus(ApplicationStatus.SUBMITTED);
+
+        UpdateDraftApplicationRequest request =
+                new UpdateDraftApplicationRequest(APPLICATION_DB_ID, new HashMap<>());
+
+        given(applicationService.getApplication(APPLICATION_DB_ID))
+                .willReturn(changeable);
+
+        assertThrows(IllegalStateException.class, () -> requestMapper.updateDraftRequestToDraft(request));
+
+        verify(applicationService).getApplication(APPLICATION_DB_ID);
+    }
+
+    /**
+     * Tests that the mapper should return null if the application ID doesn't exist
+     */
+    @Test
+    public void shouldReturnNullIfDraftIdNotExists() {
         UpdateDraftApplicationRequest request =
                 new UpdateDraftApplicationRequest(APPLICATION_DB_ID, new HashMap<>());
 
         given(applicationService.getApplication(APPLICATION_DB_ID))
                 .willReturn(null);
 
-        assertThrows(IllegalStateException.class, () -> requestMapper.updateDraftRequestToDraft(request));
+        assertNull(requestMapper.updateDraftRequestToDraft(request));
 
         verify(applicationService).getApplication(APPLICATION_DB_ID);
     }

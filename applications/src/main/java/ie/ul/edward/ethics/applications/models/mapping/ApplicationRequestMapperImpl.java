@@ -58,12 +58,16 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
         Long id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
-        if (loaded == null || loaded.getStatus() != ApplicationStatus.DRAFT)
-            throw new IllegalStateException("The application with ID " + id + " is not a DraftApplication");
+        if (loaded != null) {
+            if (loaded.getStatus() != ApplicationStatus.DRAFT)
+                throw new IllegalStateException("The application with ID " + id + " is not a DraftApplication");
 
-        DraftApplication draftApplication = (DraftApplication) loaded;
-        draftApplication.setValues(request.getValues());
+            DraftApplication draftApplication = (DraftApplication) loaded;
+            draftApplication.setValues(request.getValues());
 
-        return draftApplication;
+            return draftApplication;
+        } else {
+            return null;
+        }
     }
 }

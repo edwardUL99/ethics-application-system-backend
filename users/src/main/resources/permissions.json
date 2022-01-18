@@ -8,6 +8,14 @@
       "path": "/api/**/admin/**",
       "permissions": "ADMIN",
       "requireAll": true
+    },
+    {
+      "path": "/api/applications/draft/",
+      "permissions": "CREATE_APPLICATION,EDIT_APPLICATION"
+    },
+    {
+      "path": "/api/applications",
+      "permissions": "VIEW_OWN_APPLICATIONS"
     }
   ]
 }
