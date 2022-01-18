@@ -43,6 +43,7 @@ public class SectionConverter implements ComponentConverter {
             subComponents.add(Converters.getConverter((String)sub.get("type")).convert(sub));
 
         return new SectionComponent((String)map.get("title"),
-                Converters.parseLongString(ComponentTypes.SECTION, "description", map.getOrDefault("description", null)), subComponents);
+                Converters.parseLongString(ComponentTypes.SECTION, "description", map.getOrDefault("description", null)), subComponents,
+                (boolean)map.getOrDefault("autoSave", true));
     }
 }

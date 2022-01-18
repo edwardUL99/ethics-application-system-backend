@@ -4,6 +4,7 @@ import ie.ul.edward.ethics.applications.models.applications.Application;
 import ie.ul.edward.ethics.applications.models.applications.ApplicationStatus;
 import ie.ul.edward.ethics.applications.models.applications.DraftApplication;
 import ie.ul.edward.ethics.applications.repositories.ApplicationRepository;
+import ie.ul.edward.ethics.applications.templates.ApplicationTemplate;
 import ie.ul.edward.ethics.applications.templates.repositories.ApplicationTemplateRepository;
 import ie.ul.edward.ethics.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -88,7 +89,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Caching(evict = {
             @CacheEvict(value = "application", allEntries = true),
             @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
+            @CacheEvict(value = "status_applications", allEntries = true),
+            @CacheEvict(value = "template", allEntries = true)
     })
     public Application createApplication(Application application) {
         application.setLastUpdated(LocalDateTime.now());
@@ -109,7 +111,8 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Caching(evict = {
             @CacheEvict(value = "application", allEntries = true),
             @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
+            @CacheEvict(value = "status_applications", allEntries = true),
+            @CacheEvict(value = "template", allEntries = true)
     })
     public Application createDraftApplication(DraftApplication draftApplication, boolean update) {
         if (update && draftApplication.getId() == null)
@@ -121,5 +124,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         createApplication(draftApplication);
 
         return draftApplication;
+    }
+
+    /**
+     * Load and return the application template with the given ID
+     *
+     * @param id the id of the saved template
+     * @return the saved template or null if not found
+     */
+    @Override
+    @Cacheable(value = "template")
+    public ApplicationTemplate getApplicationTemplate(Long id) {
+        return templateRepository.findById(id).orElse(null);
     }
 }

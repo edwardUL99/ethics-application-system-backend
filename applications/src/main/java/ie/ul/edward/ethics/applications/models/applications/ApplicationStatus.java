@@ -7,7 +7,9 @@ import java.util.Arrays;
  */
 public enum ApplicationStatus {
     /**
-     * This status represents an application in the draft stage
+     * This status represents an application in the draft stage. The only application that should have this status
+     * is a DraftApplication, i.e. other implementations must check the value of ApplicationStatus being assigned to it and
+     * prevent DRAFT being set to it
      */
     DRAFT("Draft"),
     /**
@@ -59,5 +61,13 @@ public enum ApplicationStatus {
                 .filter(v -> v.label.equals(label))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("The label " + label + " does not match any enum value"));
+    }
+
+    /**
+     * Retrieve the label value
+     * @return the label value of the enum
+     */
+    public String label() {
+        return label;
     }
 }

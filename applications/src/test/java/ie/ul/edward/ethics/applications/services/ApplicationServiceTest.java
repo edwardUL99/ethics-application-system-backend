@@ -79,6 +79,11 @@ public class ApplicationServiceTest {
     private static final String APPLICATION_ID = "app_id";
 
     /**
+     * The test template database ID
+     */
+    private static final Long TEMPLATE_DB_ID = 2L;
+
+    /**
      * Create the test class and load the templates
      * @param templateLoader the loader to load the templates with
      */
@@ -130,7 +135,7 @@ public class ApplicationServiceTest {
 
         for (int i = 0; i < components.length; i++) {
             String id = components[i];
-            values.put(id, new DraftApplication.Value(null, id, answers[i]));
+            values.put(id, new DraftApplication.Value(null, id, answers[i], DraftApplication.ValueType.TEXT));
         }
 
         return new DraftApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(), getTemplate(), values);
@@ -321,5 +326,58 @@ public class ApplicationServiceTest {
 
         verifyNoInteractions(templateRepository);
         verify(applicationRepository, times(0)).save(draftApplication);
+    }
+
+    /**
+     * Tests that the application template should be retrieved successfully
+     */
+    @Test
+    public void shouldGetApplicationTemplate() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        ApplicationTemplate template = draftApplication.getApplicationTemplate();
+        template.setDatabaseId(TEMPLATE_DB_ID);
+
+        given(templateRepository.findById(TEMPLATE_DB_ID))
+                .willReturn(Optional.of(template));
+
+        ApplicationTemplate returned = applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
+
+        assertEquals(template, returned);
+        verify(templateRepository).findById(TEMPLATE_DB_ID);
+    }
+
+    /**
+     * Tests that the application template should be retrieved successfully from cache
+     */
+    @Test
+    public void shouldGetApplicationTemplateCached() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        ApplicationTemplate template = draftApplication.getApplicationTemplate();
+        template.setDatabaseId(TEMPLATE_DB_ID);
+
+        given(templateRepository.findById(TEMPLATE_DB_ID))
+                .willReturn(Optional.of(template));
+
+        applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
+        applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
+        applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
+        ApplicationTemplate returned = applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
+
+        assertEquals(template, returned);
+        verify(templateRepository, times(1)).findById(TEMPLATE_DB_ID);
+    }
+
+    /**
+     * Tests that null should be returned if no template with a given ID is found
+     */
+    @Test
+    public void shouldReturnNullOnTemplateNotFound() {
+        given(templateRepository.findById(TEMPLATE_DB_ID))
+                .willReturn(Optional.empty());
+
+        ApplicationTemplate returned = applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
+
+        assertNull(returned);
+        verify(templateRepository).findById(TEMPLATE_DB_ID);
     }
 }

@@ -3,6 +3,7 @@ package ie.ul.edward.ethics.applications.services;
 import ie.ul.edward.ethics.applications.models.applications.Application;
 import ie.ul.edward.ethics.applications.models.applications.ApplicationStatus;
 import ie.ul.edward.ethics.applications.models.applications.DraftApplication;
+import ie.ul.edward.ethics.applications.templates.ApplicationTemplate;
 import ie.ul.edward.ethics.users.models.User;
 
 import java.util.List;
@@ -51,4 +52,11 @@ public interface ApplicationService {
      * @throws IllegalStateException if draft application's ID is null and update is true
      */
     Application createDraftApplication(DraftApplication draftApplication, boolean update);
+
+    /**
+     * Load and return the application template with the given ID
+     * @param id the id of the saved template
+     * @return the saved template or null if not found
+     */
+    ApplicationTemplate getApplicationTemplate(Long id);
 }

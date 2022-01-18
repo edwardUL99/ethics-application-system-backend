@@ -31,12 +31,17 @@ public class SectionComponent extends CompositeComponent {
      */
     @OneToMany(cascade = CascadeType.ALL)
     private List<ApplicationComponent> components;
+    /**
+     * This field indicates that when the whole section's questions are answered, the application being filled out should be auto-saved.
+     * Most suitable for a draft application
+     */
+    private boolean autoSave;
 
     /**
      * Create a default SectionComponent
      */
     public SectionComponent() {
-        this(null, null, new ArrayList<>());
+        this(null, null, new ArrayList<>(), true);
     }
 
     /**
@@ -44,11 +49,13 @@ public class SectionComponent extends CompositeComponent {
      * @param title the title of the section
      * @param description the section description
      * @param components the components in the section
+     * @param autoSave true to auto-save when the section is filled
      */
-    public SectionComponent(String title, String description, List<ApplicationComponent> components) {
+    public SectionComponent(String title, String description, List<ApplicationComponent> components, boolean autoSave) {
         super(ComponentTypes.SECTION, title);
         this.description = description;
         this.components = components;
+        this.autoSave = autoSave;
     }
 
     /**

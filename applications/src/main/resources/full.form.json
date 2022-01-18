@@ -94,6 +94,7 @@
             {
               "type": "section",
               "title": "Principal Investigator (Supervisor)",
+              "autoSave": false,
               "components": [
                 {
                   "type": "text-question",
@@ -115,11 +116,13 @@
                   "title": "Telephone Number",
                   "name": "pi_telephone"
                 }
-              ]
+              ],
+              "_comment": "Only save when the parent section is auto-saved. Sub-sections only get saved when the parent section is filled"
             },
             {
               "type": "section",
               "title": "Other Investigators (Student)",
+              "autoSave": false,
               "components": [
                 {
                   "type": "question-table",

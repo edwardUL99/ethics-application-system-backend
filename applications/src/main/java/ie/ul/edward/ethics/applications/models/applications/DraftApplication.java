@@ -21,6 +21,7 @@ import java.util.*;
 public class DraftApplication extends Application {
     /**
      * The template of the application being filled in
+     * TODO this may be relevant in Application class as it may be needed for submitted applications too. If moved, you may not need createDrafTApplication with update parameter, the logic of that (and update parameter) may be moved into createApplication
      */
     @OneToOne
     private ApplicationTemplate applicationTemplate;
@@ -109,6 +110,10 @@ public class DraftApplication extends Application {
         @Lob
         @Type(type = "org.hibernate.type.TextType")
         private String value;
+        /**
+         * The type of the value
+         */
+        private ValueType valueType;
 
         /**
          * {@inheritDoc}
@@ -118,7 +123,8 @@ public class DraftApplication extends Application {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Value value1 = (Value) o;
-            return Objects.equals(id, value1.id) && Objects.equals(componentId, value1.componentId) && Objects.equals(value, value1.value);
+            return Objects.equals(id, value1.id) && Objects.equals(componentId, value1.componentId) && Objects.equals(value, value1.value)
+                    && Objects.equals(valueType, value1.valueType);
         }
 
         /**
@@ -126,7 +132,25 @@ public class DraftApplication extends Application {
          */
         @Override
         public int hashCode() {
-            return Objects.hash(id, componentId, value);
+            return Objects.hash(id, componentId, value, valueType);
         }
+    }
+
+    /**
+     * This enum represents the type of the value
+     */
+    public enum ValueType {
+        /**
+         * A text answer
+         */
+        TEXT,
+        /**
+         * A number answer
+         */
+        NUMBER,
+        /**
+         * An answer that is one or more options selected (stored in this class as a comma-separated string
+         */
+        OPTIONS
     }
 }
