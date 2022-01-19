@@ -52,7 +52,7 @@ public class SectionComponent extends CompositeComponent {
      * @param autoSave true to auto-save when the section is filled
      */
     public SectionComponent(String title, String description, List<ApplicationComponent> components, boolean autoSave) {
-        super(ComponentTypes.SECTION, title);
+        super(ComponentType.SECTION, title);
         this.description = description;
         this.components = components;
         this.autoSave = autoSave;

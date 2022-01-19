@@ -22,7 +22,7 @@ public abstract class Branch {
     /**
      * The type of branch
      */
-    protected String type;
+    protected ComponentType type;
 
     /**
      * Create a default branch
@@ -35,7 +35,7 @@ public abstract class Branch {
      * Create a branch
      * @param type the type of branch
      */
-    public Branch(String type) {
+    public Branch(ComponentType type) {
         this.type = type;
     }
 }

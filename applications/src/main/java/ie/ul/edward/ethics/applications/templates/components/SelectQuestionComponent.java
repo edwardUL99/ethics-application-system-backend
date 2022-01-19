@@ -49,7 +49,7 @@ public class SelectQuestionComponent extends QuestionComponent {
      * @param addOther true if an 'Other' text field should be added
      */
     public SelectQuestionComponent(String title, String name, String description, boolean required, boolean multiple, List<Option> options, boolean addOther) {
-        super(ComponentTypes.SELECT_QUESTION, title, name, description, required);
+        super(ComponentType.SELECT_QUESTION, title, name, description, required);
         this.multiple = multiple;
         this.options = options;
         this.addOther = addOther;

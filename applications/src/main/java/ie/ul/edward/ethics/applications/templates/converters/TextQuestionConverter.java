@@ -8,7 +8,7 @@ import java.util.Map;
 /**
  * This class converts maps into text questions
  */
-@Converter(ComponentTypes.TEXT_QUESTION)
+@Converter(ComponentType.TEXT_QUESTION)
 public class TextQuestionConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -18,7 +18,7 @@ public class TextQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.TEXT_QUESTION, map.keySet(), "title", "name");
+        Converters.validateKeys(ComponentType.TEXT_QUESTION, map.keySet(), "title", "name");
     }
 
     /**
@@ -34,7 +34,7 @@ public class TextQuestionConverter implements ComponentConverter {
         validate(map);
 
         return new TextQuestionComponent((String)map.get("title"), (String)map.get("name"),
-                Converters.parseLongString(ComponentTypes.TEXT_QUESTION, "description", map.getOrDefault("description", null)),
+                Converters.parseLongString(ComponentType.TEXT_QUESTION, "description", map.getOrDefault("description", null)),
                 (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), (boolean)map.getOrDefault("singleLine", true),
                 (String)map.getOrDefault("questionType", "text"));
     }

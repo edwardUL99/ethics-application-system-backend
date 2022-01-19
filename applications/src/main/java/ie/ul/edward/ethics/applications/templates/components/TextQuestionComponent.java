@@ -40,7 +40,7 @@ public class TextQuestionComponent extends QuestionComponent {
      * @param questionType the type of input, e.g. email, text, password passed to HTML input type attribute
      */
     public TextQuestionComponent(String title, String name, String description, boolean required, boolean singleLine, String questionType) {
-        super(ComponentTypes.TEXT_QUESTION, title, name, description, required);
+        super(ComponentType.TEXT_QUESTION, title, name, description, required);
         this.singleLine = singleLine;
         this.questionType = questionType;
     }

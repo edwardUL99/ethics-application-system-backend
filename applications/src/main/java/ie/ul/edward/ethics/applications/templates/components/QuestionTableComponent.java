@@ -35,7 +35,7 @@ public class QuestionTableComponent extends SimpleComponent {
      * @param columns the columns for the component
      */
     public QuestionTableComponent(Map<String, Cells> columns) {
-        super(ComponentTypes.QUESTION_TABLE, null);
+        super(ComponentType.QUESTION_TABLE, null);
         this.columns = new CellsMapping(columns);
     }
 

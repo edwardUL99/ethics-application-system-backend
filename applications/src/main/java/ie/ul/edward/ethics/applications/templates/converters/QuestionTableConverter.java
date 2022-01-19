@@ -1,7 +1,7 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
 import ie.ul.edward.ethics.applications.templates.components.QuestionComponent;
 import ie.ul.edward.ethics.applications.templates.components.QuestionTableComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * This represents a converter for converting a QuestionTable component
  */
-@Converter(ComponentTypes.QUESTION_TABLE)
+@Converter(ComponentType.QUESTION_TABLE)
 public class QuestionTableConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -25,12 +25,12 @@ public class QuestionTableConverter implements ComponentConverter {
     @Override
     @SuppressWarnings("unchecked")
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.QUESTION_TABLE, map.keySet(), "columns", "numRows");
+        Converters.validateKeys(ComponentType.QUESTION_TABLE, map.keySet(), "columns", "numRows");
 
         Object columns = map.get("columns");
 
         if (!Map.class.isAssignableFrom(columns.getClass()))
-            throw new ApplicationParseException("The columns field of the " + ComponentTypes.QUESTION_TABLE + " component must be a map of the column name to its corresponding question");
+            throw new ApplicationParseException("The columns field of the " + ComponentType.QUESTION_TABLE.label() + " component must be a map of the column name to its corresponding question");
 
         Map<String, Object> columnsMap = (Map<String, Object>) columns;
 
@@ -40,7 +40,7 @@ public class QuestionTableConverter implements ComponentConverter {
         });
 
         if (!Integer.class.isAssignableFrom(map.get("numRows").getClass()))
-            throw new ApplicationParseException("The numRows field of the " + ComponentTypes.QUESTION_TABLE + " component must be an Integer");
+            throw new ApplicationParseException("The numRows field of the " + ComponentType.QUESTION_TABLE.label() + " component must be an Integer");
     }
 
     /**

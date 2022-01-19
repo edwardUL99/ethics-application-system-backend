@@ -21,7 +21,7 @@ public abstract class CompositeComponent extends ApplicationComponent {
      * @param type the type of component
      * @param title the title of the component
      */
-    public CompositeComponent(String type, String title) {
+    public CompositeComponent(ComponentType type, String title) {
         super(type, title, true);
     }
 

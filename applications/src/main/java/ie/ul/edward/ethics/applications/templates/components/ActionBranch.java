@@ -36,7 +36,7 @@ public class ActionBranch extends Branch {
      * @param comment the comment to display when the action is triggered
      */
     public ActionBranch(String action, String comment) {
-        super(ComponentTypes.ACTION_BRANCH);
+        super(ComponentType.ACTION_BRANCH);
         this.action = action;
         this.comment = comment;
     }

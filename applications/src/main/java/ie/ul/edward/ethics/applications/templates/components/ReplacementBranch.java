@@ -34,7 +34,7 @@ public class ReplacementBranch extends Branch {
      * @param replacements the list of replacements if this branch is triggered
      */
     public ReplacementBranch(List<Replacement> replacements) {
-        super(ComponentTypes.REPLACEMENT_BRANCH);
+        super(ComponentType.REPLACEMENT_BRANCH);
         this.replacements = replacements;
     }
 

@@ -29,7 +29,7 @@ public class RadioQuestionComponent extends SelectQuestionComponent {
      */
     public RadioQuestionComponent(String title, String name, String description, boolean required, List<SelectQuestionComponent.Option> options) {
         super(title, name, description, required, false, options, false);
-        setType(ComponentTypes.RADIO_QUESTION);
+        setType(ComponentType.RADIO_QUESTION);
     }
 
     /**

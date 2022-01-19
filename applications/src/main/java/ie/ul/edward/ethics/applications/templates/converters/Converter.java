@@ -1,5 +1,7 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -18,5 +20,5 @@ public @interface Converter {
      * The component type the converter is to be registered for. The type must be a public static final field in {@link ie.ul.edward.ethics.applications.templates.components.ComponentTypes}
      * @return the component type
      */
-    String value();
+    ComponentType value();
 }

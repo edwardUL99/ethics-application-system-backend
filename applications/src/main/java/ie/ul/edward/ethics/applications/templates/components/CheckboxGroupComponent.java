@@ -46,7 +46,7 @@ public class CheckboxGroupComponent extends SimpleComponent {
      * @param multiple true if multiple can be chosen, false if not
      */
     public CheckboxGroupComponent(String title, Branch defaultBranch, List<Checkbox> checkboxes, boolean multiple) {
-        super(ComponentTypes.CHECKBOX_GROUP, title);
+        super(ComponentType.CHECKBOX_GROUP, title);
         this.defaultBranch  = defaultBranch;
         this.checkboxes = checkboxes;
         this.multiple = multiple;

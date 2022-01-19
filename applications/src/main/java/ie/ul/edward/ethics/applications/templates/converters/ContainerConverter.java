@@ -1,7 +1,7 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
 import ie.ul.edward.ethics.applications.templates.components.ContainerComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
@@ -10,7 +10,7 @@ import java.util.*;
 /**
  * This class represents a converter to convert a map to a container component
  */
-@Converter(ComponentTypes.CONTAINER)
+@Converter(ComponentType.CONTAINER)
 public class ContainerConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -20,7 +20,7 @@ public class ContainerConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.CONTAINER, map.keySet(), "id", "components");
+        Converters.validateKeys(ComponentType.CONTAINER, map.keySet(), "id", "components");
 
         if (!List.class.isAssignableFrom(map.get("components").getClass()))
             throw new ApplicationParseException("components is expected to be a list but it is not");

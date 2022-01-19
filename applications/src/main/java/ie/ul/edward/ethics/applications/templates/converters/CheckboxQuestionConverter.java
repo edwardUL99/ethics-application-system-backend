@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * This converter provides conversion of an object to a checkbox
  */
-@Converter(ComponentTypes.CHECKBOX_QUESTION)
+@Converter(ComponentType.CHECKBOX_QUESTION)
 public class CheckboxQuestionConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -18,7 +18,7 @@ public class CheckboxQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.CHECKBOX_QUESTION, map.keySet(), "title", "name", "options");
+        Converters.validateKeys(ComponentType.CHECKBOX_QUESTION, map.keySet(), "title", "name", "options");
 
         if (!List.class.isAssignableFrom(map.get("options").getClass()))
             throw new ApplicationParseException("The options field must map to a List");
@@ -50,7 +50,7 @@ public class CheckboxQuestionConverter implements ComponentConverter {
         }
 
         return new CheckboxQuestionComponent((String)map.get("title"), (String)map.get("name"),
-                Converters.parseLongString(ComponentTypes.CHECKBOX_QUESTION, "description", map.getOrDefault("description", null)),
+                Converters.parseLongString(ComponentType.CHECKBOX_QUESTION, "description", map.getOrDefault("description", null)),
                 (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), options);
     }
 }

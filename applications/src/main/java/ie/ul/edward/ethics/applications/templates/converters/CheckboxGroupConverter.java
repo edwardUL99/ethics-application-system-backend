@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * This class represents a converter that can convert a CheckboxGroup
  */
-@Converter(ComponentTypes.CHECKBOX_GROUP)
+@Converter(ComponentType.CHECKBOX_GROUP)
 public class CheckboxGroupConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -18,7 +18,7 @@ public class CheckboxGroupConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.CHECKBOX_GROUP, map.keySet(), "title", "defaultBranch", "checkboxes");
+        Converters.validateKeys(ComponentType.CHECKBOX_GROUP, map.keySet(), "title", "defaultBranch", "checkboxes");
 
         Object defaultBranch = map.get("defaultBranch");
 
@@ -39,11 +39,11 @@ public class CheckboxGroupConverter implements ComponentConverter {
         if (branch == null)
             return null;
 
-        String type = (String)branch.get("type");
+        ComponentType type = ComponentType.of((String)branch.get("type"));
 
-        if (ComponentTypes.ACTION_BRANCH.equals(type)) {
+        if (ComponentType.ACTION_BRANCH.equals(type)) {
             return new ActionBranch((String)branch.get("action"), (String)branch.getOrDefault("comment", null));
-        } else if (ComponentTypes.REPLACEMENT_BRANCH.equals(type)) {
+        } else if (ComponentType.REPLACEMENT_BRANCH.equals(type)) {
             List<ReplacementBranch.Replacement> replacements = new ArrayList<>();
 
             for (Map<String, Object> replacement : (List<Map<String, Object>>)branch.get("replacements")) {

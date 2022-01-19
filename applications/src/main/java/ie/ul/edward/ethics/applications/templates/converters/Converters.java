@@ -1,6 +1,6 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 import lombok.extern.log4j.Log4j2;
 import org.reflections.Reflections;
@@ -19,7 +19,7 @@ public final class Converters {
     /**
      * The mapping of converters
      */
-    private static final Map<String, ComponentConverter> converters = new HashMap<>();
+    private static final Map<ComponentType, ComponentConverter> converters = new HashMap<>();
 
     /**
      * Register all Converter annotated classes found in the ie.ul.edward.ethics.applications.parsing.templates package
@@ -33,10 +33,7 @@ public final class Converters {
                 throw new ApplicationParseException("You cannot annotate a class that does not implement ComponentConverter with the Converter annotation");
 
             Converter annotation = annotated.getAnnotation(Converter.class);
-            String componentType = annotation.value();
-
-            if (!ComponentTypes.isValidComponentType(componentType))
-                throw new ApplicationParseException("The class " + ComponentTypes.class.getName() + " does not contain component type " + componentType);
+            ComponentType componentType = annotation.value();
 
             try {
                 log.debug("Registering ComponentConverter {} for ComponentType {}", annotated.getName(), componentType);
@@ -61,7 +58,7 @@ public final class Converters {
                     "Has a key type with the component type been defined in the JSON component object?");
 
         type = type.toLowerCase();
-        ComponentConverter converter = converters.get(type);
+        ComponentConverter converter = converters.get(ComponentType.of(type));
 
         if (converter == null)
             throw new ApplicationParseException("The application does not know how to convert a component of type " + type);
@@ -76,13 +73,13 @@ public final class Converters {
      * @param required the required keys
      * @throws ApplicationParseException if required keys are missing
      */
-    public static void validateKeys(String componentType, Set<String> keys, String...required) throws ApplicationParseException {
+    public static void validateKeys(ComponentType componentType, Set<String> keys, String...required) throws ApplicationParseException {
         Set<String> requiredKeys = new TreeSet<>(List.of(required));
         Set<String> difference = new TreeSet<>(requiredKeys);
         difference.retainAll(keys);
 
         if (difference.size() != requiredKeys.size())
-            throw new ApplicationParseException("The " + componentType + " component is missing keys, required keys are: " + requiredKeys);
+            throw new ApplicationParseException("The " + componentType.label() + " component is missing keys, required keys are: " + requiredKeys);
     }
 
     /**
@@ -92,7 +89,7 @@ public final class Converters {
      * @param string the string to process
      */
     @SuppressWarnings("unchecked")
-    public static String parseLongString(String componentType, String field, Object string) {
+    public static String parseLongString(ComponentType componentType, String field, Object string) {
         if (string == null)
             return null;
 
@@ -108,7 +105,7 @@ public final class Converters {
 
             text = builder.toString();
         } else {
-            throw new ApplicationParseException("Illegal value of the " + field + " field in the " + componentType + " element. The only allowed types is" +
+            throw new ApplicationParseException("Illegal value of the " + field + " field in the " + componentType.label() + " element. The only allowed types is" +
                     " a single string or an array of strings");
         }
 

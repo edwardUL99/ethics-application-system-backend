@@ -36,7 +36,7 @@ public class SignatureQuestionComponent extends QuestionComponent {
      * @param label the label identifying who is supposed to sign it
      */
     public SignatureQuestionComponent(String title, String name, String description, String label) {
-        super(ComponentTypes.SIGNATURE, title, name, description, true); //  a signature will always be required if present
+        super(ComponentType.SIGNATURE, title, name, description, true); //  a signature will always be required if present
         this.label = label;
     }
 

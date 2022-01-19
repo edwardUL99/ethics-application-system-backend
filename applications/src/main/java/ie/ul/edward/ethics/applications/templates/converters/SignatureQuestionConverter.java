@@ -1,7 +1,7 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
 import ie.ul.edward.ethics.applications.templates.components.SignatureQuestionComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * This class converts maps into signature questions
  */
-@Converter(ComponentTypes.SIGNATURE)
+@Converter(ComponentType.SIGNATURE)
 public class SignatureQuestionConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -20,7 +20,7 @@ public class SignatureQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.SIGNATURE, map.keySet(), "title", "name", "label");
+        Converters.validateKeys(ComponentType.SIGNATURE, map.keySet(), "title", "name", "label");
     }
 
     /**
@@ -36,7 +36,7 @@ public class SignatureQuestionConverter implements ComponentConverter {
         validate(map);
 
         return new SignatureQuestionComponent((String)map.get("title"), (String)map.get("name"),
-                Converters.parseLongString(ComponentTypes.SIGNATURE, "description", map.getOrDefault("description", null)),
+                Converters.parseLongString(ComponentType.SIGNATURE, "description", map.getOrDefault("description", null)),
                 (String)map.get("label"));
     }
 }

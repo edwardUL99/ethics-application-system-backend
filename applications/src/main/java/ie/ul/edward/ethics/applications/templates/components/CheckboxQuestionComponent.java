@@ -29,7 +29,7 @@ public class CheckboxQuestionComponent extends SelectQuestionComponent {
      */
     public CheckboxQuestionComponent(String title, String name, String description, boolean required, List<Option> options) {
         super(title, name, description, required, true, options, false);
-        setType(ComponentTypes.CHECKBOX_QUESTION);
+        setType(ComponentType.CHECKBOX_QUESTION);
     }
 
     /**

@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * This class represents a converter that can convert a map into a MultipartQuestion
  */
-@Converter(ComponentTypes.MULTIPART_QUESTION)
+@Converter(ComponentType.MULTIPART_QUESTION)
 public class MultipartQuestionConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -18,7 +18,7 @@ public class MultipartQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.MULTIPART_QUESTION, map.keySet(), "conditional", "parts");
+        Converters.validateKeys(ComponentType.MULTIPART_QUESTION, map.keySet(), "conditional", "parts");
 
         if (!Map.class.isAssignableFrom(map.get("parts").getClass()))
             throw new ApplicationParseException("The parts field must map to a map");

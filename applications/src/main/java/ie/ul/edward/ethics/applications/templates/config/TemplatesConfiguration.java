@@ -82,7 +82,6 @@ public class TemplatesConfiguration {
     public ApplicationTemplateLoader applicationTemplateLoader() {
         Resource[] resources = getApplicationResources();
         ApplicationTemplateLoader loader = new ApplicationTemplateLoader(Arrays.asList(resources), applicationParser);
-
         ApplicationTemplate[] applications = loader.loadTemplates();
 
         log.info("{} application(s) loaded from resources {}", applications.length, Arrays.toString(resources));

@@ -51,7 +51,7 @@ public abstract class QuestionComponent extends SimpleComponent {
      * @param description the description of the question
      * @param required true if an answer is required, false if not
      */
-    public QuestionComponent(String type, String title, String name, String description, boolean required) {
+    public QuestionComponent(ComponentType type, String title, String name, String description, boolean required) {
         super(type, title);
         this.name = name;
         this.description = description;

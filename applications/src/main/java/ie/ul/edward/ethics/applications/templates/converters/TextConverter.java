@@ -1,7 +1,7 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
 import ie.ul.edward.ethics.applications.templates.components.TextComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * This converter converts the map to a text component
  */
-@Converter(ComponentTypes.TEXT)
+@Converter(ComponentType.TEXT)
 public class TextConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -20,7 +20,7 @@ public class TextConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.TEXT, map.keySet(), "title", "content");
+        Converters.validateKeys(ComponentType.TEXT, map.keySet(), "title", "content");
     }
 
     /**
@@ -36,7 +36,7 @@ public class TextConverter implements ComponentConverter {
         validate(map);
 
         Object contentObj = map.get("content");
-        String content = Converters.parseLongString(ComponentTypes.TEXT, "content", contentObj);
+        String content = Converters.parseLongString(ComponentType.TEXT, "content", contentObj);
 
         return new TextComponent((String)map.get("title"), content);
     }

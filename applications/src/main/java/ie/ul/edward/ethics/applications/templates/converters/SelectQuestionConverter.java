@@ -1,7 +1,7 @@
 package ie.ul.edward.ethics.applications.templates.converters;
 
 import ie.ul.edward.ethics.applications.templates.components.ApplicationComponent;
-import ie.ul.edward.ethics.applications.templates.components.ComponentTypes;
+import ie.ul.edward.ethics.applications.templates.components.ComponentType;
 import ie.ul.edward.ethics.applications.templates.components.QuestionComponent;
 import ie.ul.edward.ethics.applications.templates.components.SelectQuestionComponent;
 import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
@@ -11,7 +11,7 @@ import java.util.*;
 /**
  * This class implements a converter for a SelectQuestionComponent
  */
-@Converter(ComponentTypes.SELECT_QUESTION)
+@Converter(ComponentType.SELECT_QUESTION)
 public class SelectQuestionConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -21,7 +21,7 @@ public class SelectQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.SELECT_QUESTION, map.keySet(), "title", "name", "multiple", "options");
+        Converters.validateKeys(ComponentType.SELECT_QUESTION, map.keySet(), "title", "name", "multiple", "options");
 
         if (!List.class.isAssignableFrom(map.get("options").getClass()))
             throw new ApplicationParseException("The options field must map to a List");
@@ -53,7 +53,7 @@ public class SelectQuestionConverter implements ComponentConverter {
         }
 
         return new SelectQuestionComponent((String)map.get("title"), (String)map.get("name"),
-                Converters.parseLongString(ComponentTypes.SELECT_QUESTION, "description", map.getOrDefault("description", null)),
+                Converters.parseLongString(ComponentType.SELECT_QUESTION, "description", map.getOrDefault("description", null)),
                 (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED),
                 (boolean)map.get("multiple"), options, (boolean)map.getOrDefault("addOther", false));
     }

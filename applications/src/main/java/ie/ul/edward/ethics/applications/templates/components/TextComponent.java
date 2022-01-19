@@ -36,7 +36,7 @@ public class TextComponent extends SimpleComponent {
      * @param content the text content to display
      */
     public TextComponent(String title, String content) {
-        super(ComponentTypes.TEXT, title);
+        super(ComponentType.TEXT, title);
         this.content = content;
     }
 

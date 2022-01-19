@@ -20,7 +20,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import java.util.HashMap;
 import java.util.Map;
 
-import static ie.ul.edward.ethics.applications.services.ApplicationServiceTest.*;
 import static ie.ul.edward.ethics.test.utils.constants.Authentication.*;
 import static ie.ul.edward.ethics.test.utils.constants.Users.DEPARTMENT;
 import static ie.ul.edward.ethics.test.utils.constants.Users.NAME;

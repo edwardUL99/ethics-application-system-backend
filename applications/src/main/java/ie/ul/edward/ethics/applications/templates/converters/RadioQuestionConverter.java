@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * This converter provides conversion of an object to a checkbox
  */
-@Converter(ComponentTypes.RADIO_QUESTION)
+@Converter(ComponentType.RADIO_QUESTION)
 public class RadioQuestionConverter implements ComponentConverter {
     /**
      * Validates the map for conversion
@@ -18,7 +18,7 @@ public class RadioQuestionConverter implements ComponentConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentTypes.RADIO_QUESTION, map.keySet(), "title", "options");
+        Converters.validateKeys(ComponentType.RADIO_QUESTION, map.keySet(), "title", "options");
 
         if (!List.class.isAssignableFrom(map.get("options").getClass()))
             throw new ApplicationParseException("The options field must map to a List");
@@ -50,7 +50,7 @@ public class RadioQuestionConverter implements ComponentConverter {
         }
 
         return new RadioQuestionComponent((String)map.get("title"), (String)map.get("name"),
-                Converters.parseLongString(ComponentTypes.RADIO_QUESTION, "description", map.getOrDefault("description", null)),
+                Converters.parseLongString(ComponentType.RADIO_QUESTION, "description", map.getOrDefault("description", null)),
                 (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), options);
     }
 }

@@ -1,6 +1,5 @@
 package ie.ul.edward.ethics.applications.templates.components;
 
-import ie.ul.edward.ethics.applications.templates.exceptions.ApplicationParseException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +27,7 @@ public abstract class ApplicationComponent {
     /**
      * The type of the component
      */
-    @Setter(AccessLevel.NONE)
-    protected String type;
+    protected ComponentType type;
     /**
      * The component title
      */
@@ -59,21 +57,10 @@ public abstract class ApplicationComponent {
      * @param title the component title
      * @param composite true if a composite component (i.e. has a getComponents() method), false if not
      */
-    public ApplicationComponent(String type, String title, boolean composite) {
-        this.setType(type);
+    public ApplicationComponent(ComponentType type, String title, boolean composite) {
+        this.type = type;
         this.title = title;
         this.composite = composite;
         this.componentId = UUID.randomUUID().toString();
-    }
-
-    /**
-     * Set the type of the component
-     * @param type the component type. Must be registered in {@link ComponentTypes}
-     */
-    public void setType(String type) {
-        if (type != null && !ComponentTypes.isValidComponentType(type))
-            throw new ApplicationParseException("The type " + type + " is not a registered type in class " + ComponentTypes.class.getName());
-
-        this.type = type;
     }
 }

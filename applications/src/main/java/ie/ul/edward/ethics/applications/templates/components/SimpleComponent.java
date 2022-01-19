@@ -20,7 +20,7 @@ public abstract class SimpleComponent extends ApplicationComponent {
      * @param type the type of component
      * @param title the title of the component
      */
-    public SimpleComponent(String type, String title) {
+    public SimpleComponent(ComponentType type, String title) {
         super(type, title,false);
     }
 }

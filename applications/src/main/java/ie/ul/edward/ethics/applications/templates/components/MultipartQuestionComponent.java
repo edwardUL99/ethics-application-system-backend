@@ -43,7 +43,7 @@ public class MultipartQuestionComponent extends QuestionComponent {
      * @param parts the map of part IDs to parts
      */
     public MultipartQuestionComponent(String title, boolean required, boolean conditional, Map<String, QuestionPart> parts) {
-        super(ComponentTypes.MULTIPART_QUESTION, title, null, null, required);
+        super(ComponentType.MULTIPART_QUESTION, title, null, null, required);
         this.conditional = conditional;
         this.parts = parts;
     }
@@ -127,7 +127,7 @@ public class MultipartQuestionComponent extends QuestionComponent {
          * @param value the value of the current part that determines part should be branched to
          */
         public QuestionBranch(String part, String value) {
-            super(ComponentTypes.QUESTION_BRANCH);
+            super(ComponentType.QUESTION_BRANCH);
             this.part = part;
             this.value = value;
         }

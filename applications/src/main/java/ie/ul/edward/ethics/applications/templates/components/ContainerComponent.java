@@ -43,7 +43,7 @@ public class ContainerComponent extends CompositeComponent {
      * @param components the list of components within the container
      */
     public ContainerComponent(String id, List<ApplicationComponent> components) {
-        super(ComponentTypes.CONTAINER, null);
+        super(ComponentType.CONTAINER, null);
         this.id = id;
         this.components = components;
     }
