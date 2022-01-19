@@ -15,7 +15,8 @@
     },
     {
       "path": "/api/applications",
-      "permissions": "VIEW_OWN_APPLICATIONS"
+      "permissions": "VIEW_OWN_APPLICATIONS",
+      "requestMethod": "GET"
     }
   ]
 }

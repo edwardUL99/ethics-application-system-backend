@@ -55,15 +55,15 @@ is an example:
   ]
 }
 ```
-The file [PermissionsConfiguration.java](src/main/java/ie/ul/edward/ethics/users/config/PermissionsConfiguration.java) by default defines the paths
+The file [PermissionsConfiguration.java](FYP/ethics-application-system/backend/users/src/main/java/ie/ul/ethics/scieng/users/config/PermissionsConfiguration.java) by default defines the paths
 that are equivalent to the above JSON file.
 
 The `path` can be an ANT path so that it will match any path that matches the pattern, or a concrete path. The permissions field
 allows a comma-separated list of permissions to be defined. The names are the names of the constant permissions fields defined in
-[Permissions.java](src/main/java/ie/ul/edward/ethics/users/authorization/Permissions.java).
+[Permissions.java](FYP/ethics-application-system/backend/users/src/main/java/ie/ul/ethics/scieng/users/authorization/Permissions.java).
 
 A field `requestMethod` can be set with a String matching one of the request methods in the following file:
-[RequestMethods.java](src/main/java/ie/ul/edward/ethics/users/authorization/RequestMethod.java) and specifies that authorization
+[RequestMethods.java](FYP/ethics-application-system/backend/users/src/main/java/ie/ul/ethics/scieng/users/authorization/RequestMethod.java) and specifies that authorization
 should only be carried out if the request is made using that method. If not specified, the default is `ALL` which means any request
 requires authorization.
 
