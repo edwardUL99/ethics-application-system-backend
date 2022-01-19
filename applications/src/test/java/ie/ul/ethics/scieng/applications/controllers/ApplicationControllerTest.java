@@ -209,7 +209,7 @@ public class ApplicationControllerTest {
 
         CreateDraftApplicationResponse response = new CreateDraftApplicationResponse(draftApplication);
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getValues());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getAnswers());
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
@@ -218,7 +218,7 @@ public class ApplicationControllerTest {
                 .willReturn(USERNAME);
         given(requestMapper.createDraftRequestToDraft(request))
                 .willReturn(draftApplication);
-        given(applicationService.createDraftApplication(draftApplication, false))
+        given(applicationService.createApplication(draftApplication, false))
                 .willReturn(draftApplication);
 
         mockMvc.perform(post(createApiPath(Constants.Endpoint.APPLICATIONS, "draft"))
@@ -229,7 +229,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().json(result));
 
         verify(authenticationInformation).getUsername();
-        verify(applicationService).createDraftApplication(draftApplication, false);
+        verify(applicationService).createApplication(draftApplication, false);
         verify(requestMapper).createDraftRequestToDraft(request);
     }
 
@@ -242,7 +242,7 @@ public class ApplicationControllerTest {
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getValues());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getAnswers());
 
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INSUFFICIENT_PERMISSIONS);
@@ -296,7 +296,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().json(result));
 
         verify(authenticationInformation).getUsername();
-        verify(applicationService, times(0)).createDraftApplication(draftApplication, false);
+        verify(applicationService, times(0)).createApplication(draftApplication, false);
         verify(requestMapper).createDraftRequestToDraft(request);
     }
 
@@ -318,7 +318,7 @@ public class ApplicationControllerTest {
                 .willReturn(USERNAME);
         given(requestMapper.updateDraftRequestToDraft(request))
                 .willReturn(draftApplication);
-        given(applicationService.createDraftApplication(draftApplication, true))
+        given(applicationService.createApplication(draftApplication, true))
                 .willReturn(draftApplication);
 
         mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "draft"))
@@ -330,7 +330,7 @@ public class ApplicationControllerTest {
 
         verify(authenticationInformation).getUsername();
         verify(requestMapper).updateDraftRequestToDraft(request);
-        verify(applicationService).createDraftApplication(draftApplication, true);
+        verify(applicationService).createApplication(draftApplication, true);
     }
 
     /**

@@ -1,7 +1,11 @@
 package ie.ul.ethics.scieng.users.config;
 
 import ie.ul.ethics.scieng.users.authorization.RequestMethod;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.*;
 import java.util.stream.Collectors;

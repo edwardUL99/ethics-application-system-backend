@@ -113,13 +113,13 @@ public class ApplicationController {
      * @param request the request to create the draft
      * @return the response body
      */
-    private ResponseEntity<?> createDraftInternal(CreateDraftApplicationRequest request) {
+    private ResponseEntity<?> createDraftApplicationInternal(CreateDraftApplicationRequest request) {
         DraftApplication draftApplication = requestMapper.createDraftRequestToDraft(request);
 
         if (draftApplication.getUser() == null) {
             return respondError(USER_NOT_FOUND);
         } else {
-            Application application = applicationService.createDraftApplication(draftApplication, false);
+            Application application = applicationService.createApplication(draftApplication, false);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
         }
@@ -137,7 +137,7 @@ public class ApplicationController {
         if (verification != null)
             return verification;
 
-        return createDraftInternal(request);
+        return createDraftApplicationInternal(request);
     }
 
     /**
@@ -148,7 +148,7 @@ public class ApplicationController {
     private ResponseEntity<?> updateDraftInternal(DraftApplication draftApplication) {
         try {
             Map<String, Object> response = new HashMap<>();
-            applicationService.createDraftApplication(draftApplication, true);
+            applicationService.createApplication(draftApplication, true);
             response.put(MESSAGE, APPLICATION_UPDATED);
 
             return ResponseEntity.ok(response);

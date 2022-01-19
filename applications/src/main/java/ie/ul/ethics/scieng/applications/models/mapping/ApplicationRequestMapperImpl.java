@@ -63,7 +63,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
                 throw new IllegalStateException("The application with ID " + id + " is not a DraftApplication");
 
             DraftApplication draftApplication = (DraftApplication) loaded;
-            draftApplication.setValues(request.getValues());
+            draftApplication.setAnswers(request.getValues());
 
             return draftApplication;
         } else {

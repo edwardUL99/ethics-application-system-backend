@@ -5,7 +5,7 @@ function checkStatus() {
 		echo "Build failed..."
 		exit "$1"
 	fi
-} 
+}
 
 mvn clean install -pl '!app'
 

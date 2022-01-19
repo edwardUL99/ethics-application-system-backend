@@ -6,7 +6,6 @@ import ie.ul.ethics.scieng.authentication.exceptions.IllegalUpdateException;
 import ie.ul.ethics.scieng.authentication.exceptions.UsernameExistsException;
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
 import ie.ul.ethics.scieng.authentication.jwt.JWT;
-import ie.ul.ethics.scieng.authentication.models.*;
 import ie.ul.ethics.scieng.authentication.services.AccountService;
 import ie.ul.ethics.scieng.common.email.EmailSender;
 import ie.ul.ethics.scieng.common.email.exceptions.EmailException;

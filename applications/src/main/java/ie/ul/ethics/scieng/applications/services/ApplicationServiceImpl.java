@@ -3,7 +3,6 @@ package ie.ul.ethics.scieng.applications.services;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -108,38 +107,17 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true),
             @CacheEvict(value = "template", allEntries = true)
     })
-    public Application createApplication(Application application) {
+    public Application createApplication(Application application, boolean update) {
+        if (update && application.getId() == null)
+            throw new ApplicationException("You cannot update a DraftApplication that has no ID");
+
+        if (!update)
+            templateRepository.save(application.getApplicationTemplate());
+
         application.setLastUpdated(LocalDateTime.now());
         applicationRepository.save(application);
 
         return application;
-    }
-
-    /**
-     * Does some required processing on a draft application and then passes it to {@link #createApplication(Application)}
-     *
-     * @param draftApplication the application to create
-     * @param update           true if it's an update, false if new
-     * @return the created application
-     * @throws ApplicationException if draft application's ID is null and update is true
-     */
-    @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true),
-            @CacheEvict(value = "template", allEntries = true)
-    })
-    public Application createDraftApplication(DraftApplication draftApplication, boolean update) {
-        if (update && draftApplication.getId() == null)
-            throw new ApplicationException("You cannot update a DraftApplication that has no ID");
-
-        if (!update)
-            templateRepository.save(draftApplication.getApplicationTemplate());
-
-        createApplication(draftApplication);
-
-        return draftApplication;
     }
 
     /**

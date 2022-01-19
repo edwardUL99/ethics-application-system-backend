@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -119,13 +120,13 @@ public class ApplicationRequestMapperTest {
      * @return the test application
      */
     public Application createDraftApplication() {
-        HashMap<String, DraftApplication.Value> values = new HashMap<>();
+        HashMap<String, Answer> values = new HashMap<>();
         String[] components = {"component1", "component2", "component3", "component4"};
         String[] answers = {"answer1", "answer2", "answer3", "answer4"};
 
         for (int i = 0; i < components.length; i++) {
             String id = components[i];
-            values.put(id, new DraftApplication.Value(null, id, answers[i], DraftApplication.ValueType.TEXT));
+            values.put(id, new Answer(null, id, answers[i], Answer.ValueType.TEXT));
         }
 
         return new DraftApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(), getTemplate(), values);
@@ -140,7 +141,7 @@ public class ApplicationRequestMapperTest {
         draftApplication.setId(null);
         draftApplication.setApplicationId(null);
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(USERNAME, draftApplication.getApplicationTemplate(), draftApplication.getValues());
+                new CreateDraftApplicationRequest(USERNAME, draftApplication.getApplicationTemplate(), draftApplication.getAnswers());
 
         given(userService.loadUser(USERNAME))
                 .willReturn(draftApplication.getUser());
@@ -160,9 +161,9 @@ public class ApplicationRequestMapperTest {
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
-        Map<String, DraftApplication.Value> oldValues = draftApplication.getValues();
-        Map<String, DraftApplication.Value> newValues = new HashMap<>(oldValues);
-        newValues.put("component5", new DraftApplication.Value(null, "component5", "answer5", DraftApplication.ValueType.TEXT));
+        Map<String, Answer> oldValues = draftApplication.getAnswers();
+        Map<String, Answer> newValues = new HashMap<>(oldValues);
+        newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
 
         UpdateDraftApplicationRequest request =
                 new UpdateDraftApplicationRequest(APPLICATION_DB_ID, newValues);
@@ -175,7 +176,7 @@ public class ApplicationRequestMapperTest {
         DraftApplication returned = requestMapper.updateDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
-        assertEquals(draftApplication.getValues(), newValues);
+        assertEquals(draftApplication.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_DB_ID);
     }
 
@@ -187,7 +188,7 @@ public class ApplicationRequestMapperTest {
         DraftApplication temp = (DraftApplication) createDraftApplication();
 
         return new DraftApplication(temp.getId(), temp.getApplicationId(),
-                temp.getUser(), temp.getApplicationTemplate(), temp.getValues()) {
+                temp.getUser(), temp.getApplicationTemplate(), temp.getAnswers()) {
             @Override
             public void setStatus(ApplicationStatus status) {
                 this.status = status;;

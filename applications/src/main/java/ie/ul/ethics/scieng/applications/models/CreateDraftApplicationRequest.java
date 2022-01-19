@@ -1,8 +1,12 @@
 package ie.ul.ethics.scieng.applications.models;
 
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
 import java.util.Map;
@@ -30,5 +34,5 @@ public class CreateDraftApplicationRequest {
      * The initial mapping of values
      */
     @NotNull
-    private Map<String, DraftApplication.Value> values;
+    private Map<String, Answer> values;
 }

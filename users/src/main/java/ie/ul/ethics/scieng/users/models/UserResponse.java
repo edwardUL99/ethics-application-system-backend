@@ -2,7 +2,11 @@ package ie.ul.ethics.scieng.users.models;
 
 import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.users.models.authorization.Role;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * The response of requesting loading a user

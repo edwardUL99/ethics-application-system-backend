@@ -1,7 +1,11 @@
 package ie.ul.ethics.scieng.users.models;
 
 import ie.ul.ethics.scieng.users.models.authorization.Authorization;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Collection;
 

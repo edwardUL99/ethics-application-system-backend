@@ -36,7 +36,8 @@ public final class Roles {
             new Role(null, "Committee Member",
                     "This role is the role allocated to a committee member",
                     List.of(
-                            Permissions.VIEW_OWN_APPLICATIONS
+                            Permissions.VIEW_OWN_APPLICATIONS,
+                            Permissions.REVIEW_APPLICATIONS
                     )); // TODO create permissions for committee members
 
     /**

@@ -2,10 +2,8 @@ package ie.ul.ethics.scieng.applications.services;
 
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.models.User;
-import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 
 import java.util.List;
 
@@ -41,18 +39,10 @@ public interface ApplicationService {
     /**
      * Create/update the application
      * @param application the application to save
+     * @param update true to update, false to create
      * @return the saved application
      */
-    Application createApplication(Application application);
-
-    /**
-     * Does some required processing on a draft application and then passes it to {@link #createApplication(Application)}
-     * @param draftApplication the application to create
-     * @param update true if it's an update, false if new
-     * @return the created application
-     * @throws ApplicationException if draft application's ID is null and update is true
-     */
-    Application createDraftApplication(DraftApplication draftApplication, boolean update);
+    Application createApplication(Application application, boolean update);
 
     /**
      * Load and return the application template with the given ID

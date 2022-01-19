@@ -1051,6 +1051,66 @@
 					"response": []
 				},
 				{
+					"name": "Get Roles",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200 OK\", function() {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Result is as expected\", function () {",
+									"    let json = pm.response.json()",
+									"    pm.expect(json).to.have.property(\"authorizations\");",
+									"",
+									"    let authorizations = json.authorizations;",
+									"",
+									"    for (authorization of authorizations) {",
+									"        pm.expect(authorization).to.have.property(\"id\");",
+									"        pm.expect(authorization).to.have.property(\"name\");",
+									"        pm.expect(authorization).to.have.property(\"description\");",
+									"        pm.expect(authorization).to.have.property(\"permissions\");",
+									"        pm.expect(authorization).to.have.property(\"singleUser\");",
+									"",
+									"        if (authorization.name == \"Chair\") {",
+									"            pm.collectionVariables.set(\"chairId\", authorization.id);",
+									"        }",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/users/roles",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"users",
+								"roles"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Update Role to chair",
 					"event": [
 						{
@@ -1096,7 +1156,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"username\": \"test\",\n    \"role\": 11\n}",
+							"raw": "{\n    \"username\": \"test\",\n    \"role\": {{chairId}}\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -1112,62 +1172,6 @@
 								"users",
 								"user",
 								"role"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Roles",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"pm.test(\"Status is 200 OK\", function() {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"Result is as expected\", function () {",
-									"    let json = pm.response.json()",
-									"    pm.expect(json).to.have.property(\"authorizations\");",
-									"",
-									"    let authorizations = json.authorizations;",
-									"",
-									"    for (authorization of authorizations) {",
-									"        pm.expect(authorization).to.have.property(\"id\");",
-									"        pm.expect(authorization).to.have.property(\"name\");",
-									"        pm.expect(authorization).to.have.property(\"description\");",
-									"        pm.expect(authorization).to.have.property(\"permissions\");",
-									"        pm.expect(authorization).to.have.property(\"singleUser\");",
-									"    }",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": [
-								{
-									"key": "token",
-									"value": "{{auth.token}}",
-									"type": "string"
-								}
-							]
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{api.path}}/users/roles",
-							"host": [
-								"{{api.path}}"
-							],
-							"path": [
-								"users",
-								"roles"
 							]
 						}
 					},
@@ -1668,6 +1672,30 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Applications",
+			"item": [
+				{
+					"name": "Get Application Templates",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{api.path}}/applications/templates/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"applications",
+								"templates",
+								""
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"auth": {
@@ -1716,6 +1744,10 @@
 		},
 		{
 			"key": "confirmationToken",
+			"value": ""
+		},
+		{
+			"key": "chairId",
 			"value": ""
 		}
 	]

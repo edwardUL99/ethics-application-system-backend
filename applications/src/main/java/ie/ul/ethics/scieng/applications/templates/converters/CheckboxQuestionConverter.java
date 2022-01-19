@@ -1,6 +1,5 @@
 package ie.ul.ethics.scieng.applications.templates.converters;
 
-import ie.ul.ethics.scieng.applications.templates.components.*;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationParseException;
 import ie.ul.ethics.scieng.applications.templates.components.*;
 

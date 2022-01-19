@@ -4,6 +4,7 @@ import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -140,13 +141,13 @@ public class ApplicationServiceTest {
      * @return the test application
      */
     public static Application createDraftApplication(ApplicationTemplate applicationTemplate) {
-        HashMap<String, DraftApplication.Value> values = new HashMap<>();
+        HashMap<String, Answer> values = new HashMap<>();
         String[] components = {"component1", "component2", "component3", "component4"};
         String[] answers = {"answer1", "answer2", "answer3", "answer4"};
 
         for (int i = 0; i < components.length; i++) {
             String id = components[i];
-            values.put(id, new DraftApplication.Value(null, id, answers[i], DraftApplication.ValueType.TEXT));
+            values.put(id, new Answer(null, id, answers[i], Answer.ValueType.TEXT));
         }
 
         return new DraftApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(), applicationTemplate, values);
@@ -286,7 +287,7 @@ public class ApplicationServiceTest {
     public void shouldCreateApplication() {
         Application application = createDraftApplication(getTemplate());
 
-        Application created = applicationService.createApplication(application);
+        Application created = applicationService.createApplication(application, false);
 
         assertEquals(application, created);
         assertNotNull(application.getLastUpdated());
@@ -294,49 +295,33 @@ public class ApplicationServiceTest {
     }
 
     /**
-     * Tests that a draft application should be created
-     */
-    @Test
-    public void shouldCreateDraftApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
-
-        Application created = applicationService.createDraftApplication(draftApplication, false);
-
-        assertEquals(draftApplication, created);
-        assertNotNull(created.getLastUpdated());
-        verify(templateRepository).save(draftApplication.getApplicationTemplate());
-        verify(applicationRepository).save(draftApplication);
-    }
-
-    /**
      * Tests that a draft application should be updated
      */
     @Test
-    public void shouldUpdateDraftApplication() {
+    public void shouldUpdateApplication() {
         DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
         LocalDateTime now = LocalDateTime.now();
         draftApplication.setLastUpdated(now);
 
-        Application created = applicationService.createDraftApplication(draftApplication, true);
+        Application created = applicationService.createApplication(draftApplication, true);
 
         assertEquals(draftApplication, created);
         assertTrue(created.getLastUpdated() != null && created.getLastUpdated().isAfter(now));
         verifyNoInteractions(templateRepository);
         verify(applicationRepository).save(draftApplication);
     }
-
     /**
      * Tests that an ApplicationException is thrown if an application is attempted to be updated without an ID
      */
     @Test
-    public void shouldThrowExceptionOnDraftUpdateNoId() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
-        draftApplication.setId(null);
+    public void shouldThrowExceptionOnUpdateNoId() {
+        Application application = createDraftApplication(getTemplate());
+        application.setId(null);
 
-        assertThrows(ApplicationException.class, () -> applicationService.createDraftApplication(draftApplication, true));
+        assertThrows(ApplicationException.class, () -> applicationService.createApplication(application, true));
 
         verifyNoInteractions(templateRepository);
-        verify(applicationRepository, times(0)).save(draftApplication);
+        verify(applicationRepository, times(0)).save(application);
     }
 
     /**

@@ -1,7 +1,11 @@
 package ie.ul.ethics.scieng.users.models;
 
 import ie.ul.ethics.scieng.authentication.models.Account;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * This class represents a user response containing just user information with just role name

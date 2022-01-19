@@ -5,7 +5,6 @@ import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.models.*;
-import ie.ul.ethics.scieng.users.models.*;
 import ie.ul.ethics.scieng.users.models.authorization.Role;
 import ie.ul.ethics.scieng.users.services.UserService;
 import static ie.ul.ethics.scieng.common.Constants.*;

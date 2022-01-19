@@ -44,12 +44,24 @@ public final class Permissions {
             new Permission(null, "View All Applications", "This permission allows a user to view all applications in the system");
 
     /**
+     * This permission allows a role to review applications
+     */
+    public static final Permission REVIEW_APPLICATIONS =
+            new Permission(null, "Review Applications", "This permission allows a user to review applications");
+
+    /**
+     * This permission allows a role to refer applications back to applicants
+     */
+    public static final Permission REFER_APPLICATIONS =
+            new Permission(null, "Refer Applications", "This permission allows a user to refer applications back to the applicant");
+
+    /**
      * This permission allows a role to view all admin resources
      */
     public static final Permission ADMIN =
             new Permission(null, "Admin", "This permission grants a user access to certain admin resources");
 
-    // TODO put more defined roles here
+    // TODO put more defined permissions here
 
     /**
      * This permission allows a role to create new users
