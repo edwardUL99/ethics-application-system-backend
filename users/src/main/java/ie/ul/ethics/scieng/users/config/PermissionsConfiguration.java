@@ -42,7 +42,8 @@ public class PermissionsConfiguration {
                     .requireAllPermissions("/api/**/admin/**", Permissions.ADMIN)
                     .requireOneOfPermissions(createApiPath(Endpoint.APPLICATIONS, "draft"), Permissions.CREATE_APPLICATION,
                             Permissions.EDIT_APPLICATION)
-                    .requireOneOfPermissions(createApiPath(Endpoint.APPLICATIONS, true), RequestMethod.GET, Permissions.VIEW_OWN_APPLICATIONS);
+                    .requireOneOfPermissions(createApiPath(Endpoint.APPLICATIONS, true), RequestMethod.GET, Permissions.VIEW_OWN_APPLICATIONS)
+                    .requireAllPermissions("/api/applications/id/", RequestMethod.GET, Permissions.CREATE_APPLICATION);
         } else {
             for (PermissionsPathsConfig.ConfiguredPath configuredPath : configuredPaths) {
                 String path = configuredPath.getPath();

@@ -8,7 +8,6 @@ import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTemplateRepository;
 import ie.ul.ethics.scieng.users.models.User;
-import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -37,25 +36,19 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The loader for loading application templates
      */
     private final ApplicationTemplateLoader templateLoader;
-    /**
-     * The user service for checking user's permissions on application services
-     */
-    private final UserService userService;
 
     /**
      * Create an ApplicationServiceImpl
      * @param templateRepository the template repository for saving application templates
      * @param applicationRepository the repository for saving and loading applications
      * @param templateLoader the loader for application template loading
-     * @param userService the user service for checking user's permissions on application services
      */
     @Autowired
     public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository,
-                                  ApplicationTemplateLoader templateLoader, UserService userService) {
+                                  ApplicationTemplateLoader templateLoader) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
         this.templateLoader = templateLoader;
-        this.userService = userService;
     }
 
     /**
@@ -68,6 +61,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Cacheable(value = "application")
     public Application getApplication(Long id) {
         return applicationRepository.findById(id).orElse(null);
+    }
+
+    /**
+     * Retrieve the application by the applicationId attribute
+     *
+     * @param applicationId the applicationId to retrieve by
+     * @return the application if found, null if not
+     */
+    @Override
+    @Cacheable(value = "application")
+    public Application getApplication(String applicationId) {
+        return applicationRepository.findByApplicationId(applicationId).orElse(null);
     }
 
     /**

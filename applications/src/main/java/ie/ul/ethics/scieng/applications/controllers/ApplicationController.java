@@ -6,6 +6,7 @@ import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -45,6 +46,10 @@ public class ApplicationController {
      */
     private final UserService userService;
     /**
+     * The policy for generating application IDs
+     */
+    private final ApplicationIDPolicy applicationIDPolicy;
+    /**
      * Authentication information to retrieve user's username
      */
     @Resource(name = "authenticationInformation")
@@ -55,11 +60,26 @@ public class ApplicationController {
      * @param applicationService the service for applications processing
      * @param requestMapper the mapper for mapping requests to entities
      * @param userService the user service for loading users
+     * @param applicationIDPolicy the policy for generating IDs
      */
-    public ApplicationController(ApplicationService applicationService, ApplicationRequestMapper requestMapper, UserService userService) {
+    public ApplicationController(ApplicationService applicationService, ApplicationRequestMapper requestMapper, UserService userService,
+                                 ApplicationIDPolicy applicationIDPolicy) {
         this.applicationService = applicationService;
         this.requestMapper = requestMapper;
         this.userService = userService;
+        this.applicationIDPolicy = applicationIDPolicy;
+    }
+
+    /**
+     * This endpoint must be called before creating an application
+     * @return the response body containing the ID
+     */
+    @GetMapping("/id")
+    public ResponseEntity<?> generateId() {
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", applicationIDPolicy.generate());
+
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -77,11 +97,16 @@ public class ApplicationController {
     /**
      * This endpoint retrieves the application with the given ID
      * @param id the id of the application
+     * @param applicationId the applicationId if wants to be found by that
      * @return the response body
      */
     @GetMapping
-    public ResponseEntity<?> getApplication(@RequestParam Long id) {
-        Application application = applicationService.getApplication(id);
+    public ResponseEntity<?> getApplication(@RequestParam(required = false, name = "dbId") Long id,
+                                            @RequestParam(required = false, name = "id") String applicationId) {
+        if ((id == null && applicationId == null) || (id != null && applicationId != null))
+            return ResponseEntity.badRequest().build();
+
+        Application application = (id == null) ? applicationService.getApplication(applicationId):applicationService.getApplication(id);
 
         if (application != null) {
             User user = userService.loadUser(authenticationInformation.getUsername());

@@ -19,13 +19,16 @@ import java.util.Map;
 @Setter
 public abstract class Application {
     /**
-     * The database ID of the application
+     * The database ID of the application. It changes depending on the status of the application since a different
+     * subclass is instantiated. The old application should be deleted and replaced with the new one. However, the
+     * {@link #applicationId} should remain the same
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     protected Long id;
     /**
-     * The unique ethics committee application ID
+     * The unique ethics committee application ID. This should remain the same across different Application sub-class
+     * instances, even if {@link #id} remains the same, as long as it represents the same application, just in a different state
      */
     @Column(unique = true)
     protected String applicationId;

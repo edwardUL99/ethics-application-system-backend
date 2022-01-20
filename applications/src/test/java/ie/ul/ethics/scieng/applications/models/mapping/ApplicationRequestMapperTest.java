@@ -141,7 +141,7 @@ public class ApplicationRequestMapperTest {
         draftApplication.setId(null);
         draftApplication.setApplicationId(null);
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(USERNAME, draftApplication.getApplicationTemplate(), draftApplication.getAnswers());
+                new CreateDraftApplicationRequest(USERNAME, draftApplication.getApplicationTemplate(), APPLICATION_ID, draftApplication.getAnswers());
 
         given(userService.loadUser(USERNAME))
                 .willReturn(draftApplication.getUser());

@@ -17,6 +17,11 @@
       "path": "/api/applications",
       "permissions": "VIEW_OWN_APPLICATIONS",
       "requestMethod": "GET"
+    },
+    {
+      "path": "/api/applications/id/",
+      "permissions": "CREATE_APPLICATION",
+      "requestMethod": "GET"
     }
   ]
 }

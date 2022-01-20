@@ -6,6 +6,7 @@ import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -16,6 +17,7 @@ import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.common.Constants;
 import ie.ul.ethics.scieng.test.utils.JSON;
 
+import static ie.ul.ethics.scieng.applications.services.ApplicationServiceTest.APPLICATION_ID;
 import static ie.ul.ethics.scieng.common.Constants.*;
 import static ie.ul.ethics.scieng.test.utils.constants.Authentication.USERNAME;
 import static org.mockito.BDDMockito.given;
@@ -73,6 +75,11 @@ public class ApplicationControllerTest {
     @MockBean
     private ApplicationRequestMapper requestMapper;
     /**
+     * The mock bean for generating IDs
+     */
+    @MockBean
+    private ApplicationIDPolicy applicationIDPolicy;
+    /**
      * The loaded templates
      */
     private final ApplicationTemplate[] templates;
@@ -101,6 +108,26 @@ public class ApplicationControllerTest {
     private void initMocks() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         MockitoAnnotations.openMocks(this);
+    }
+
+    /**
+     * Tests that an ID should be generated successfully
+     */
+    @Test
+    public void shouldGenerateIDSuccessfully() throws Exception {
+        Map<String, Object> response = new HashMap<>();
+        response.put("id", APPLICATION_ID);
+        String result = JSON.convertJSON(response);
+
+        given(applicationIDPolicy.generate())
+                .willReturn(APPLICATION_ID);
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "id")))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationIDPolicy).generate();
     }
 
     /**
@@ -139,7 +166,7 @@ public class ApplicationControllerTest {
         String json = JSON.convertJSON(draft);
 
         mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
-                        .param("id", "" + ApplicationServiceTest.APPLICATION_DB_ID))
+                        .param("dbId", "" + ApplicationServiceTest.APPLICATION_DB_ID))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(json));
@@ -158,7 +185,7 @@ public class ApplicationControllerTest {
                 .willReturn(null);
 
         mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
-                        .param("id", "" + ApplicationServiceTest.APPLICATION_DB_ID))
+                        .param("dbId", "" + ApplicationServiceTest.APPLICATION_DB_ID))
                 .andExpect(status().isNotFound());
 
         verify(applicationService).getApplication(ApplicationServiceTest.APPLICATION_DB_ID);
@@ -188,7 +215,7 @@ public class ApplicationControllerTest {
         String result = JSON.convertJSON(response);
 
         mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
-                        .param("id", "" + ApplicationServiceTest.APPLICATION_DB_ID))
+                        .param("dbId", "" + ApplicationServiceTest.APPLICATION_DB_ID))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
@@ -196,6 +223,100 @@ public class ApplicationControllerTest {
         verify(applicationService).getApplication(ApplicationServiceTest.APPLICATION_DB_ID);
         verify(userService).loadUser("not_me");
         verify(authenticationInformation).getUsername();
+    }
+
+    /**
+     * Tests that an application should be retrieved successfully
+     */
+    @Test
+    public void shouldGetApplicationSuccessfullyByAppId() throws Exception {
+        Application draft = ApplicationServiceTest.createDraftApplication(templates[0]);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(draft);
+        given(userService.loadUser(USERNAME))
+                .willReturn(draft.getUser());
+
+        String json = JSON.convertJSON(draft);
+
+        mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
+                        .param("id", APPLICATION_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(json));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
+        verify(authenticationInformation).getUsername();
+    }
+
+    /**
+     * Should get not found on get application if the ID doesn't exist
+     */
+    @Test
+    public void shouldThrowNotFoundOnGetApplicationByAppId() throws Exception {
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(null);
+
+        mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
+                        .param("id", APPLICATION_ID))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that insufficient permissions should be thrown on get application if the user cannot view the application
+     */
+    @Test
+    public void shouldThrowInsufficientPermissionsOnGetApplicationByAppId() throws Exception {
+        Application application = ApplicationServiceTest.createDraftApplication(templates[0]);
+        User user = ApplicationServiceTest.createTestUser();
+        Account account = user.getAccount();
+        account.setUsername("not_me");
+        user.setAccount(account);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(application);
+        given(userService.loadUser("not_me"))
+                .willReturn(user);
+        given(authenticationInformation.getUsername())
+                .willReturn("not_me");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INSUFFICIENT_PERMISSIONS);
+
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
+                        .param("id", APPLICATION_ID))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser("not_me");
+        verify(authenticationInformation).getUsername();
+    }
+
+    /**
+     * This method tests that if either id or applicationId are both provided or neither are provided, a bad request is thrown
+     */
+    @Test
+    public void shouldThrowIfIllegalIDCombinationGivenOnGetApplication() throws Exception {
+        mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
+                        .param("dbId", "" + ApplicationServiceTest.APPLICATION_DB_ID)
+                        .param("id", APPLICATION_ID))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS)))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(applicationService);
+        verifyNoInteractions(userService);
+        verifyNoInteractions(authenticationInformation);
     }
 
     /**
@@ -209,7 +330,7 @@ public class ApplicationControllerTest {
 
         CreateDraftApplicationResponse response = new CreateDraftApplicationResponse(draftApplication);
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getAnswers());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, draftApplication.getAnswers());
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
@@ -242,7 +363,7 @@ public class ApplicationControllerTest {
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getAnswers());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, draftApplication.getAnswers());
 
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INSUFFICIENT_PERMISSIONS);
@@ -273,7 +394,7 @@ public class ApplicationControllerTest {
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], new HashMap<>());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, new HashMap<>());
 
         draftApplication.setUser(null);
 

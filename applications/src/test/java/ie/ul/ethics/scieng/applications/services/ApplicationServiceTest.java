@@ -203,6 +203,57 @@ public class ApplicationServiceTest {
     }
 
     /**
+     * This tests that applications should be retrieved successfully
+     */
+    @Test
+    public void shouldGetApplicationByAppId() {
+        Application application = createDraftApplication(getTemplate());
+        application.setApplicationId(APPLICATION_ID);
+
+        given(applicationRepository.findByApplicationId(APPLICATION_ID))
+                .willReturn(Optional.of(application));
+
+        Application found = applicationService.getApplication(APPLICATION_ID);
+
+        assertEquals(application, found);
+        verify(applicationRepository).findByApplicationId(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that retrieving an application should be cached
+     */
+    @Test
+    public void shouldGetApplicationByAppIdCache() {
+        Application application = createDraftApplication(getTemplate());
+        application.setApplicationId(APPLICATION_ID);
+
+        given(applicationRepository.findByApplicationId(APPLICATION_ID))
+                .willReturn(Optional.of(application));
+
+        applicationService.getApplication(APPLICATION_ID);
+        applicationService.getApplication(APPLICATION_ID);
+        applicationService.getApplication(APPLICATION_ID);
+        Application found = applicationService.getApplication(APPLICATION_ID);
+
+        assertEquals(application, found);
+        verify(applicationRepository, times(1)).findByApplicationId(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that null should be returned if an application by ID does not exist
+     */
+    @Test
+    public void shouldReturnNullOnGetApplicationNotFoundByAppId() {
+        given(applicationRepository.findByApplicationId(APPLICATION_ID))
+                .willReturn(Optional.empty());
+
+        Application found = applicationService.getApplication(APPLICATION_ID);
+
+        assertNull(found);
+        verify(applicationRepository).findByApplicationId(APPLICATION_ID);
+    }
+
+    /**
      * Tests that applications created by user should be retrieved
      */
     @Test
@@ -290,6 +341,7 @@ public class ApplicationServiceTest {
         Application created = applicationService.createApplication(application, false);
 
         assertEquals(application, created);
+        assertEquals(application.getApplicationId(), APPLICATION_ID);
         assertNotNull(application.getLastUpdated());
         verify(applicationRepository).save(application);
     }
@@ -300,6 +352,7 @@ public class ApplicationServiceTest {
     @Test
     public void shouldUpdateApplication() {
         DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
+        draftApplication.setApplicationId(APPLICATION_ID);
         LocalDateTime now = LocalDateTime.now();
         draftApplication.setLastUpdated(now);
 

@@ -47,22 +47,30 @@ public class PermissionsAuthorizer {
         if (UserPermissionsConfig.permissionsDisabled())
             return true; // always authorise if disabled
 
-        Map<String, RequiredPermissions> requiredPermissions = permissionsRequired(path);
-        RequiredPermissions matchedPermissions = requiredPermissions.get(method);
+        Map<String, List<RequiredPermissions>> requiredPermissions = permissionsRequired(path);
+        List<RequiredPermissions> matchedPermissionsList = requiredPermissions.get(method);
 
-        if (matchedPermissions == null && requiredPermissions.containsKey("ALL"))
-            matchedPermissions = requiredPermissions.get("ALL");
+        if (matchedPermissionsList == null && requiredPermissions.containsKey("ALL"))
+            matchedPermissionsList = requiredPermissions.get("ALL");
 
-        if (matchedPermissions != null) {
-            if (user == null)
-                return false;
+        if (matchedPermissionsList != null) {
+            boolean authorized = true;
 
-            Role role = user.getRole();
+            for (RequiredPermissions matchedPermissions : matchedPermissionsList) {
+                if (user == null)
+                    return false;
 
-            if (role == null)
-                return false;
-            else
-                return matchedPermissions.match(role.getPermissions());
+                if (matchedPermissions != null) {
+                    Role role = user.getRole();
+
+                    if (role == null)
+                        return false;
+                    else
+                        authorized = authorized && matchedPermissions.match(role.getPermissions());
+                }
+            }
+
+            return authorized;
         }
 
         return true;
@@ -70,12 +78,13 @@ public class PermissionsAuthorizer {
 
     /**
      * This method returns the required permissions gor the given path. If the path has been configured to need
-     * permissions, it will be matched. Otherwise, null is returned to indicate no permissions are required
+     * permissions, it will be matched. Otherwise, null is returned to indicate no permissions are required.
+     * If the path matches multiple configurations, these will be returned
      * @param path the path to match. If it doesn't end in /, it will be added since the matcher expects it
-     * @return map of request methods to the request permissions that match this path
+     * @return map of request methods to the list request permissions that match this path
      */
-    public Map<String, RequiredPermissions> permissionsRequired(String path) {
-        Map<String, RequiredPermissions> permissionsMap = new HashMap<>();
+    public Map<String, List<RequiredPermissions>> permissionsRequired(String path) {
+        Map<String, List<RequiredPermissions>> permissionsMap = new HashMap<>();
 
         if (!path.endsWith("/"))
             path += "/";
@@ -83,10 +92,14 @@ public class PermissionsAuthorizer {
         for (Map.Entry<Path, RequiredPermissions> e : pathPermissions.entrySet()) {
             Path key = e.getKey();
 
-            if (matcher.match(key.path, path)) {
-                permissionsMap.put(key.requestMethod.toString(), e.getValue());
-            }
+            String requestMethod = key.requestMethod.toString();
+            List<RequiredPermissions> requiredPermissions = permissionsMap.computeIfAbsent(requestMethod, k -> new ArrayList<>());
+
+            if (matcher.match(key.path, path))
+                requiredPermissions.add(e.getValue());
         }
+
+        permissionsMap.values().removeIf(v -> v.size() == 0);
 
         return permissionsMap;
     }

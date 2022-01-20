@@ -31,6 +31,11 @@ public class CreateDraftApplicationRequest {
     @NotNull
     private ApplicationTemplate applicationTemplate;
     /**
+     * The application ID generated from the /api/applications/id GET endpoint
+     */
+    @NotNull
+    private String id;
+    /**
      * The initial mapping of values
      */
     @NotNull

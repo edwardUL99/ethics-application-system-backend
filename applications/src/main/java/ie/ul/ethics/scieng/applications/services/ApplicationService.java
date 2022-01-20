@@ -23,6 +23,13 @@ public interface ApplicationService {
     Application getApplication(Long id);
 
     /**
+     * Retrieve the application by the applicationId attribute
+     * @param applicationId the applicationId to retrieve by
+     * @return the application if found, null if not
+     */
+    Application getApplication(String applicationId);
+
+    /**
      * Get the list of applications created by the given user
      * @param user the user to search for applications by
      * @return the list of applications

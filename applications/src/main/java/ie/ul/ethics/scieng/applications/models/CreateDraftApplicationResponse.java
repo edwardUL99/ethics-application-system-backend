@@ -22,7 +22,11 @@ public class CreateDraftApplicationResponse {
     /**
      * The database ID of the created draft application
      */
-    private Long id;
+    private Long dbId;
+    /**
+     * The application ID for the application
+     */
+    private String id;
     /**
      * The status of a draft application is always DRAFT
      */
@@ -45,7 +49,8 @@ public class CreateDraftApplicationResponse {
      * @param draftApplication the application to make the response from
      */
     public CreateDraftApplicationResponse(DraftApplication draftApplication) {
-        this.id = draftApplication.getId();
+        this.dbId = draftApplication.getId();
+        this.id = draftApplication.getApplicationId();
         this.username = draftApplication.getUser().getUsername();
         this.templateId = draftApplication.getApplicationTemplate().getDatabaseId();
         this.createdAt = draftApplication.getLastUpdated();

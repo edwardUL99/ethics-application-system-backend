@@ -35,12 +35,20 @@ public class PermissionsAuthorizerTest {
     /**
      * This is the test ant path 2
      */
-    public static final String TEST_ANT_PATH2 = "/grant/permissions/";
+    public static final String TEST_ANT_PATH2 = "/grant/permissions/**";
+
+    /**
+     * This is the test ant path 3
+     */
+    public static final String TEST_ANT_PATH3 = "/test/permissions/admin/submit/";
 
     static {
         paths.put(new PermissionsAuthorizer.Path(TEST_ANT_PATH1), new RequiredPermissions(Permissions.ADMIN));
         paths.put(new PermissionsAuthorizer.Path(TEST_ANT_PATH2, RequestMethod.PUT),
-                new RequiredPermissions(List.of(Permissions.GRANT_PERMISSIONS, Permissions.ADMIN), true));
+                new RequiredPermissions(List.of(Permissions.GRANT_PERMISSIONS), true));
+        paths.put(new PermissionsAuthorizer.Path(TEST_ANT_PATH3),
+                new RequiredPermissions(List.of(Permissions.GRANT_PERMISSIONS), true));
+
     }
 
     /**
@@ -110,6 +118,34 @@ public class PermissionsAuthorizerTest {
     }
 
     /**
+     * Tests that a user should be authorized if multiple required permissions are retrieved from the path
+     * if multiple required paths match and all permissions are satisfied
+     */
+    @Test
+    public void shouldAuthorizeIfMultipleRequiredPermissionsFromPath() {
+        User user = UserServiceTest.createTestUser();
+        user.setRole(Roles.CHAIR);
+
+        boolean returned = permissionsAuthorizer.authorise(TEST_ANT_PATH3, "GET", user);
+
+        assertTrue(returned);
+    }
+
+    /**
+     * Tests that a user should not be authorized if multiple required permissions are retrieved from the path
+     * if multiple required paths match but some required permissions don't match
+     */
+    @Test
+    public void shouldNotAuthorizeIfMultipleRequiredPermissionsFromPathAndOnePermissionMissing() {
+        User user = UserServiceTest.createTestUser();
+        user.setRole(Roles.ADMINISTRATOR);
+
+        boolean returned = permissionsAuthorizer.authorise(TEST_ANT_PATH3, "GET", user);
+
+        assertFalse(returned);
+    }
+
+    /**
      * If authorization is disabled, authorizer should always return true
      */
     @Test
@@ -138,10 +174,10 @@ public class PermissionsAuthorizerTest {
      */
     @Test
     public void shouldGetRequiredPermissionsFromPath() {
-        Map<String, RequiredPermissions> expected = new HashMap<>();
-        expected.put("ALL", new RequiredPermissions(Permissions.ADMIN));
+        Map<String, List<RequiredPermissions>> expected = new HashMap<>();
+        expected.put("ALL", List.of(new RequiredPermissions(Permissions.ADMIN)));
 
-        Map<String, RequiredPermissions> returned = permissionsAuthorizer.permissionsRequired("/test/auth/admin/account");
+        Map<String, List<RequiredPermissions>> returned = permissionsAuthorizer.permissionsRequired("/test/auth/admin/account");
 
         assertEquals(expected, returned);
     }
@@ -151,7 +187,21 @@ public class PermissionsAuthorizerTest {
      */
     @Test
     public void shouldGetEmptyMapIfPathNotConfigured() {
-        Map<String, RequiredPermissions> returned = permissionsAuthorizer.permissionsRequired("/path/not/configured");
+        Map<String, List<RequiredPermissions>> returned = permissionsAuthorizer.permissionsRequired("/path/not/configured");
         assertEquals(returned.size(), 0);
+    }
+
+    /**
+     * Tests that multiple required permissions should be retrieved from the path if multiple required paths match
+     */
+    @Test
+    public void shouldGetMultipleRequiredPermissionsFromPath() {
+        Map<String, List<RequiredPermissions>> expected = new HashMap<>();
+        expected.put("ALL", List.of(new RequiredPermissions(Permissions.ADMIN),
+                new RequiredPermissions(List.of(Permissions.GRANT_PERMISSIONS), true)));
+
+        Map<String, List<RequiredPermissions>> returned = permissionsAuthorizer.permissionsRequired(TEST_ANT_PATH3);
+
+        assertEquals(expected, returned);
     }
 }
