@@ -1,5 +1,7 @@
 package ie.ul.ethics.scieng.applications.controllers;
 
+import ie.ul.ethics.scieng.applications.models.ApplicationResponse;
+import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
 import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
@@ -163,7 +165,8 @@ public class ApplicationControllerTest {
         given(userService.loadUser(USERNAME))
                 .willReturn(draft.getUser());
 
-        String json = JSON.convertJSON(draft);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(draft);
+        String json = JSON.convertJSON(response);
 
         mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
                         .param("dbId", "" + ApplicationServiceTest.APPLICATION_DB_ID))
@@ -239,7 +242,8 @@ public class ApplicationControllerTest {
         given(userService.loadUser(USERNAME))
                 .willReturn(draft.getUser());
 
-        String json = JSON.convertJSON(draft);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(draft);
+        String json = JSON.convertJSON(response);
 
         mockMvc.perform(get(createApiPath(Constants.Endpoint.APPLICATIONS))
                         .param("id", APPLICATION_ID))
@@ -350,7 +354,44 @@ public class ApplicationControllerTest {
                 .andExpect(content().json(result));
 
         verify(authenticationInformation).getUsername();
+        verify(applicationService).getApplication(APPLICATION_ID);
         verify(applicationService).createApplication(draftApplication, false);
+        verify(requestMapper).createDraftRequestToDraft(request);
+    }
+
+    /**
+     * Tests that a draft application should not be created if it already exists
+     */
+    @Test
+    public void shouldNotCreateDraftApplicationIfAlreadyExists() throws Exception {
+        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
+
+        CreateDraftApplicationRequest request =
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, draftApplication.getAnswers());
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, APPLICATION_ALREADY_EXISTS);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(requestMapper.createDraftRequestToDraft(request))
+                .willReturn(draftApplication);
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(draftApplication);
+
+        mockMvc.perform(post(createApiPath(Constants.Endpoint.APPLICATIONS, "draft"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(authenticationInformation).getUsername();
+        verify(applicationService).getApplication(APPLICATION_ID);
         verify(requestMapper).createDraftRequestToDraft(request);
     }
 
@@ -428,7 +469,7 @@ public class ApplicationControllerTest {
     public void shouldUpdateDraftApplication() throws Exception {
         DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
 
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_DB_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
         Map<String, Object> response = new HashMap<>();
         response.put(MESSAGE, APPLICATION_UPDATED);
 
@@ -461,7 +502,7 @@ public class ApplicationControllerTest {
     public void shouldThrowInsufficientPermissionsOnUpdate() throws Exception {
         DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
 
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_DB_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INSUFFICIENT_PERMISSIONS);
 
@@ -490,7 +531,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowErrorIfApplicationNotDraft() throws Exception {
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_DB_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, APPLICATION_NOT_DRAFT);
 
@@ -515,7 +556,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowNotFoundOnUpdate() throws Exception {
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_DB_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
 
         String json = JSON.convertJSON(request);
 

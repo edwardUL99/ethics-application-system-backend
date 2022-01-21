@@ -20,10 +20,10 @@ import java.util.Map;
 @EqualsAndHashCode
 public class UpdateDraftApplicationRequest {
     /**
-     * The id of the application being updated
+     * The application id of the application being updated (REC number)
      */
     @NotNull
-    private Long id;
+    private String id;
     /**
      * The new values being saved
      */

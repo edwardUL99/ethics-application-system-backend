@@ -43,7 +43,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      */
     @Override
     public DraftApplication createDraftRequestToDraft(CreateDraftApplicationRequest request) {
-        return new DraftApplication(null, null, userService.loadUser(request.getUsername()), request.getApplicationTemplate(),
+        return new DraftApplication(null, request.getId(), userService.loadUser(request.getUsername()), request.getApplicationTemplate(),
                 request.getValues());
     }
 
@@ -55,7 +55,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      */
     @Override
     public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) {
-        Long id = request.getId();
+        String id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
         if (loaded != null) {

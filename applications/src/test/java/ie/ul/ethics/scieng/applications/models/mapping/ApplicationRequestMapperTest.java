@@ -139,7 +139,6 @@ public class ApplicationRequestMapperTest {
     public void shouldMapCreateDraftRequest() {
         DraftApplication draftApplication = (DraftApplication) createDraftApplication();
         draftApplication.setId(null);
-        draftApplication.setApplicationId(null);
         CreateDraftApplicationRequest request =
                 new CreateDraftApplicationRequest(USERNAME, draftApplication.getApplicationTemplate(), APPLICATION_ID, draftApplication.getAnswers());
 
@@ -166,18 +165,18 @@ public class ApplicationRequestMapperTest {
         newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_DB_ID, newValues);
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues);
 
         assertNotEquals(oldValues, newValues);
 
-        given(applicationService.getApplication(APPLICATION_DB_ID))
+        given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(draftApplication);
 
         DraftApplication returned = requestMapper.updateDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
-        verify(applicationService).getApplication(APPLICATION_DB_ID);
+        verify(applicationService).getApplication(APPLICATION_ID);
     }
 
     /**
@@ -205,14 +204,14 @@ public class ApplicationRequestMapperTest {
         changeable.setStatus(ApplicationStatus.SUBMITTED);
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_DB_ID, new HashMap<>());
+                new UpdateDraftApplicationRequest(APPLICATION_ID, new HashMap<>());
 
-        given(applicationService.getApplication(APPLICATION_DB_ID))
+        given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(changeable);
 
         assertThrows(IllegalStateException.class, () -> requestMapper.updateDraftRequestToDraft(request));
 
-        verify(applicationService).getApplication(APPLICATION_DB_ID);
+        verify(applicationService).getApplication(APPLICATION_ID);
     }
 
     /**
@@ -221,13 +220,13 @@ public class ApplicationRequestMapperTest {
     @Test
     public void shouldReturnNullIfDraftIdNotExists() {
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_DB_ID, new HashMap<>());
+                new UpdateDraftApplicationRequest(APPLICATION_ID, new HashMap<>());
 
-        given(applicationService.getApplication(APPLICATION_DB_ID))
+        given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(null);
 
         assertNull(requestMapper.updateDraftRequestToDraft(request));
 
-        verify(applicationService).getApplication(APPLICATION_DB_ID);
+        verify(applicationService).getApplication(APPLICATION_ID);
     }
 }

@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.controllers;
 
+import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
 import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
@@ -27,8 +28,9 @@ import static ie.ul.ethics.scieng.common.Constants.*;
 
 /**
  * This class represents the controller for the applications endpoints
- * TODO add /api/applications/any/ get which allows retrieving all applications by id, lock with VIEW_ALL_APPLICATIONS permissions. In /api/applications/, if the user of the loaded application doesn't match the username of the authenticated username, throw insufficient permissions
- * or if username isn't equal to this username, check if the user has VIEW_ALL_APPLICATIONS permission and then retrieve it
+ * TODO add /api/applications/all/ get which allows retrieving all applications by id, lock with VIEW_ALL_APPLICATIONS permissions. In /api/applications/, if the user of the loaded application doesn't match the username of the authenticated username, throw insufficient permissions
+ * or if username isn't equal to this username, check if the user has VIEW_ALL_APPLICATIONS permission and then retrieve it.
+ * It will have a request object with a query (i.e. find all within certain date range) (have a interface query with an enum valiue with the implementation query assigned to it)
  */
 @RestController
 @RequestMapping("/api/applications")
@@ -112,7 +114,7 @@ public class ApplicationController {
             User user = userService.loadUser(authenticationInformation.getUsername());
 
             if (application.canBeViewedBy(user)) {
-                return ResponseEntity.ok(application);
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
             } else {
                 return respondError(INSUFFICIENT_PERMISSIONS);
             }
@@ -144,9 +146,15 @@ public class ApplicationController {
         if (draftApplication.getUser() == null) {
             return respondError(USER_NOT_FOUND);
         } else {
-            Application application = applicationService.createApplication(draftApplication, false);
+            Application application = applicationService.getApplication(draftApplication.getApplicationId());
 
-            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
+            if (application != null) {
+                return respondError(APPLICATION_ALREADY_EXISTS);
+            } else {
+                application = applicationService.createApplication(draftApplication, false);
+
+                return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
+            }
         }
     }
 
