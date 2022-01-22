@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.models.applications;
 
+import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
@@ -37,12 +38,19 @@ public class DraftApplication extends Application {
     }
 
     /**
-     * Overridden as you cannot change the status of a DraftApplication
-     * This operation is a no-op
+     * Set the status of the application. The status an application can be in differs depending on the concrete sub-class.
+     *
+     * @param status the status of the application
+     * @throws ApplicationException if the status is invalid for that application
      */
     @Override
-    public void setStatus(ApplicationStatus status) {
-        this.status = ApplicationStatus.DRAFT;
+    public void setStatus(ApplicationStatus status) throws ApplicationException {
+        if (status != null) {
+            if (status != ApplicationStatus.DRAFT)
+                throw new ApplicationException("The only applicable state to a DraftApplication is " + ApplicationStatus.DRAFT);
+        }
+
+        this.status = status;
     }
 
     /**

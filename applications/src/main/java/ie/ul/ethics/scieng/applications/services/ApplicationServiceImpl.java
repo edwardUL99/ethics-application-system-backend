@@ -3,6 +3,7 @@ package ie.ul.ethics.scieng.applications.services;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 /**
  * This class is the implementation of the ApplicationService
@@ -145,5 +147,36 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public ApplicationTemplate[] getApplicationTemplates() {
         return templateLoader.loadTemplates();
+    }
+
+    /**
+     * Submit an application from the applicant to the committee and convert the application to a submitted state.
+     * The draft instance of the application will be removed and replaced with the submitted instance. The database IDs
+     * will differ but the applicationId field will remain the same.
+     *
+     * @param application the application to submit
+     * @return the submitted application
+     * @throws ApplicationException if the application is not in a draft or referred state
+     */
+    @Override
+    public Application submitApplication(Application application) throws ApplicationException {
+        Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
+        ApplicationStatus status = application.getStatus();
+
+        if (status == null || !permissible.contains(status))
+            throw new ApplicationException("The status of an application being submitted must belong to the set: " + permissible);
+
+        SubmittedApplication submittedApplication = new SubmittedApplication();
+        submittedApplication.setStatus(ApplicationStatus.SUBMITTED);
+        submittedApplication.setApplicationId(application.getApplicationId());
+        submittedApplication.setUser(application.getUser());
+        submittedApplication.setApplicationTemplate(application.getApplicationTemplate());
+        submittedApplication.setAnswers(application.getAnswers());
+        submittedApplication.setLastUpdated(LocalDateTime.now());
+
+        applicationRepository.delete(application);
+        applicationRepository.save(submittedApplication);
+
+        return submittedApplication;
     }
 }

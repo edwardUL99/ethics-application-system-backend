@@ -38,7 +38,7 @@ public class ReferredApplication extends SubmittedApplication {
      */
     public ReferredApplication() {
         this(null, null, null, ApplicationStatus.REFERRED, null, new HashMap<>(),
-                new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), null);
+                new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), null);
     }
 
     /**
@@ -52,25 +52,32 @@ public class ReferredApplication extends SubmittedApplication {
      * @param answers                   the answers to the application
      * @param comments                 the list of comments on this application
      * @param assignedCommitteeMembers the list of assigned committee members
+     * @param finalComment             the last comment left on the application
      * @param editableFields           the list of component IDs that can be edited in the referred application
      * @param referredBy               the user that referred the application (must have ADMIN permission)
      */
     public ReferredApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<Comment> comments,
-                               List<User> assignedCommitteeMembers, List<String> editableFields, User referredBy) {
-        super(id, applicationId, user, status, applicationTemplate, answers, comments, assignedCommitteeMembers);
+                               List<User> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
+        super(id, applicationId, user, status, applicationTemplate, answers, comments, assignedCommitteeMembers, finalComment);
         this.editableFields = editableFields;
         this.setReferredBy(referredBy);
     }
 
     /**
-     * Sets the status of the application to referred no matter the status passed in
+     * Set the status of the application. The status an application can be in differs depending on the concrete sub-class.
      *
-     * @param status this status will be ignored
+     * @param status the status of the application
+     * @throws ApplicationException if the status is invalid for that application
      */
     @Override
-    public void setStatus(ApplicationStatus status) {
-        this.status = ApplicationStatus.REFERRED;
+    public void setStatus(ApplicationStatus status) throws ApplicationException {
+        if (status != null) {
+            if (status != ApplicationStatus.REFERRED)
+                throw new ApplicationException("The only applicable state to a ReferredApplication is " + ApplicationStatus.REFERRED);
+        }
+
+        this.status = status;
     }
 
     /**
@@ -92,7 +99,9 @@ public class ReferredApplication extends SubmittedApplication {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         ReferredApplication that = (ReferredApplication) o;
-        return id != null && Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) && Objects.equals(applicationId, that.applicationId) && Objects.equals(user, that.user)
+                && Objects.equals(applicationTemplate, that.applicationTemplate) && Objects.equals(answers, that.answers)
+                && Objects.equals(editableFields, that.editableFields) && Objects.equals(referredBy, that.referredBy);
     }
 
     /**
@@ -100,6 +109,6 @@ public class ReferredApplication extends SubmittedApplication {
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id, applicationId, user, applicationTemplate, answers, editableFields, referredBy);
     }
 }

@@ -1,8 +1,10 @@
 package ie.ul.ethics.scieng.applications.models;
 
+import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,20 +18,30 @@ import java.util.Set;
 @EqualsAndHashCode(callSuper = false)
 @Getter
 @Setter
+@ApplicationResponseRegistration(status = {
+        ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
+        ApplicationStatus.APPROVED, ApplicationStatus.REJECTED
+}, applicationClass = SubmittedApplication.class)
 public class SubmittedApplicationResponse extends ApplicationResponse {
     /**
      * The comments left on the submitted application
      */
     private Map<String, Comment> comments;
+    /**
+     * The final comment left on the application if it is approved/rejected
+     */
+    private Comment finalComment;
 
     /**
      * Create a response from the application
      *
      * @param application the application to create the response from
      */
-    public SubmittedApplicationResponse(Application application) {
+    public SubmittedApplicationResponse(SubmittedApplication application) {
         super(application);
-        validateApplicationStatus(application);
+
+        this.comments = application.getComments();
+        this.finalComment = application.getFinalComment();
     }
 
     /**

@@ -1,7 +1,9 @@
 package ie.ul.ethics.scieng.applications.models.applications;
 
+import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.models.User;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,6 +42,7 @@ public abstract class Application {
     /**
      * The status of the application
      */
+    @Setter(AccessLevel.NONE)
     protected ApplicationStatus status;
     /**
      * The template of the application being filled in
@@ -80,7 +83,7 @@ public abstract class Application {
         this.id = id;
         this.applicationId = applicationId;
         this.user = user;
-        this.status = status;
+        this.setStatus(status);
         this.applicationTemplate = applicationTemplate;
         this.answers = answers;
     }
@@ -91,4 +94,11 @@ public abstract class Application {
      * @return true if they can view it, false if not
      */
     public abstract boolean canBeViewedBy(User user);
+
+    /**
+     * Set the status of the application. The status an application can be in differs depending on the concrete sub-class.
+     * @param status the status of the application
+     * @throws ApplicationException if the status is invalid for that application
+     */
+    public abstract void setStatus(ApplicationStatus status) throws ApplicationException;
 }

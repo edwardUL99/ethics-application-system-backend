@@ -11,7 +11,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * This class represents a response for an application
@@ -56,6 +55,8 @@ public abstract class ApplicationResponse {
      * @param application the application to create the response from
      */
     public ApplicationResponse(Application application) {
+        validateApplicationStatus(application);
+
         this.dbId = application.getId();
         this.id = application.getApplicationId();
         this.username = application.getUser().getUsername();

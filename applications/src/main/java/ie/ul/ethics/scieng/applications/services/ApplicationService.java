@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.services;
 
+import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -63,4 +64,14 @@ public interface ApplicationService {
      * @return array of loaded templates
      */
     ApplicationTemplate[] getApplicationTemplates();
+
+    /**
+     * Submit an application from the applicant to the committee and convert the application to a submitted state.
+     * The draft instance of the application will be removed and replaced with the submitted instance. The database IDs
+     * will differ but the applicationId field will remain the same.
+     * @param application the application to submit
+     * @return the submitted application
+     * @throws ApplicationException if the application is not in a draft or referred state
+     */
+    Application submitApplication(Application application) throws ApplicationException;
 }

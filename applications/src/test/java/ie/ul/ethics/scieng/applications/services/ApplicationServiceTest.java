@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -151,6 +152,17 @@ public class ApplicationServiceTest {
         }
 
         return new DraftApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(), applicationTemplate, values);
+    }
+
+    /**
+     * Create a submitted application from the provided draft application
+     * @param draftApplication the draft application to submit
+     * @return the submitted application
+     */
+    public static Application createSubmittedApplication(DraftApplication draftApplication) {
+        return new SubmittedApplication(null, draftApplication.getApplicationId(), draftApplication.getUser(),
+                ApplicationStatus.SUBMITTED, draftApplication.getApplicationTemplate(), draftApplication.getAnswers(),
+                new ArrayList<>(), new ArrayList<>(), null);
     }
 
     /**
@@ -442,5 +454,36 @@ public class ApplicationServiceTest {
 
         assertEquals(templates, returned);
         verify(loader).loadTemplates();
+    }
+
+    /**
+     * Tests that an application should be submitted successfully
+     */
+    @Test
+    public void shouldSubmitApplication() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+
+        Application returned = applicationService.submitApplication(draftApplication);
+
+        assertEquals(submitted, returned);
+        assertTrue(returned instanceof SubmittedApplication);
+        assertEquals(ApplicationStatus.SUBMITTED, returned.getStatus());
+        assertNotNull(returned.getLastUpdated());
+        assertEquals(draftApplication.getApplicationId(), returned.getApplicationId());
+        verify(applicationRepository).delete(draftApplication);
+        verify(applicationRepository).save(submitted);
+    }
+
+    /**
+     * Tests that if an application is not in a draft/referred state when being submitted, an ApplicationException will be thrown
+     */
+    @Test
+    public void shouldThrowIfIncorrectApplicationBeingSubmitted() {
+        Application submitted = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+
+        assertThrows(ApplicationException.class, () -> applicationService.submitApplication(submitted));
+
+        verifyNoInteractions(applicationRepository);
     }
 }

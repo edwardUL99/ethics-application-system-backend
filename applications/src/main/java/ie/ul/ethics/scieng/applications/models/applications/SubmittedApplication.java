@@ -45,7 +45,7 @@ public class SubmittedApplication extends Application {
      * Create a default Application
      */
     public SubmittedApplication() {
-        super();
+        this(null, null, null, null, null, new HashMap<>(), new ArrayList<>(), new ArrayList<>(), null);
     }
 
     /**
@@ -59,10 +59,11 @@ public class SubmittedApplication extends Application {
      * @param answers              the answers to the application
      * @param comments            the list of comments on this application
      * @param assignedCommitteeMembers the list of assigned committee members
+     * @param finalComment        the final comment given to the application if approved/rejected
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
-                                List<Comment> comments, List<User> assignedCommitteeMembers) {
+                                List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment) {
         super(id, applicationId, user, status, applicationTemplate, answers);
         this.comments = comments.stream()
                 .collect(Collectors.toMap(
@@ -70,6 +71,7 @@ public class SubmittedApplication extends Application {
                         c -> c
                 ));
         assignedCommitteeMembers.forEach(this::assignCommitteeMember);
+        this.finalComment = finalComment;
     }
 
     /**
@@ -99,6 +101,24 @@ public class SubmittedApplication extends Application {
     }
 
     /**
+     * Set the status of the application. The status an application can be in differs depending on the concrete sub-class.
+     *
+     * @param status the status of the application
+     * @throws ApplicationException if the status is invalid for that application
+     */
+    @Override
+    public void setStatus(ApplicationStatus status) throws ApplicationException {
+        if (status != null) {
+            Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
+                    ApplicationStatus.APPROVED, ApplicationStatus.REJECTED);
+            if (!permissible.contains(status)) // TODO decide if approved/rejected require their own subclasses
+                throw new ApplicationException("The only applicable statuses for a SubmittedApplication are " + permissible);
+
+            this.status = status;
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -106,7 +126,10 @@ public class SubmittedApplication extends Application {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         SubmittedApplication that = (SubmittedApplication) o;
-        return id != null && Objects.equals(id, that.id);
+        return Objects.equals(id, that.id) && Objects.equals(applicationId, that.applicationId) && Objects.equals(user, that.user)
+                && Objects.equals(applicationTemplate, that.applicationTemplate) && Objects.equals(answers, that.answers)
+                && Objects.equals(comments, that.comments) && Objects.equals(assignedCommitteeMembers, that.assignedCommitteeMembers)
+                && Objects.equals(finalComment, that.finalComment);
     }
 
     /**
@@ -114,6 +137,6 @@ public class SubmittedApplication extends Application {
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, comments, assignedCommitteeMembers, finalComment);
     }
 }
