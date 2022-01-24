@@ -108,9 +108,9 @@ public final class Constants {
     public static final String APPLICATION_UPDATED = "application_updated";
 
     /**
-     * The error message for when an application that is not a draft is attempted to be updated
+     * The error message for when an application is in an incorrect status for the operation being carried out on it
      */
-    public static final String APPLICATION_NOT_DRAFT = "application_not_draft";
+    public static final String INVALID_APPLICATION_STATUS = "invalid_application_status";
 
     /**
      * The error message for when an application already exists

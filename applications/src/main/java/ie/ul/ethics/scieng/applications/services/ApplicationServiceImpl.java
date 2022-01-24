@@ -159,6 +159,11 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws ApplicationException if the application is not in a draft or referred state
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
     public Application submitApplication(Application application) throws ApplicationException {
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
         ApplicationStatus status = application.getStatus();

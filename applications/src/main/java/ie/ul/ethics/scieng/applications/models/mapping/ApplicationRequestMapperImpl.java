@@ -1,6 +1,8 @@
 package ie.ul.ethics.scieng.applications.models.mapping;
 
+import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
@@ -9,6 +11,8 @@ import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import java.util.Set;
 
 /**
  * This provides the default implementation for the mapper
@@ -54,18 +58,41 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @return the mapped draft application
      */
     @Override
-    public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) {
+    public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
         String id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
         if (loaded != null) {
             if (loaded.getStatus() != ApplicationStatus.DRAFT)
-                throw new IllegalStateException("The application with ID " + id + " is not a DraftApplication");
+                throw new MappingException("The application with ID " + id + " is not a DraftApplication");
 
             DraftApplication draftApplication = (DraftApplication) loaded;
             draftApplication.setAnswers(request.getValues());
 
             return draftApplication;
+        } else {
+            return null;
+        }
+    }
+
+    /**
+     * Maps submit application request to an application. The application that is returned should be either a draft
+     * or referred application
+     *
+     * @param request the request to map
+     * @return the mapped application, null if it does not exist
+     * @throws MappingException if the request ID does not match a draft or referred application
+     */
+    @Override
+    public Application submitRequestToApplication(SubmitApplicationRequest request) throws MappingException {
+        String id = request.getId();
+        Application loaded = applicationService.getApplication(id);
+
+        if (loaded != null) {
+            if (!Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED).contains(loaded.getStatus()))
+                throw new MappingException("The application with ID " + id + " is not in the draft or referred states");
+
+            return loaded;
         } else {
             return null;
         }

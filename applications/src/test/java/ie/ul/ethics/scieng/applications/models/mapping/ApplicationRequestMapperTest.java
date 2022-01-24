@@ -1,11 +1,15 @@
 package ie.ul.ethics.scieng.applications.models.mapping;
 
+import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
+import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -23,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -180,27 +185,26 @@ public class ApplicationRequestMapperTest {
     }
 
     /**
-     * A "hack" to set not draft status on draft application TODO remove this when other application types are implemented
-     * @return the application that is a draft but different status
+     * Get either a submitted or referred application
+     * @param submitted true to retrieve a submitted application or false for referred
+     * @return the created application
      */
-    private Application getStatusChangeableDraftApplication() {
-        DraftApplication temp = (DraftApplication) createDraftApplication();
-
-        return new DraftApplication(temp.getId(), temp.getApplicationId(),
-                temp.getUser(), temp.getApplicationTemplate(), temp.getAnswers()) {
-            @Override
-            public void setStatus(ApplicationStatus status) {
-                this.status = status;;
-            }
-        };
+    private Application getSubmittedReferredApplication(boolean submitted) {
+        if (submitted) {
+            return new SubmittedApplication(null, APPLICATION_ID, createTestUser(), ApplicationStatus.SUBMITTED,
+                    templates[0], new HashMap<>(), new ArrayList<>(), new ArrayList<>(), null);
+        } else {
+            return new ReferredApplication(null, APPLICATION_ID, createTestUser(), ApplicationStatus.REFERRED,
+                    templates[0], new HashMap<>(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), null);
+        }
     }
 
     /**
      * Tests that an IllegalStateException should be thrown if the given application ID is not a draft application
      */
     @Test
-    public void shouldThrowIllegalStateIfIDNotDraft() {
-        Application changeable = getStatusChangeableDraftApplication();
+    public void shouldThrowIfIDNotDraft() {
+        Application changeable = getSubmittedReferredApplication(true);
         changeable.setStatus(ApplicationStatus.SUBMITTED);
 
         UpdateDraftApplicationRequest request =
@@ -209,7 +213,7 @@ public class ApplicationRequestMapperTest {
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(changeable);
 
-        assertThrows(IllegalStateException.class, () -> requestMapper.updateDraftRequestToDraft(request));
+        assertThrows(MappingException.class, () -> requestMapper.updateDraftRequestToDraft(request));
 
         verify(applicationService).getApplication(APPLICATION_ID);
     }
@@ -226,6 +230,59 @@ public class ApplicationRequestMapperTest {
                 .willReturn(null);
 
         assertNull(requestMapper.updateDraftRequestToDraft(request));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that a draft application should be mapped from the request
+     */
+    @Test
+    public void shouldMapDraftSubmitRequest() {
+        Application draft = createDraftApplication();
+
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(draft);
+
+        Application mapped = requestMapper.submitRequestToApplication(request);
+
+        assertEquals(draft, mapped);
+        verify(applicationService).getApplication(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that a referred application should be mapped from the request
+     */
+    @Test
+    public void shouldMapReferredSubmitRequest() {
+        Application referred = getSubmittedReferredApplication(false);
+
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(referred);
+
+        Application mapped = requestMapper.submitRequestToApplication(request);
+
+        assertEquals(referred, mapped);
+        verify(applicationService).getApplication(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that an exception should be thrown if the application is neither a draft nor a referred application
+     */
+    @Test
+    public void shouldThrowIfApplicationIsNotDraftReferred() {
+        Application submitted = getSubmittedReferredApplication(true);
+
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(submitted);
+
+        assertThrows(MappingException.class, () -> requestMapper.submitRequestToApplication(request));
 
         verify(applicationService).getApplication(APPLICATION_ID);
     }

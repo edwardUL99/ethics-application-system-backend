@@ -1,10 +1,12 @@
 package ie.ul.ethics.scieng.applications.controllers;
 
+import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.ApplicationResponse;
 import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
 import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
+import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
@@ -19,7 +21,7 @@ import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.common.Constants;
 import ie.ul.ethics.scieng.test.utils.JSON;
 
-import static ie.ul.ethics.scieng.applications.services.ApplicationServiceTest.APPLICATION_ID;
+import static ie.ul.ethics.scieng.applications.services.ApplicationServiceTest.*;
 import static ie.ul.ethics.scieng.common.Constants.*;
 import static ie.ul.ethics.scieng.test.utils.constants.Authentication.USERNAME;
 import static org.mockito.BDDMockito.given;
@@ -533,12 +535,12 @@ public class ApplicationControllerTest {
     public void shouldThrowErrorIfApplicationNotDraft() throws Exception {
         UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
         Map<String, Object> response = new HashMap<>();
-        response.put(ERROR, APPLICATION_NOT_DRAFT);
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        doThrow(IllegalStateException.class).when(requestMapper).updateDraftRequestToDraft(request);
+        doThrow(MappingException.class).when(requestMapper).updateDraftRequestToDraft(request);
 
         mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "draft"))
                         .contentType(JSON.MEDIA_TYPE)
@@ -569,6 +571,112 @@ public class ApplicationControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(requestMapper).updateDraftRequestToDraft(request);
+        verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * This method tests that a draft application should be s
+     */
+    @Test
+    public void shouldSubmitApplication() throws Exception {
+        Application draft = createDraftApplication(templates[0]);
+
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        String json = JSON.convertJSON(request);
+        Application submitted = createSubmittedApplication((DraftApplication) draft);
+        String response = JSON.convertJSON(ApplicationResponseFactory.buildResponse(submitted));
+
+        given(requestMapper.submitRequestToApplication(request))
+                .willReturn(draft);
+        given(applicationService.submitApplication(draft))
+                .willReturn(submitted);
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "submit"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(response));
+
+        verify(requestMapper).submitRequestToApplication(request);
+        verify(applicationService).submitApplication(draft);
+        verify(authenticationInformation).getUsername();
+    }
+
+    /**
+     * Tests that bad request is thrown if mapping fails
+     */
+    @Test
+    public void shouldThrowBadRequestIfMappingFails() throws Exception {
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        String json = JSON.convertJSON(request);
+
+        doThrow(MappingException.class).when(requestMapper).submitRequestToApplication(request);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "submit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+
+        verify(requestMapper).submitRequestToApplication(request);
+        verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * Tests that insufficient permissions should be thrown if the application being submitted is not the user's own application
+     */
+    @Test
+    public void shouldThrowInsufficientPermissionsIfNotOwnApplication() throws Exception {
+        Application draft = createDraftApplication(templates[0]);
+
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        String json = JSON.convertJSON(request);
+
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put(ERROR, INSUFFICIENT_PERMISSIONS);
+
+        String response = JSON.convertJSON(responseMap);
+
+        given(requestMapper.submitRequestToApplication(request))
+                .willReturn(draft);
+        given(authenticationInformation.getUsername())
+                .willReturn("not_my_username");
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "submit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(response));
+
+        verify(requestMapper).submitRequestToApplication(request);
+        verifyNoInteractions(applicationService);
+        verify(authenticationInformation).getUsername();
+    }
+
+    /**
+     * Tests that if an application is not found, a 404 is returned
+     */
+    @Test
+    public void shouldThrowNotFoundIfApplicationDoesNotExist() throws Exception {
+        SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
+
+        String json = JSON.convertJSON(request);
+
+        given(requestMapper.submitRequestToApplication(request))
+                .willReturn(null);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "submit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(requestMapper).submitRequestToApplication(request);
         verifyNoInteractions(applicationService);
     }
 }

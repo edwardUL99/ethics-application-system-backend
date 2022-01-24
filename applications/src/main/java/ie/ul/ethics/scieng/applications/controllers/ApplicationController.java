@@ -1,9 +1,11 @@
 package ie.ul.ethics.scieng.applications.controllers;
 
+import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
 import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
+import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
@@ -32,7 +34,7 @@ import static ie.ul.ethics.scieng.common.Constants.*;
  * or if username isn't equal to this username, check if the user has VIEW_ALL_APPLICATIONS permission and then retrieve it.
  * It will have a request object with a query (i.e. find all within certain date range) (have a interface query with an enum value with the implementation query assigned to it)
  *
- * TODO also implement controller methods for submitting applications etc.
+ * TODO also implement controller methods for submitting, reviewing applications etc.
  */
 @RestController
 @RequestMapping("/api/applications")
@@ -213,9 +215,42 @@ public class ApplicationController {
             } else {
                 return ResponseEntity.notFound().build();
             }
-        } catch (IllegalStateException ex) {
+        } catch (MappingException ex) {
             ex.printStackTrace();
-            return respondError(APPLICATION_NOT_DRAFT);
+            return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /*
+     * TODO the put mapping for submit should be locked down to those with review application permissions (and view own assigned)
+     * since an applicant cannot update their own submitted application
+     */
+
+    /**
+     * This endpoint represents the submission point for a draft or referred application
+     * @param request the submission request
+     * @return the response body
+     */
+    @PostMapping("/submit")
+    public ResponseEntity<?> submitApplication(@RequestBody @Valid SubmitApplicationRequest request) {
+        try {
+            Application application = requestMapper.submitRequestToApplication(request);
+
+            if (application != null) {
+                ResponseEntity<?> verification = verifyOwnUser(application.getUser().getUsername());
+
+                if (verification != null)
+                    return verification;
+
+                Application submitted = applicationService.submitApplication(application);
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(submitted));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MappingException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
         }
     }
 }
