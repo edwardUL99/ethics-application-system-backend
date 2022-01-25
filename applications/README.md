@@ -15,6 +15,7 @@ is no extra path elements after the prefix
 | /draft     | POST   | Create a draft application using the generated ID                                                                            |
 |            | PUT    | Update the draft application that is being created                                                                           |
 | /submit    | POST   | Submit the draft application that is being created to the ethics committee and set it to a Submitted status                  |
+| /resubmit  | POST   | Allows an admin/chair to accept an application that has been re-submitted back after being referred and assign committee members to it |
 | /review    | POST   | Set a submitted application to in review or an application in review to reviewed                                             |
 | /approve   | POST   | Approve/Reject an application that has been reviewed by committee members                                                    |
 | /refer     | POST   | Refer a reviewed application back to the applicant for more information                                                      |

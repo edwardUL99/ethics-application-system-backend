@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.models;
 
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
@@ -59,15 +60,15 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      * Validate that the application has the correct status for this response object
      *
      * @param application the application the response is being created from
-     * @throws IllegalArgumentException if not valid
+     * @throws InvalidStatusException if not valid
      */
     @Override
-    protected void validateApplicationStatus(Application application) throws IllegalArgumentException {
+    protected void validateApplicationStatus(Application application) throws InvalidStatusException {
         ApplicationStatus status = application.getStatus();
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW,
                 ApplicationStatus.REVIEWED, ApplicationStatus.APPROVED, ApplicationStatus.REJECTED);
 
         if (!permissible.contains(status))
-            throw new IllegalArgumentException("The application must have one of the following states: " + permissible);
+            throw new InvalidStatusException("The application must have one of the following states: " + permissible);
     }
 }

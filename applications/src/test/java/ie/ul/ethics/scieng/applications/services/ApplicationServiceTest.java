@@ -493,11 +493,14 @@ public class ApplicationServiceTest {
 
         Application submitted = createSubmittedApplication(draftApplication);
         ((SubmittedApplication)submitted).assignCommitteeMember(referrer);
+        submitted.setStatus(ApplicationStatus.RESUBMITTED);
+        ((SubmittedApplication) submitted).assignCommitteeMembersToPrevious();
 
         Application returned = applicationService.submitApplication(referred);
 
         assertEquals(submitted, returned);
-        assertTrue(((SubmittedApplication)returned).getAssignedCommitteeMembers().contains(referrer));
+        assertTrue(((SubmittedApplication)returned).getPreviousCommitteeMembers().contains(referrer));
+        assertEquals(ApplicationStatus.RESUBMITTED, returned.getStatus());
         verify(applicationRepository).delete(referred);
         verify(applicationRepository).save(submitted);
     }
@@ -512,6 +515,41 @@ public class ApplicationServiceTest {
         assertThrows(InvalidStatusException.class, () -> applicationService.submitApplication(submitted));
 
         verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that an application that has been referred and resubmitted can be accepted by the committee
+     */
+    @Test
+    public void shouldAcceptResubmittedApplication() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+        User referrer = createTestUser();
+        referrer.setUsername("referrer");
+        referrer.setRole(Roles.CHAIR);
+        submitted.assignCommitteeMember(referrer);
+        submitted.setStatus(ApplicationStatus.RESUBMITTED);
+        submitted.assignCommitteeMembersToPrevious();
+
+        assertTrue(submitted.getPreviousCommitteeMembers().contains(referrer));
+
+        SubmittedApplication returned = (SubmittedApplication) applicationService.acceptResubmitted(submitted, List.of(referrer));
+
+        assertEquals(0, returned.getPreviousCommitteeMembers().size());
+        assertTrue(returned.getAssignedCommitteeMembers().contains(referrer));
+        assertEquals(ApplicationStatus.REVIEW, returned.getStatus());
+        verify(applicationRepository).save(any());
+    }
+
+    /**
+     * Tests that an illegal status exception should be thrown if the application is not in a resubmitted state
+     */
+    @Test
+    public void shouldThrowIllegalStatusOnAcceptResubmission() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+
+        assertThrows(InvalidStatusException.class, () -> applicationService.acceptResubmitted(submitted, new ArrayList<>()));
     }
 
     /**

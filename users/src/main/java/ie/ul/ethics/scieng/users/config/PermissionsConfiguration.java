@@ -46,7 +46,8 @@ public class PermissionsConfiguration {
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "id"), RequestMethod.GET, Permissions.CREATE_APPLICATION)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "review"), Permissions.REVIEW_APPLICATIONS)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "approve"), Permissions.APPROVE_APPLICATIONS)
-                    .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "refer"), Permissions.REFER_APPLICATIONS);
+                    .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "refer"), Permissions.REFER_APPLICATIONS)
+                    .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "resubmit"), Permissions.ASSIGN_APPLICATIONS);
         } else {
             for (PermissionsPathsConfig.ConfiguredPath configuredPath : configuredPaths) {
                 String path = configuredPath.getPath();

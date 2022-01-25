@@ -17,6 +17,10 @@ public enum ApplicationStatus {
      */
     SUBMITTED("Submitted"),
     /**
+     * This status represents an application that has been referred but re-submitted back to the ethics committee
+     */
+    RESUBMITTED("Re-submitted"),
+    /**
      * This status represents an application that is currently being reviewed
      */
     REVIEW("In Review"),

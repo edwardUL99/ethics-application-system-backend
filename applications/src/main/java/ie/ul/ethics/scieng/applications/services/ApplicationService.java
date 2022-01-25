@@ -81,6 +81,16 @@ public interface ApplicationService {
     Application submitApplication(Application application) throws InvalidStatusException;
 
     /**
+     * Accept an application that has been re-submitted and assign the list of committee members to the application.
+     * After this method is called, the application will be "reset" to the submitted state with the assigned committee members
+     * @param application the application to accept
+     * @param committeeMembers the list of committee members to assign
+     * @return the updated application
+     * @throws InvalidStatusException if the application status is not re-submitted
+     */
+    Application acceptResubmitted(Application application, List<User> committeeMembers) throws InvalidStatusException;
+
+    /**
      * Mark an application as being in review and no longer submitted.
      * @param application the application to put into review
      * @param finishReview if true, the application is marked as reviewed

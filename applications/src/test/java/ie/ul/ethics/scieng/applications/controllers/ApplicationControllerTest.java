@@ -19,7 +19,9 @@ import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
+import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ReviewApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
@@ -56,6 +58,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -689,6 +692,161 @@ public class ApplicationControllerTest {
                 .andExpect(status().isNotFound());
 
         verify(requestMapper).submitRequestToApplication(request);
+        verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * Create a test resubmitted application
+     * @return the test application instance
+     */
+    private Application createResubmitted() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+        User referrer = createTestUser();
+        referrer.setUsername("referrer");
+        referrer.setRole(Roles.CHAIR);
+        submitted.assignCommitteeMember(referrer);
+        submitted.setStatus(ApplicationStatus.RESUBMITTED);
+        submitted.assignCommitteeMembersToPrevious();
+
+        return submitted;
+    }
+
+    /**
+     * Tests that a resubmitted application should be accepted
+     */
+    @Test
+    public void shouldAcceptResubmittedApplication() throws Exception {
+        SubmittedApplication resubmitted = (SubmittedApplication) createResubmitted();
+        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+        submitted.setStatus(ApplicationStatus.REVIEW);
+        resubmitted.getPreviousCommitteeMembers().forEach(submitted::assignCommitteeMember);
+        submitted.clearPreviousCommitteeMembers();
+
+        AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submitted);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        List<User> committeeMembers = List.of(submitted.getUser());
+
+        given(requestMapper.mapAcceptResubmittedRequest(request))
+                .willReturn(new MappedAcceptResubmittedRequest(resubmitted, committeeMembers));
+        given(applicationService.acceptResubmitted(resubmitted, committeeMembers))
+                .willReturn(submitted);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "resubmit"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).mapAcceptResubmittedRequest(request);
+        verify(applicationService).acceptResubmitted(resubmitted, List.of(submitted.getUser()));
+    }
+
+    /**
+     * Tests that an Illegal status error is thrown on accept resubmit if the status is wrong
+     */
+    @Test
+    public void shouldThrowIllegalStatusErrorOnAcceptResubmit() throws Exception {
+        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+        submitted.setStatus(ApplicationStatus.SUBMITTED);
+
+        AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        List<User> committeeMembers = List.of(submitted.getUser());
+
+        given(requestMapper.mapAcceptResubmittedRequest(request))
+                .willReturn(new MappedAcceptResubmittedRequest(submitted, committeeMembers));
+        doThrow(InvalidStatusException.class).when(applicationService).acceptResubmitted(submitted, committeeMembers);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "resubmit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).mapAcceptResubmittedRequest(request);
+        verify(applicationService).acceptResubmitted(submitted, List.of(submitted.getUser()));
+    }
+
+    /**
+     * Tests that an ApplicationException is thrown on accept resubmit if something goes wrong
+     */
+    @Test
+    public void shouldThrowApplicationExceptionOnAcceptResubmit() throws Exception {
+        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+
+        AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, null);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        List<User> committeeMembers = List.of(submitted.getUser());
+
+        given(requestMapper.mapAcceptResubmittedRequest(request))
+                .willReturn(new MappedAcceptResubmittedRequest(submitted, committeeMembers));
+        doThrow(ApplicationException.class).when(applicationService).acceptResubmitted(submitted, committeeMembers);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "resubmit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).mapAcceptResubmittedRequest(request);
+        verify(applicationService).acceptResubmitted(submitted, List.of(submitted.getUser()));
+    }
+
+    /**
+     * Tests that a 404 error should be thrown if either the application or a committee member doesn't exist
+     */
+    @Test
+    public void shouldThrowNotFoundOnAcceptResubmitted() throws Exception {
+        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+
+        AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
+        String json = JSON.convertJSON(request);
+        List<User> committeeMembers = List.of(submitted.getUser());
+
+        given(requestMapper.mapAcceptResubmittedRequest(request))
+                .willReturn(new MappedAcceptResubmittedRequest(null, committeeMembers));
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "resubmit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(requestMapper).mapAcceptResubmittedRequest(request);
+
+        request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME, "not_found"));
+        json = JSON.convertJSON(request);
+
+        committeeMembers = new ArrayList<>();
+        committeeMembers.add(submitted.getUser());
+        committeeMembers.add(null);
+
+        given(requestMapper.mapAcceptResubmittedRequest(request))
+                .willReturn(new MappedAcceptResubmittedRequest(submitted, committeeMembers));
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "resubmit"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(requestMapper).mapAcceptResubmittedRequest(request);
         verifyNoInteractions(applicationService);
     }
 

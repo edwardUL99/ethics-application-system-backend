@@ -45,4 +45,11 @@ public interface ApplicationRequestMapper {
      * @return the mapped request object
      */
     MappedReferApplicationRequest mapReferApplicationRequest(ReferApplicationRequest request);
+
+    /**
+     * Map the request to an object with the loaded application and list of loaded committee members
+     * @param request the request to map
+     * @return the mapped request
+     */
+    MappedAcceptResubmittedRequest mapAcceptResubmittedRequest(AcceptResubmittedRequest request);
 }

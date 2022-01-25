@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.models;
 
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
@@ -69,7 +70,7 @@ public abstract class ApplicationResponse {
     /**
      * Validate that the application has the correct status for this response object
      * @param application the application the response is being created from
-     * @throws IllegalArgumentException if not valid
+     * @throws InvalidStatusException if not valid
      */
-    protected abstract void validateApplicationStatus(Application application) throws IllegalArgumentException;
+    protected abstract void validateApplicationStatus(Application application) throws InvalidStatusException;
 }

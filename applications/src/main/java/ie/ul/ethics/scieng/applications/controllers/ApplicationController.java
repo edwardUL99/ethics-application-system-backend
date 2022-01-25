@@ -14,7 +14,9 @@ import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
+import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ReviewApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
@@ -30,7 +32,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
 
@@ -39,6 +43,7 @@ import static ie.ul.ethics.scieng.common.Constants.*;
  * TODO add /api/applications/all/ get which allows retrieving all applications by id, lock with VIEW_ALL_APPLICATIONS permissions. In /api/applications/, if the user of the loaded application doesn't match the username of the authenticated username, throw insufficient permissions
  * or if username isn't equal to this username, check if the user has VIEW_ALL_APPLICATIONS permission and then retrieve it.
  * It will have a request object with a query (i.e. find all within certain date range) (have a interface query with an enum value with the implementation query assigned to it)
+ * Or just find all and filter the retrieved list by the can be viewed by method with the user retrieving the applications
  */
 @RestController
 @RequestMapping("/api/applications")
@@ -256,6 +261,33 @@ public class ApplicationController {
         } catch (MappingException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * The endpoint to accept a re-submitted application
+     * @param request the request to accept the application and assign it to committee members
+     * @return the response body
+     */
+    @PostMapping("/resubmit")
+    public ResponseEntity<?> resubmitApplication(@RequestBody @Valid AcceptResubmittedRequest request) {
+        try {
+            MappedAcceptResubmittedRequest mapped = requestMapper.mapAcceptResubmittedRequest(request);
+            Application application = mapped.getApplication();
+            List<User> committeeMembers = mapped.getCommitteeMembers();
+
+            if (application == null || committeeMembers.stream().anyMatch(Objects::isNull)) {
+                return ResponseEntity.notFound().build();
+            } else {
+                Application accepted = applicationService.acceptResubmitted(application, committeeMembers);
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(accepted));
+            }
+        } catch (InvalidStatusException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
+        } catch (ApplicationException ex) {
+            ex.printStackTrace();
+            return respondError(ex.getMessage());
         }
     }
 

@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.models;
 
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
@@ -29,11 +30,11 @@ public class DraftApplicationResponse extends ApplicationResponse {
      * Validate that the application has the correct status for this response object
      *
      * @param application the application the response is being created from
-     * @throws IllegalArgumentException if not valid
+     * @throws InvalidStatusException if not valid
      */
     @Override
-    protected void validateApplicationStatus(Application application) throws IllegalArgumentException {
+    protected void validateApplicationStatus(Application application) throws InvalidStatusException {
         if (application.getStatus() != ApplicationStatus.DRAFT)
-            throw new IllegalArgumentException("The provided application must be a DraftApplication");
+            throw new InvalidStatusException("The provided application must be a DraftApplication");
     }
 }

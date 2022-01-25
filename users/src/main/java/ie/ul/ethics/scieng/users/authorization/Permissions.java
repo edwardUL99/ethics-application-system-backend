@@ -68,6 +68,12 @@ public final class Permissions {
             new Permission(null, "Approve Applications", "This permission grants a user the ability to approve applications");
 
     /**
+     * This permission allows a role to assign applications to committee members
+     */
+    public static final Permission ASSIGN_APPLICATIONS =
+            new Permission(null, "Assign Applications", "This permission grants a user the ability to assign apploications to committee members");
+
+    /**
      * This permission allows a role to create new users
      */
     public static final Permission CREATE_USERS =

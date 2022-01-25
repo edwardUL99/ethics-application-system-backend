@@ -179,8 +179,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                 ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), application.getAnswers(),
                 new ArrayList<>(), new ArrayList<>(), null);
 
-        if (status == ApplicationStatus.REFERRED)
-            submittedApplication.assignCommitteeMember(((ReferredApplication)application).getReferredBy());
+        if (status == ApplicationStatus.REFERRED) {
+            ReferredApplication referred = (ReferredApplication) application;
+            submittedApplication.assignCommitteeMember(referred.getReferredBy());
+            referred.getAssignedCommitteeMembers().forEach(referred::assignCommitteeMember);
+            submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
+            submittedApplication.assignCommitteeMembersToPrevious();
+        }
 
         submittedApplication.setLastUpdated(LocalDateTime.now());
 
@@ -188,6 +193,37 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
+    }
+
+    /**
+     * Accept an application that has been re-submitted and assign the list of committee members to the application.
+     * After this method is called, the application will be "reset" to the submitted state with the assigned committee members
+     *
+     * @param application      the application to accept
+     * @param committeeMembers the list of committee members to assign
+     * @return the updated application
+     * @throws InvalidStatusException if the application status is not re-submitted
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application acceptResubmitted(Application application, List<User> committeeMembers) throws InvalidStatusException {
+        if (application.getStatus() != ApplicationStatus.RESUBMITTED)
+            throw new InvalidStatusException("The application status must be " + ApplicationStatus.RESUBMITTED + " to use this method");
+
+        SubmittedApplication submitted = (SubmittedApplication) application;
+        application.setStatus(ApplicationStatus.REVIEW);
+        committeeMembers.forEach(submitted::assignCommitteeMember);
+        submitted.clearPreviousCommitteeMembers();
+
+        submitted.setLastUpdated(LocalDateTime.now());
+
+        applicationRepository.save(submitted);
+
+        return submitted;
     }
 
     /**

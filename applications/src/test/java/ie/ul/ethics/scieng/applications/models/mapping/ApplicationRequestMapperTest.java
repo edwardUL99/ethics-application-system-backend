@@ -36,7 +36,9 @@ import java.util.Map;
 import static ie.ul.ethics.scieng.test.utils.constants.Users.*;
 import static ie.ul.ethics.scieng.test.utils.constants.Authentication.*;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 /**
@@ -312,5 +314,36 @@ public class ApplicationRequestMapperTest {
         assertEquals(expected, returned);
         verify(applicationService).getApplication(APPLICATION_ID);
         verify(userService).loadUser(USERNAME);
+    }
+
+    /**
+     * Tests that a request to accept a resubmitted application is mapped correctly
+     */
+    @Test
+    public void shouldMapAcceptResubmittedRequest() {
+        Application resubmitted = getSubmittedReferredApplication(true);
+        resubmitted.setStatus(ApplicationStatus.RESUBMITTED);
+        User chair = createTestUser();
+        chair.setUsername("chair");
+        chair.setRole(Roles.CHAIR);
+        List<User> users = List.of(chair);
+
+        List<String> usernames = List.of("chair");
+
+        AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, usernames);
+        MappedAcceptResubmittedRequest mapped = new MappedAcceptResubmittedRequest(resubmitted, users);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(resubmitted);
+        for (int i = 0; i < usernames.size(); i++) {
+            given(userService.loadUser(usernames.get(i)))
+                    .willReturn(users.get(i));
+        }
+
+        MappedAcceptResubmittedRequest returned = requestMapper.mapAcceptResubmittedRequest(request);
+
+        assertEquals(mapped, returned);
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService, times(users.size())).loadUser(any());
     }
 }

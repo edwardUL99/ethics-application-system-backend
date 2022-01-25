@@ -9,11 +9,14 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
+import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This provides the default implementation for the mapper
@@ -110,5 +113,22 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
     public MappedReferApplicationRequest mapReferApplicationRequest(ReferApplicationRequest request) {
         return new MappedReferApplicationRequest(applicationService.getApplication(request.getId()),
                 request.getEditableFields(), userService.loadUser(request.getReferrer()));
+    }
+
+    /**
+     * Map the request to an object with the loaded application and list of loaded committee members
+     *
+     * @param request the request to map
+     * @return the mapped request
+     */
+    @Override
+    public MappedAcceptResubmittedRequest mapAcceptResubmittedRequest(AcceptResubmittedRequest request) {
+        Application application = applicationService.getApplication(request.getId());
+        List<User> committeeMembers = request.getCommitteeMembers()
+                .stream()
+                .map(userService::loadUser)
+                .collect(Collectors.toList());
+
+        return new MappedAcceptResubmittedRequest(application, committeeMembers);
     }
 }
