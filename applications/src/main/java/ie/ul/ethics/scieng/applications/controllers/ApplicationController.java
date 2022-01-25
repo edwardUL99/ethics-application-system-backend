@@ -39,8 +39,6 @@ import static ie.ul.ethics.scieng.common.Constants.*;
  * TODO add /api/applications/all/ get which allows retrieving all applications by id, lock with VIEW_ALL_APPLICATIONS permissions. In /api/applications/, if the user of the loaded application doesn't match the username of the authenticated username, throw insufficient permissions
  * or if username isn't equal to this username, check if the user has VIEW_ALL_APPLICATIONS permission and then retrieve it.
  * It will have a request object with a query (i.e. find all within certain date range) (have a interface query with an enum value with the implementation query assigned to it)
- *
- * TODO also implement controller methods for submitting, reviewing applications etc.
  */
 @RestController
 @RequestMapping("/api/applications")

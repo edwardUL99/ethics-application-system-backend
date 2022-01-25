@@ -1,5 +1,7 @@
 package ie.ul.ethics.scieng.applications.models.applications;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import ie.ul.ethics.scieng.users.models.User;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -30,6 +32,7 @@ public class Comment {
      * The user that left the comment
      */
     @OneToOne
+    @JsonIgnore
     private User user;
     /**
      * The comment text
@@ -70,6 +73,15 @@ public class Comment {
     public void addSubComment(Comment comment) {
         comment.setComponentId(componentId); // attaches to the same component
         subComments.add(comment);
+    }
+
+    /**
+     * Return the username of the commenter
+     * @return commenter's username
+     */
+    @JsonProperty("username")
+    public String getCommenterUsername() {
+        return (user == null) ? null:user.getUsername();
     }
 
     /**

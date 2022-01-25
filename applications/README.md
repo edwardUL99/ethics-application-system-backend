@@ -65,6 +65,9 @@ public class ExampleComponentConverter implements ComponentConverter {
     }
 }
 ```
+The class needs to be within the same package as the other converters and the other annotation. After the converter is annotated,
+it can be retrieved using `Converters.getConverter("example-component")`. Note that the string passed in is the label from the enum
+value and the type used in JSON
 4. To use the new component, in the JSON file, when creating an object, do the following:
 ```json
 {

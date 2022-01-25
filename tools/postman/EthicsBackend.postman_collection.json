@@ -1946,6 +1946,7 @@
 									"    pm.expect(json).to.have.property('answers');",
 									"    pm.expect(json).to.have.property('lastUpdated');",
 									"    pm.expect(json).to.have.property('comments');",
+									"    pm.expect(json).to.have.property('assignedCommitteeMembers');",
 									"    pm.expect(json.finalComment).to.eql(null);",
 									"})"
 								],
@@ -2101,6 +2102,44 @@
 							"path": [
 								"applications",
 								"review",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Refer application",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.chair.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{application-id}}\",\n    \"editableFields\": [],\n    \"referrer\": \"chair\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/applications/refer/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"applications",
+								"refer",
 								""
 							]
 						}

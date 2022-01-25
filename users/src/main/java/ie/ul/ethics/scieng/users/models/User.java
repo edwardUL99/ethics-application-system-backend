@@ -95,6 +95,15 @@ public class User {
     }
 
     /**
+     * Sets the username of the user by changing the username of the account also
+     * @param username the new username
+     */
+    public void setUsername(String username) {
+        this.username = username;
+        this.account.setUsername(username);
+    }
+
+    /**
      * Retrieve the user's full name
      * @return the name of the user
      */

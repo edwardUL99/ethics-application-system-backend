@@ -27,7 +27,6 @@ import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
-import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.common.Constants;
 import ie.ul.ethics.scieng.test.utils.JSON;
 
@@ -220,9 +219,7 @@ public class ApplicationControllerTest {
     public void shouldThrowInsufficientPermissionsOnGetApplication() throws Exception {
         Application application = ApplicationServiceTest.createDraftApplication(templates[0]);
         User user = ApplicationServiceTest.createTestUser();
-        Account account = user.getAccount();
-        account.setUsername("not_me");
-        user.setAccount(account);
+        user.setUsername("not_me");
 
         given(applicationService.getApplication(ApplicationServiceTest.APPLICATION_DB_ID))
                 .willReturn(application);
@@ -297,9 +294,7 @@ public class ApplicationControllerTest {
     public void shouldThrowInsufficientPermissionsOnGetApplicationByAppId() throws Exception {
         Application application = ApplicationServiceTest.createDraftApplication(templates[0]);
         User user = ApplicationServiceTest.createTestUser();
-        Account account = user.getAccount();
-        account.setUsername("not_me");
-        user.setAccount(account);
+        user.setUsername("not_me");
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(application);

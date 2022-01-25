@@ -479,6 +479,30 @@ public class ApplicationServiceTest {
     }
 
     /**
+     * Tests that if an application is referred, they will be added to the list of the assigned committee members when
+     * submitted
+     */
+    @Test
+    public void shouldSubmitReferredApplication() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        User referrer = createTestUser();
+        referrer.setUsername("referrer");
+        referrer.setRole(Roles.CHAIR);
+        Application referred = new ReferredApplication(null, APPLICATION_ID, draftApplication.getUser(), draftApplication.getApplicationTemplate(),
+                draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
+
+        Application submitted = createSubmittedApplication(draftApplication);
+        ((SubmittedApplication)submitted).assignCommitteeMember(referrer);
+
+        Application returned = applicationService.submitApplication(referred);
+
+        assertEquals(submitted, returned);
+        assertTrue(((SubmittedApplication)returned).getAssignedCommitteeMembers().contains(referrer));
+        verify(applicationRepository).delete(referred);
+        verify(applicationRepository).save(submitted);
+    }
+
+    /**
      * Tests that if an application is not in a draft/referred state when being submitted, an InvalidStatusException will be thrown
      */
     @Test

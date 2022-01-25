@@ -71,6 +71,9 @@ public interface ApplicationService {
      * Submit an application from the applicant to the committee and convert the application to a submitted state.
      * The draft instance of the application will be removed and replaced with the submitted instance. The database IDs
      * will differ but the applicationId field will remain the same.
+     *
+     * If the application being submitted has been referred, the referring user will be added to the list of assigned committee
+     * members in the submitted application
      * @param application the application to submit
      * @return the submitted application
      * @throws InvalidStatusException if the application is not in a draft or referred state

@@ -5,12 +5,15 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
+import ie.ul.ethics.scieng.users.models.User;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class represents a response for a submitted application
@@ -28,6 +31,10 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      */
     private Map<String, Comment> comments;
     /**
+     * The list of usernames of the assigned committee members
+     */
+    private List<String> assignedCommitteeMembers;
+    /**
      * The final comment left on the application if it is approved/rejected
      */
     private Comment finalComment;
@@ -41,6 +48,10 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
         super(application);
 
         this.comments = application.getComments();
+        this.assignedCommitteeMembers = application.getAssignedCommitteeMembers()
+                .stream()
+                .map(User::getUsername)
+                .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
     }
 

@@ -178,6 +178,10 @@ public class ApplicationServiceImpl implements ApplicationService {
         SubmittedApplication submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
                 ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), application.getAnswers(),
                 new ArrayList<>(), new ArrayList<>(), null);
+
+        if (status == ApplicationStatus.REFERRED)
+            submittedApplication.assignCommitteeMember(((ReferredApplication)application).getReferredBy());
+
         submittedApplication.setLastUpdated(LocalDateTime.now());
 
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
