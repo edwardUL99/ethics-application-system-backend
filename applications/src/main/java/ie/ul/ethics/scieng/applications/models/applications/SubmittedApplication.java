@@ -1,6 +1,7 @@
 package ie.ul.ethics.scieng.applications.models.applications;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
@@ -11,7 +12,6 @@ import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This class represents an application that has been submitted
@@ -65,11 +65,8 @@ public class SubmittedApplication extends Application {
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
                                 List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment) {
         super(id, applicationId, user, status, applicationTemplate, answers);
-        this.comments = comments.stream()
-                .collect(Collectors.toMap(
-                        Comment::getComponentId,
-                        c -> c
-                ));
+        this.comments = new HashMap<>();
+        comments.forEach(this::addComment);
         assignedCommitteeMembers.forEach(this::assignCommitteeMember);
         this.finalComment = finalComment;
     }
@@ -84,6 +81,14 @@ public class SubmittedApplication extends Application {
             throw new ApplicationException("The user being assigned to the SubmittedApplication must have the REVIEW_APPLICATIONS permission");
 
         assignedCommitteeMembers.add(user);
+    }
+
+    /**
+     * Adds the provided comment to the application
+     * @param comment the comment to add
+     */
+    public void addComment(Comment comment) {
+        this.comments.put(comment.getComponentId(), comment);
     }
 
     /**
@@ -104,15 +109,15 @@ public class SubmittedApplication extends Application {
      * Set the status of the application. The status an application can be in differs depending on the concrete sub-class.
      *
      * @param status the status of the application
-     * @throws ApplicationException if the status is invalid for that application
+     * @throws InvalidStatusException if the status is invalid for that application
      */
     @Override
-    public void setStatus(ApplicationStatus status) throws ApplicationException {
+    public void setStatus(ApplicationStatus status) throws InvalidStatusException {
         if (status != null) {
             Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
                     ApplicationStatus.APPROVED, ApplicationStatus.REJECTED);
             if (!permissible.contains(status)) // TODO decide if approved/rejected require their own subclasses
-                throw new ApplicationException("The only applicable statuses for a SubmittedApplication are " + permissible);
+                throw new InvalidStatusException("The only applicable statuses for a SubmittedApplication are " + permissible);
 
             this.status = status;
         }

@@ -11,12 +11,12 @@ are checked against the permissions and if they have the required permissions, t
 Otherwise, the request is responded to with status code 401 and error message `insufficient_permissions`.
 
 ## Endpoints
-All the endpoints in this module begin with the path `/api/users`. If the endpoint in the following table is blank, it means
+All the endpoints in this module begin with the path `/api/users`. If the endpoint in the following table is [blank], it means
 the request is just made with '/api/users' and no extra elements in the path
 
 | Endpoint     | Method | Description                                                                                                                                                                                        |
 |--------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|              | GET    | When a get request is made to /users without any additional endpoints specified, a list of all the users in the system is returned (a shortened version of user profiles)                              |
+| [blank]             | GET    | When a get request is made to /users without any additional endpoints specified, a list of all the users in the system is returned (a shortened version of user profiles)                              |
 | /user        | GET    | Retrieves the user with the specified username as a URL parameter. A URL boolean parameter email can also be specified to treat username as an email and find the user for the given email address |
 |              | POST   | Allows a user to create their own user profile. The initial role is Standard User unless the email matches the configured chair person email and no chair already exists.                          |
 |              | PUT    | This endpoint allows a user to update their own user profile                                                                                                                                       |

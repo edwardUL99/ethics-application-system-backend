@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
@@ -29,6 +30,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static ie.ul.ethics.scieng.test.utils.constants.Users.*;
@@ -194,7 +196,7 @@ public class ApplicationRequestMapperTest {
             return new SubmittedApplication(null, APPLICATION_ID, createTestUser(), ApplicationStatus.SUBMITTED,
                     templates[0], new HashMap<>(), new ArrayList<>(), new ArrayList<>(), null);
         } else {
-            return new ReferredApplication(null, APPLICATION_ID, createTestUser(), ApplicationStatus.REFERRED,
+            return new ReferredApplication(null, APPLICATION_ID, createTestUser(),
                     templates[0], new HashMap<>(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), null);
         }
     }
@@ -285,5 +287,30 @@ public class ApplicationRequestMapperTest {
         assertThrows(MappingException.class, () -> requestMapper.submitRequestToApplication(request));
 
         verify(applicationService).getApplication(APPLICATION_ID);
+    }
+
+    /**
+     * Tests that a ReferApplicationRequest should be mapped successfully
+     */
+    @Test
+    public void shouldMapReferApplicationRequest() {
+        Application reviewed = getSubmittedReferredApplication(true);
+        reviewed.setStatus(ApplicationStatus.REVIEWED);
+        List<String> editableFields = new ArrayList<>();
+        User referrer = createTestUser();
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(reviewed);
+        given(userService.loadUser(USERNAME))
+                .willReturn(referrer);
+
+        MappedReferApplicationRequest expected = new MappedReferApplicationRequest(reviewed, editableFields, referrer);
+
+        MappedReferApplicationRequest returned =
+                requestMapper.mapReferApplicationRequest(new ReferApplicationRequest(APPLICATION_ID, editableFields, USERNAME));
+
+        assertEquals(expected, returned);
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
     }
 }

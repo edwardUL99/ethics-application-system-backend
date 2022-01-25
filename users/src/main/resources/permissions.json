@@ -22,6 +22,18 @@
       "path": "/api/applications/id/",
       "permissions": "CREATE_APPLICATION",
       "requestMethod": "GET"
+    },
+    {
+      "path": "/api/applications/review/",
+      "permissions": "REVIEW_APPLICATIONS"
+    },
+    {
+      "path": "/api/applications/approve/",
+      "permissions": "APPROVE_APPLICATIONS"
+    },
+    {
+      "path": "/api/applications/refer/",
+      "permissions": "REFER_APPLICATIONS"
     }
   ]
 }

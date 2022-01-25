@@ -1,10 +1,13 @@
 package ie.ul.ethics.scieng.applications.services;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
+import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -476,13 +479,186 @@ public class ApplicationServiceTest {
     }
 
     /**
-     * Tests that if an application is not in a draft/referred state when being submitted, an ApplicationException will be thrown
+     * Tests that if an application is not in a draft/referred state when being submitted, an InvalidStatusException will be thrown
      */
     @Test
     public void shouldThrowIfIncorrectApplicationBeingSubmitted() {
         Application submitted = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
 
-        assertThrows(ApplicationException.class, () -> applicationService.submitApplication(submitted));
+        assertThrows(InvalidStatusException.class, () -> applicationService.submitApplication(submitted));
+
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that an application that is submitted should be set to in review
+     */
+    @Test
+    public void shouldSetApplicationToReview() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+        submitted.setId(APPLICATION_DB_ID);
+        Application inReview = createSubmittedApplication(draftApplication);
+        inReview.setId(APPLICATION_DB_ID);
+        inReview.setStatus(ApplicationStatus.REVIEW);
+
+        assertEquals(ApplicationStatus.SUBMITTED, submitted.getStatus());
+
+        Application returned = applicationService.reviewApplication(submitted, false);
+
+        assertSame(submitted, returned);
+        assertEquals(ApplicationStatus.REVIEW, returned.getStatus());
+        verify(applicationRepository).save(inReview);
+    }
+
+    /**
+     * Tests that an application that is in review is set to reviewed
+     */
+    @Test
+    public void shouldSetApplicationToReviewed() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+        submitted.setId(APPLICATION_DB_ID);
+        submitted.setStatus(ApplicationStatus.REVIEW);
+        Application inReview = createSubmittedApplication(draftApplication);
+        inReview.setId(APPLICATION_DB_ID);
+        inReview.setStatus(ApplicationStatus.REVIEWED);
+
+        assertEquals(ApplicationStatus.REVIEW, submitted.getStatus());
+
+        Application returned = applicationService.reviewApplication(submitted, true);
+
+        assertSame(submitted, returned);
+        assertEquals(ApplicationStatus.REVIEWED, returned.getStatus());
+        verify(applicationRepository).save(inReview);
+    }
+
+    /**
+     * Tests that an InvalidStatusException is thrown if the application is not in the correct status for the reviewApplication
+     * method
+     */
+    @Test
+    public void shouldThrowIfReviewApplicationIncorrectStatus() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+        submitted.setStatus(ApplicationStatus.REVIEW);
+        assertEquals(ApplicationStatus.REVIEW, submitted.getStatus());
+
+        assertThrows(InvalidStatusException.class, () -> applicationService.reviewApplication(submitted, false));
+
+        submitted.setStatus(ApplicationStatus.SUBMITTED);
+        assertEquals(ApplicationStatus.SUBMITTED, submitted.getStatus());
+
+        assertThrows(InvalidStatusException.class, () -> applicationService.reviewApplication(submitted, true));
+
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that an application should be approved/rejected successfully
+     */
+    @Test
+    public void shouldApproveApplication() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+        submitted.setId(APPLICATION_DB_ID);
+        submitted.setStatus(ApplicationStatus.REVIEWED);
+        Application saved = createSubmittedApplication(draftApplication);
+        saved.setId(APPLICATION_DB_ID);
+        assertEquals(ApplicationStatus.REVIEWED, submitted.getStatus());
+        saved.setStatus(ApplicationStatus.APPROVED);
+
+        Comment finalComment = new Comment();
+        ((SubmittedApplication)saved).setFinalComment(finalComment);
+
+        Application returned = applicationService.approveApplication(submitted, true, finalComment);
+
+        assertSame(returned, submitted);
+        assertEquals(ApplicationStatus.APPROVED, returned.getStatus());
+        verify(applicationRepository).save(saved);
+
+        saved.setStatus(ApplicationStatus.REJECTED);
+
+        submitted.setStatus(ApplicationStatus.REVIEWED);
+        assertEquals(ApplicationStatus.REVIEWED, submitted.getStatus());
+        returned = applicationService.approveApplication(submitted, false, finalComment);
+
+        assertSame(returned, submitted);
+        assertEquals(ApplicationStatus.REJECTED, returned.getStatus());
+        verify(applicationRepository, times(2)).save(saved);
+    }
+
+    /**
+     * Tests that if an application is passed into approveApplication, an InvalidStatusException is thrown
+     * if the application is not in a Reviewed state
+     */
+    @Test
+    public void shouldThrowIfApplicationIsNotReviewedOnApproveApplication() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+
+        Comment finalComment = new Comment();
+
+        assertThrows(InvalidStatusException.class, () -> applicationService.approveApplication(submitted, true, finalComment));
+        assertThrows(InvalidStatusException.class, () -> applicationService.approveApplication(submitted, true, finalComment));
+
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that an application should be referred
+     */
+    @Test
+    public void shouldReferApplication() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+        submitted.setStatus(ApplicationStatus.REVIEWED);
+
+        User referrer = createTestUser();
+        referrer.setRole(Roles.CHAIR);
+
+        List<String> editable = new ArrayList<>();
+
+        Application returned = applicationService.referApplication(submitted, editable, referrer);
+
+        assertTrue(returned instanceof ReferredApplication);
+        assertEquals(ApplicationStatus.REFERRED, returned.getStatus());
+        verify(applicationRepository).delete(submitted);
+        verify(applicationRepository).save(returned);
+    }
+
+    /**
+     * Tests that an InvalidStatusException is thrown if the application is not in a reviewed state and passed into referApplication
+     */
+    @Test
+    public void shouldThrowIfApplicationNotReviewedOnRefer() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+
+        User referrer = createTestUser();
+        referrer.setRole(Roles.CHAIR);
+
+        List<String> editable = new ArrayList<>();
+
+        assertThrows(InvalidStatusException.class, () -> applicationService.referApplication(submitted, editable, referrer));
+
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that is the referrer passed into referApplication does not have REFER_APPLICATIONS permission, an ApplicationException
+     * is thrown
+     */
+    @Test
+    public void shouldThrowIfReferrerHasIncorrectPermissions() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
+
+        User referrer = createTestUser();
+
+        List<String> editable = new ArrayList<>();
+
+        assertThrows(ApplicationException.class, () -> applicationService.referApplication(submitted, editable, referrer));
 
         verifyNoInteractions(applicationRepository);
     }

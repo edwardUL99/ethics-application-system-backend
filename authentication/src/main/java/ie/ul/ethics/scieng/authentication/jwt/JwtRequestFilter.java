@@ -37,6 +37,9 @@ public class JwtRequestFilter extends OncePerRequestFilter {
      * The authentication utility class providing Jwt authentication
      */
     private final JWT jwt;
+    /**
+     * The authentication information object to set authentication information
+     */
     @Resource(name="authenticationInformation")
     private AuthenticationInformation authenticationInformation;
 

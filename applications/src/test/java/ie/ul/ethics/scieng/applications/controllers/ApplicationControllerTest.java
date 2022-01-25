@@ -1,17 +1,27 @@
 package ie.ul.ethics.scieng.applications.controllers;
 
+import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.ApplicationResponse;
 import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
 import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
+import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
+import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.mapping.ReviewApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -29,6 +39,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import ie.ul.ethics.scieng.applications.services.ApplicationServiceTest;
@@ -44,6 +55,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -96,6 +108,11 @@ public class ApplicationControllerTest {
      * Used for mocking interactions with the model view controller
      */
     private MockMvc mockMvc;
+
+    /**
+     * A username for a referrer account
+     */
+    private static final String REFERRER_USERNAME = "referrer";
 
     /**
      * Create a test class instance
@@ -678,5 +695,392 @@ public class ApplicationControllerTest {
 
         verify(requestMapper).submitRequestToApplication(request);
         verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * Tests that an application should be set to review correctly
+     */
+    @Test
+    public void shouldReviewApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draft);
+        Application review = createSubmittedApplication(draft);
+        review.setStatus(ApplicationStatus.REVIEW);
+
+        ReviewApplicationRequest request = new ReviewApplicationRequest(APPLICATION_ID, false);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(review);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(submitted);
+        given(applicationService.reviewApplication(submitted, false))
+                .willReturn(review);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "review"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).reviewApplication(submitted, false);
+    }
+
+    /**
+     * Tests that an application should be set to reviewed
+     */
+    @Test
+    public void shouldSetApplicationToReviewed() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application review = createSubmittedApplication(draft);
+        review.setStatus(ApplicationStatus.REVIEW);
+        Application reviewed = createSubmittedApplication(draft);
+        reviewed.setStatus(ApplicationStatus.REVIEWED);
+
+        ReviewApplicationRequest request = new ReviewApplicationRequest(APPLICATION_ID, true);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(reviewed);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(review);
+        given(applicationService.reviewApplication(review, true))
+                .willReturn(reviewed);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "review"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).reviewApplication(review, true);
+    }
+
+    /**
+     * Tests that a 404 should be returned if the application in the review application request does not exist
+     */
+    @Test
+    public void shouldThrowNotFoundOnReview() throws Exception {
+        ReviewApplicationRequest request = new ReviewApplicationRequest(APPLICATION_ID, false);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(null);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "review"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(JSON.convertJSON(request)))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoMoreInteractions(applicationService);
+    }
+
+    /**
+     * Tests than an Invalid application status should be returned if the application status is incorrect
+     */
+    @Test
+    public void shouldThrowInvalidStatusOnReview() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application application = createSubmittedApplication(draft);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(application);
+        doThrow(InvalidStatusException.class).when(applicationService).reviewApplication(application, true);
+
+        ReviewApplicationRequest request = new ReviewApplicationRequest(APPLICATION_ID, true);
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "review"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).reviewApplication(application, true);
+    }
+
+    /**
+     * Tests that an application should be approved successfully
+     */
+    @Test
+    public void shouldApproveApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application reviewed = createSubmittedApplication(draft);
+        reviewed.setStatus(ApplicationStatus.REVIEWED);
+        Application approved = createSubmittedApplication(draft);
+        approved.setStatus(ApplicationStatus.APPROVED);
+        Comment finalComment = new Comment();
+        ((SubmittedApplication)approved).setFinalComment(finalComment);
+
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(approved);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(reviewed);
+        given(applicationService.approveApplication(reviewed, true, finalComment))
+                .willReturn(approved);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "approve"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).approveApplication(reviewed, true, finalComment);
+    }
+
+    /**
+     * Tests that an application should be rejected successfully
+     */
+    @Test
+    public void shouldRejectApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application reviewed = createSubmittedApplication(draft);
+        reviewed.setStatus(ApplicationStatus.REVIEWED);
+        Application rejected = createSubmittedApplication(draft);
+        rejected.setStatus(ApplicationStatus.APPROVED);
+        Comment finalComment = new Comment();
+        ((SubmittedApplication)rejected).setFinalComment(finalComment);
+
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, false, finalComment);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(rejected);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(reviewed);
+        given(applicationService.approveApplication(reviewed, false, finalComment))
+                .willReturn(rejected);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "approve"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).approveApplication(reviewed, false, finalComment);
+    }
+
+    /**
+     * Tests that a 404 error should be thrown if the application doesn't exist
+     */
+    @Test
+    public void shouldThrowIfApplicationNotFoundOnApprove() throws Exception {
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(null);
+
+        Comment finalComment = new Comment();
+
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+
+        String json = JSON.convertJSON(request);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "approve"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoMoreInteractions(applicationService);
+    }
+
+    /**
+     * Tests that an invalid application status error is thrown if the application is in the wrong status
+     */
+    @Test
+    public void shouldThrowInvalidStatusErrorOnApproveApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draft);
+        Comment finalComment = new Comment();
+
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(submitted);
+        doThrow(InvalidStatusException.class).when(applicationService).approveApplication(submitted, true, finalComment);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "approve"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).approveApplication(submitted, true, finalComment);
+    }
+
+    /**
+     * Create a test ReferredApplication instance
+     * @param base the base application to refer
+     * @return the referred application instance
+     */
+    private Application createReferredApplication(Application base) {
+        User referrer = createTestUser();
+        referrer.getAccount().setUsername(REFERRER_USERNAME);
+        referrer.setRole(Roles.CHAIR);
+
+        return new ReferredApplication(APPLICATION_DB_ID, APPLICATION_ID, createTestUser(),
+                templates[0], base.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
+    }
+
+    /**
+     * Tests that an application should be referred to the applicant successfully
+     */
+    @Test
+    public void shouldReferApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application reviewed = createSubmittedApplication(draft);
+        reviewed.setStatus(ApplicationStatus.REVIEWED);
+        ReferredApplication referred = (ReferredApplication) createReferredApplication(reviewed);
+        User referrer = referred.getReferredBy();
+
+        ReferApplicationRequest request = new ReferApplicationRequest(APPLICATION_ID, new ArrayList<>(), REFERRER_USERNAME);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(referred);
+        MappedReferApplicationRequest mapped = new MappedReferApplicationRequest(reviewed, new ArrayList<>(), referrer);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(requestMapper.mapReferApplicationRequest(request))
+                .willReturn(mapped);
+        given(applicationService.referApplication(reviewed, new ArrayList<>(), referrer))
+                .willReturn(referred);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "refer"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).mapReferApplicationRequest(request);
+        verify(applicationService).referApplication(reviewed, new ArrayList<>(), referrer);
+    }
+
+    /**
+     * Tests that an invalid status error should be thrown when an application is referred
+     */
+    @Test
+    public void shouldThrowInvalidStatusOnRefer() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application reviewed = createSubmittedApplication(draft);
+        User referrer = createTestUser();
+        referrer.getAccount().setUsername(REFERRER_USERNAME);
+        referrer.setRole(Roles.CHAIR);
+
+        ReferApplicationRequest request = new ReferApplicationRequest(APPLICATION_ID, new ArrayList<>(), REFERRER_USERNAME);
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(requestMapper.mapReferApplicationRequest(request))
+                .willReturn(new MappedReferApplicationRequest(reviewed, new ArrayList<>(), referrer));
+        doThrow(InvalidStatusException.class).when(applicationService).referApplication(reviewed, new ArrayList<>(), referrer);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "refer"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).mapReferApplicationRequest(request);
+        verify(applicationService).referApplication(reviewed, new ArrayList<>(), referrer);
+    }
+
+    /**
+     * Tests that a general application error should be thrown when an application is referred
+     */
+    @Test
+    public void shouldThrowApplicationExceptionOnRefer() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application reviewed = createSubmittedApplication(draft);
+        User referrer = createTestUser();
+        referrer.getAccount().setUsername(REFERRER_USERNAME);
+        referrer.setRole(Roles.CHAIR);
+
+        ReferApplicationRequest request = new ReferApplicationRequest(APPLICATION_ID, new ArrayList<>(), REFERRER_USERNAME);
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, null);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(requestMapper.mapReferApplicationRequest(request))
+                .willReturn(new MappedReferApplicationRequest(reviewed, new ArrayList<>(), referrer));
+        doThrow(ApplicationException.class).when(applicationService).referApplication(reviewed, new ArrayList<>(), referrer);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "refer"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).mapReferApplicationRequest(request);
+        verify(applicationService).referApplication(reviewed, new ArrayList<>(), referrer);
+    }
+
+    /**
+     * Tests that a 404 should be thrown if either the application or referring user is not found
+     */
+    @Test
+    public void shouldThrowNotFoundOnReferApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application reviewed = createSubmittedApplication(draft);
+        User referrer = createTestUser();
+        referrer.getAccount().setUsername(REFERRER_USERNAME);
+        referrer.setRole(Roles.CHAIR);
+
+        ReferApplicationRequest request = new ReferApplicationRequest(APPLICATION_ID, new ArrayList<>(), REFERRER_USERNAME);
+
+        String json = JSON.convertJSON(request);
+
+        given(requestMapper.mapReferApplicationRequest(request))
+                .willReturn(new MappedReferApplicationRequest(null, new ArrayList<>(), referrer));
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "refer"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        given(requestMapper.mapReferApplicationRequest(request))
+                .willReturn(new MappedReferApplicationRequest(reviewed, new ArrayList<>(), null));
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "refer"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(requestMapper, times(2)).mapReferApplicationRequest(request);
+        verify(applicationService, times(0)).referApplication(reviewed, new ArrayList<>(), referrer);
     }
 }

@@ -61,13 +61,19 @@ public final class Permissions {
     public static final Permission ADMIN =
             new Permission(null, "Admin", "This permission grants a user access to certain admin resources");
 
-    // TODO put more defined permissions here
+    /**
+     * This permission allows a role to approve applications
+     */
+    public static final Permission APPROVE_APPLICATIONS =
+            new Permission(null, "Approve Applications", "This permission grants a user the ability to approve applications");
 
     /**
      * This permission allows a role to create new users
      */
     public static final Permission CREATE_USERS =
             new Permission(null, "Create Users", "This permission allows a user to create new users");
+
+    // TODO need to add functionality to create and delete users to controller and user service
 
     /**
      * This permission allows a role to delete other users. It should not be allowed to delete administrators however,

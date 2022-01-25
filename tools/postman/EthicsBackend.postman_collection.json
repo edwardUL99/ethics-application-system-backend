@@ -219,7 +219,7 @@
 									"    let json = pm.response.json()",
 									"    pm.expect(json.username).to.eql(\"test\");",
 									"    pm.expect(json.token).not.eql(undefined);",
-									"    pm.environment.set(\"auth.token\", json.token);",
+									"    pm.collectionVariables.set(\"auth.token\", json.token);",
 									"",
 									"    json.expiry = new Date(json.expiry);",
 									"",
@@ -328,7 +328,7 @@
 									"    let json = pm.response.json()",
 									"    pm.expect(json.username).to.eql(\"chair\");",
 									"    pm.expect(json.token).not.eql(undefined);",
-									"    pm.environment.set(\"auth.chair.token\", json.token);",
+									"    pm.collectionVariables.set(\"auth.chair.token\", json.token);",
 									"",
 									"    json.expiry = new Date(json.expiry);",
 									"",
@@ -1924,6 +1924,188 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Submit Application",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function() {",
+									"    pm.response.to.have.status(200);",
+									"})",
+									"",
+									"pm.test('Response is as expected', function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.dbId).to.eql(2);",
+									"    pm.expect(json.id).to.eql('REC-1');",
+									"    pm.expect(json.username).to.eql('test');",
+									"    pm.expect(json.status).to.eql('SUBMITTED');",
+									"    pm.expect(json.templateId).to.eql(1);",
+									"    pm.expect(json).to.have.property('answers');",
+									"    pm.expect(json).to.have.property('lastUpdated');",
+									"    pm.expect(json).to.have.property('comments');",
+									"    pm.expect(json.finalComment).to.eql(null);",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{application-id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/applications/submit/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"applications",
+								"submit",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Review Application",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function() {",
+									"    pm.response.to.have.status(200);",
+									"})",
+									"",
+									"pm.test('Response is as expected', function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.dbId).to.eql(2);",
+									"    pm.expect(json.id).to.eql('REC-1');",
+									"    pm.expect(json.username).to.eql('test');",
+									"    pm.expect(json.status).to.eql('REVIEW');",
+									"    pm.expect(json.templateId).to.eql(1);",
+									"    pm.expect(json).to.have.property('answers');",
+									"    pm.expect(json).to.have.property('lastUpdated');",
+									"    pm.expect(json).to.have.property('comments');",
+									"    pm.expect(json.finalComment).to.eql(null);",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.chair.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{application-id}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/applications/review/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"applications",
+								"review",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Review Application Set Reviewed",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test('Status is 200 OK', function() {",
+									"    pm.response.to.have.status(200);",
+									"})",
+									"",
+									"pm.test('Response is as expected', function() {",
+									"    let json = pm.response.json();",
+									"    pm.expect(json.dbId).to.eql(2);",
+									"    pm.expect(json.id).to.eql('REC-1');",
+									"    pm.expect(json.username).to.eql('test');",
+									"    pm.expect(json.status).to.eql('REVIEWED');",
+									"    pm.expect(json.templateId).to.eql(1);",
+									"    pm.expect(json).to.have.property('answers');",
+									"    pm.expect(json).to.have.property('lastUpdated');",
+									"    pm.expect(json).to.have.property('comments');",
+									"    pm.expect(json.finalComment).to.eql(null);",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{auth.chair.token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"{{application-id}}\",\n    \"finishReview\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{api.path}}/applications/review/",
+							"host": [
+								"{{api.path}}"
+							],
+							"path": [
+								"applications",
+								"review",
+								""
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}
@@ -1960,19 +2142,6 @@
 	],
 	"variable": [
 		{
-			"key": "auth.token",
-			"value": ""
-		},
-		{
-			"key": "auth.chair.token",
-			"value": ""
-		},
-		{
-			"key": "api.path",
-			"value": "http://localhost:8080/api",
-			"type": "default"
-		},
-		{
 			"key": "confirmationToken",
 			"value": ""
 		},
@@ -1983,6 +2152,21 @@
 		{
 			"key": "application-id",
 			"value": ""
+		},
+		{
+			"key": "api.path",
+			"value": "http://localhost:8080/api",
+			"type": "string"
+		},
+		{
+			"key": "auth.token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "auth.chair.token",
+			"value": "",
+			"type": "string"
 		}
 	]
 }

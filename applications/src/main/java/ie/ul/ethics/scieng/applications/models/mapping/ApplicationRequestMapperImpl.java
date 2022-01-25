@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
@@ -96,5 +97,18 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
         } else {
             return null;
         }
+    }
+
+    /**
+     * Maps refer application request to the MappedReferApplicationRequest object. Does not perform validation to
+     * ensure that the application or user exists.
+     *
+     * @param request the request to map
+     * @return the mapped request object
+     */
+    @Override
+    public MappedReferApplicationRequest mapReferApplicationRequest(ReferApplicationRequest request) {
+        return new MappedReferApplicationRequest(applicationService.getApplication(request.getId()),
+                request.getEditableFields(), userService.loadUser(request.getReferrer()));
     }
 }

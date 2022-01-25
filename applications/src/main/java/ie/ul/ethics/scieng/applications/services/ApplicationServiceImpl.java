@@ -1,8 +1,11 @@
 package ie.ul.ethics.scieng.applications.services;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
+import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -17,6 +20,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -116,7 +120,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     })
     public Application createApplication(Application application, boolean update) {
         if (update && application.getId() == null)
-            throw new ApplicationException("You cannot update a DraftApplication that has no ID");
+            throw new ApplicationException("You cannot update an Application that has no ID");
 
         if (!update)
             templateRepository.save(application.getApplicationTemplate());
@@ -156,7 +160,7 @@ public class ApplicationServiceImpl implements ApplicationService {
      *
      * @param application the application to submit
      * @return the submitted application
-     * @throws ApplicationException if the application is not in a draft or referred state
+     * @throws InvalidStatusException if the application is not in a draft or referred state
      */
     @Override
     @Caching(evict = {
@@ -164,24 +168,118 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "user_applications", allEntries = true),
             @CacheEvict(value = "status_applications", allEntries = true)
     })
-    public Application submitApplication(Application application) throws ApplicationException {
+    public Application submitApplication(Application application) throws InvalidStatusException {
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
         ApplicationStatus status = application.getStatus();
 
         if (status == null || !permissible.contains(status))
-            throw new ApplicationException("The status of an application being submitted must belong to the set: " + permissible);
+            throw new InvalidStatusException("The status of an application being submitted must belong to the set: " + permissible);
 
-        SubmittedApplication submittedApplication = new SubmittedApplication();
-        submittedApplication.setStatus(ApplicationStatus.SUBMITTED);
-        submittedApplication.setApplicationId(application.getApplicationId());
-        submittedApplication.setUser(application.getUser());
-        submittedApplication.setApplicationTemplate(application.getApplicationTemplate());
-        submittedApplication.setAnswers(application.getAnswers());
+        SubmittedApplication submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
+                ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), application.getAnswers(),
+                new ArrayList<>(), new ArrayList<>(), null);
         submittedApplication.setLastUpdated(LocalDateTime.now());
 
-        applicationRepository.delete(application);
+        applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
+    }
+
+    /**
+     * Mark an application as being in review and no longer submitted.
+     *
+     * @param application  the application to put into review
+     * @param finishReview if true, the application is marked as reviewed
+     * @return the application instance after it being updated
+     * @throws InvalidStatusException if the application is not in the submitted state and finishReview is false. If
+     *                              finishReview is true and the application is not in a review state, this exception will be thrown
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application reviewApplication(Application application, boolean finishReview) throws InvalidStatusException {
+        ApplicationStatus status = application.getStatus();
+
+        if (!finishReview && status != ApplicationStatus.SUBMITTED)
+            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
+                + ApplicationStatus.SUBMITTED + " status");
+        else if (finishReview && status != ApplicationStatus.REVIEW)
+            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEWED + " if it is in the "
+                    + ApplicationStatus.REVIEW + " status");
+
+        ApplicationStatus target = (finishReview) ? ApplicationStatus.REVIEWED:ApplicationStatus.REVIEW;
+
+        application.setStatus(target);
+        createApplication(application, true);
+
+        return application;
+    }
+
+    /**
+     * Mark the approval status on the application. The only user's that should have access to this method are those
+     * that have the APPROVE_APPLICATION permission
+     *
+     * @param application the application to set the approval status
+     * @param approve     true to approve the application, false to reject it // TODO after prototype, implement approve with minor/major clarifications
+     * @param finalComment the final comment to leave on the application
+     * @return the application after being updated
+     * @throws InvalidStatusException if the application is not in a reviewed state
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application approveApplication(Application application, boolean approve, Comment finalComment) throws InvalidStatusException {
+        if (application.getStatus() != ApplicationStatus.REVIEWED)
+            throw new InvalidStatusException("To approve/reject an Application, its status must be " + ApplicationStatus.REVIEWED);
+
+        ApplicationStatus target = (approve) ? ApplicationStatus.APPROVED:ApplicationStatus.REJECTED;
+        application.setStatus(target);
+        ((SubmittedApplication)application).setFinalComment(finalComment);
+        createApplication(application, true);
+
+        return application;
+    }
+
+    /**
+     * Refer the application to the user that created the application. This should result in the submitted version of the
+     * application being removed from the system and replaced with the referred application
+     *
+     * @param application the application that is to be referred
+     * @param editableFields the list of field IDs that can be edited
+     * @param referrer    the user that is referring the application to the user
+     * @return the referred application instance
+     * @throws ApplicationException if the application is not in a reviewed state or the referrer does not have the REFER_APPLICATIONS permission
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException {
+        // TODO here, you will trigger the email notification that the application has been referred to the user
+
+        if (application.getStatus() != ApplicationStatus.REVIEWED)
+            throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
+
+        SubmittedApplication submitted = (SubmittedApplication) application;
+
+        ReferredApplication referredApplication =
+                new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
+                        application.getAnswers(), new ArrayList<>(submitted.getComments().values()), submitted.getAssignedCommitteeMembers(), submitted.getFinalComment(),
+                        editableFields, referrer);
+
+        applicationRepository.delete(application);
+        applicationRepository.save(referredApplication);
+        referredApplication.setLastUpdated(LocalDateTime.now());
+
+        return referredApplication;
     }
 }

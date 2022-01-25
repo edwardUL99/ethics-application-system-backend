@@ -80,7 +80,8 @@ public class Comment {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         Comment comment = (Comment) o;
-        return id != null && Objects.equals(id, comment.id);
+        return Objects.equals(id, comment.id) && Objects.equals(user, comment.user) && Objects.equals(this.comment, comment.comment)
+                && Objects.equals(componentId, comment.componentId) && Objects.equals(subComments, comment.subComments);
     }
 
     /**
@@ -88,6 +89,6 @@ public class Comment {
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode();
+        return Objects.hash(id, user, comment, componentId, subComments);
     }
 }

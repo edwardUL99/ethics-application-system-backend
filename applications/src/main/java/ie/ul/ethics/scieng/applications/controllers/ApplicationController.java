@@ -1,16 +1,22 @@
 package ie.ul.ethics.scieng.applications.controllers;
 
+import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
 import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
+import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
+import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.mapping.ReviewApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
@@ -222,7 +228,8 @@ public class ApplicationController {
     }
 
     /*
-     * TODO the put mapping for submit should be locked down to those with review application permissions (and view own assigned)
+     * TODO the put mapping for submit should be locked down to those with review application permissions (and view own assigned).
+     * The update involves assigning comments to the application
      * since an applicant cannot update their own submitted application
      */
 
@@ -251,6 +258,78 @@ public class ApplicationController {
         } catch (MappingException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * This endpoint allows the review status to be set on an application
+     * @param request the request to set the review status
+     * @return the response body
+     */
+    @PostMapping("/review")
+    public ResponseEntity<?> reviewApplication(@RequestBody @Valid ReviewApplicationRequest request) {
+        try {
+            Application application = applicationService.getApplication(request.getId());
+
+            if (application == null) {
+                return ResponseEntity.notFound().build();
+            } else {
+                application = applicationService.reviewApplication(application, request.isFinishReview());
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+            }
+        } catch (InvalidStatusException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * This endpoint allows an application to be approved/rejected
+     * @param request the request to approve/reject the application
+     * @return the response body
+     */
+    @PostMapping("/approve")
+    public ResponseEntity<?> approveApplication(@RequestBody @Valid ApproveApplicationRequest request) {
+        try {
+            Application application = applicationService.getApplication(request.getId());
+
+            if (application == null) {
+                return ResponseEntity.notFound().build();
+            } else {
+                application = applicationService.approveApplication(application, request.isApprove(), request.getFinalComment());
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+            }
+        } catch (InvalidStatusException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * This endpoint is used to refer applications
+     * @param request the request to refer the application
+     * @return the response body
+     */
+    @PostMapping("/refer")
+    public ResponseEntity<?> referApplication(@RequestBody @Valid ReferApplicationRequest request) {
+        try {
+            MappedReferApplicationRequest mapped = requestMapper.mapReferApplicationRequest(request);
+            Application application = mapped.getApplication();
+            User referrer = mapped.getReferrer();
+
+            if (application == null || referrer == null) {
+                return ResponseEntity.notFound().build();
+            } else {
+                application = applicationService.referApplication(application, mapped.getEditableFields(), referrer);
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+            }
+        } catch (InvalidStatusException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
+        } catch (ApplicationException ex) {
+            ex.printStackTrace();
+            return respondError(ex.getMessage());
         }
     }
 }

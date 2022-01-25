@@ -2,11 +2,11 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 
 /**
  * This interface represents a mapper that can map any requests to the applications module into mapped objects.
@@ -37,4 +37,12 @@ public interface ApplicationRequestMapper {
      * @throws MappingException if the request ID does not match a draft or referred application
      */
     Application submitRequestToApplication(SubmitApplicationRequest request) throws MappingException;
+
+    /**
+     * Maps refer application request to the MappedReferApplicationRequest object. Does not perform validation to
+     * ensure that the application or user exists.
+     * @param request the request to map
+     * @return the mapped request object
+     */
+    MappedReferApplicationRequest mapReferApplicationRequest(ReferApplicationRequest request);
 }
