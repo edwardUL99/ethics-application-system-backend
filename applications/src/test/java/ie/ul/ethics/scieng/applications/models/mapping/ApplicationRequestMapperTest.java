@@ -1,12 +1,16 @@
 package ie.ul.ethics.scieng.applications.models.mapping;
 
+import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
@@ -38,8 +42,7 @@ import static ie.ul.ethics.scieng.test.utils.constants.Authentication.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 /**
  * This class tests the ApplicationRequestMapper interface
@@ -345,5 +348,115 @@ public class ApplicationRequestMapperTest {
         assertEquals(mapped, returned);
         verify(applicationService).getApplication(APPLICATION_ID);
         verify(userService, times(users.size())).loadUser(any());
+    }
+
+    /**
+     * This method tests that ReviewSubmittedApplicationRequests are mapped correctly
+     */
+    @Test
+    public void shouldMapReviewSubmittedRequest() {
+        Application review = getSubmittedReferredApplication(true);
+        review.setStatus(ApplicationStatus.REVIEW);
+        SubmittedApplication mapped = (SubmittedApplication) getSubmittedReferredApplication(true);
+        mapped.setStatus(ApplicationStatus.REVIEW);
+
+        User user = createTestUser();
+
+        Comment comment = new Comment(null, user, "comment", "component", new ArrayList<>());
+        comment.addSubComment(new Comment(null, user, "comment1", "component1", new ArrayList<>()));
+        mapped.addComment(comment);
+
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(review);
+
+        SubmittedApplication returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
+
+        assertEquals(mapped, returned);
+        assertTrue(returned.getComments().containsValue(comment));
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService, times(2)).loadUser(USERNAME);
+    }
+
+    /**
+     * Tests that if the application doesn't exist, null is returned
+     */
+    @Test
+    public void shouldReturnNullOnReviewSubmitted() {
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(null);
+
+        SubmittedApplication returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
+
+        assertNull(returned);
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoInteractions(userService);
+    }
+
+    /**
+     * This method tests that An InvalidStatusException is thrown if the application in ReviewSubmittedApplicationRequests is not in review
+     */
+    @Test
+    public void shouldThrowApplicationStatusReviewSubmittedRequest() {
+        Application review = getSubmittedReferredApplication(true);
+        SubmittedApplication mapped = (SubmittedApplication) getSubmittedReferredApplication(true);
+
+        User user = createTestUser();
+
+        Comment comment = new Comment(null, user, "comment", "component", new ArrayList<>());
+        comment.addSubComment(new Comment(null, user, "comment1", "component1", new ArrayList<>()));
+        mapped.addComment(comment);
+
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(review);
+
+        assertThrows(InvalidStatusException.class, () -> requestMapper.reviewSubmittedRequestToSubmitted(request));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoInteractions(userService);
+    }
+
+    /**
+     * This method tests that an ApplicationException is thrown if a comment with a null user exists
+     */
+    @Test
+    public void shouldThrowIfUserIsNullMapReviewSubmittedRequest() {
+        Application review = getSubmittedReferredApplication(true);
+        review.setStatus(ApplicationStatus.REVIEW);
+        SubmittedApplication mapped = (SubmittedApplication) getSubmittedReferredApplication(true);
+        mapped.setStatus(ApplicationStatus.REVIEW);
+
+        Comment comment = new Comment(null, null, "comment", "component", new ArrayList<>());
+        comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
+        mapped.addComment(comment);
+
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        given(userService.loadUser(USERNAME))
+                .willReturn(null);
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(review);
+
+        assertThrows(ApplicationException.class, () -> requestMapper.reviewSubmittedRequestToSubmitted(request));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
     }
 }

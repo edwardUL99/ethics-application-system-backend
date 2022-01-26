@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
+import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -89,6 +90,41 @@ public class ReferredApplication extends SubmittedApplication {
             throw new ApplicationException("The referredBy user must contain the REFER_APPLICATION permission");
 
         this.referredBy = referredBy;
+    }
+
+    /**
+     * If this application is being used in a response, it should be "cleaned" to remove information from it
+     * that may not be viewable by the user depending on their permissions. If the user can view everything regardless of
+     * permissions, this method can safely be a no-op
+     * If the method does need to clean an application, {@link #copy()} should be called, modify the copy and return it
+     *
+     * @param user the user that will be viewing the application
+     * @return the cleaned application. If no-op this could be the same instance as this
+     */
+    @Override
+    public ReferredApplication clean(User user) {
+        ReferredApplication application = copy();
+        Collection<Permission> permissions = user.getRole().getPermissions();
+
+        if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+            application.comments.clear();
+            application.finalComment = null;
+        }
+
+        return application;
+    }
+
+    /**
+     * Make a copy of this application instance from top-level fields. If any fields are nested objects,
+     * they should be shallow copied, for example, a list will be a copy of the list but same objects contained within it.
+     *
+     * @return the copied instance
+     */
+    @Override
+    public ReferredApplication copy() {
+        return new ReferredApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers),
+                new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, new ArrayList<>(editableFields),
+                referredBy);
     }
 
     /**

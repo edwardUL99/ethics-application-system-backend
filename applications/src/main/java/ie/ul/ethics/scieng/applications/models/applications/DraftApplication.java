@@ -66,6 +66,31 @@ public class DraftApplication extends Application {
     }
 
     /**
+     * If this application is being used in a response, it should be "cleaned" to remove information from it
+     * that may not be viewable by the user depending on their permissions. If the user can view everything regardless of
+     * permissions, this method can safely be a no-op
+     * If the method does need to clean an application, {@link #copy()} should be called, modify the copy and return it
+     * @param user the user that will be viewing the application
+     * @return the cleaned application. If no-op this could be the same instance as this
+     */
+    @Override
+    public DraftApplication clean(User user) {
+        // no-op for draft application
+        return this;
+    }
+
+    /**
+     * Make a copy of this application instance from top-level fields. If any fields are nested objects,
+     * they should be shallow copied, for example, a list will be a copy of the list but same objects contained within it.
+     *
+     * @return the copied instance
+     */
+    @Override
+    public DraftApplication copy() {
+        return new DraftApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers));
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

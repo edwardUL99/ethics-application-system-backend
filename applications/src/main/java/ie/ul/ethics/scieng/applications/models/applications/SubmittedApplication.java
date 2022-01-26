@@ -156,7 +156,8 @@ public class SubmittedApplication extends Application {
         Collection<Permission> permissions = user.getRole().getPermissions();
 
         return (this.user.getUsername().equals(user.getUsername()) && permissions.contains(Permissions.VIEW_OWN_APPLICATIONS))
-                || permissions.contains(Permissions.REVIEW_APPLICATIONS);
+                || (permissions.contains(Permissions.REVIEW_APPLICATIONS) && assignedCommitteeMembers.contains(user))
+                || permissions.contains(Permissions.VIEW_ALL_APPLICATIONS);
     }
 
     /**
@@ -176,6 +177,51 @@ public class SubmittedApplication extends Application {
 
             this.status = status;
         }
+    }
+
+    /**
+     * If this application is being used in a response, it should be "cleaned" to remove information from it
+     * that may not be viewable by the user depending on their permissions. If the user can view everything regardless of
+     * permissions, this method can safely be a no-op
+     * If the method does need to clean an application, {@link #copy()} should be called, modify the copy and return it
+     *
+     * @param user the user that will be viewing the application
+     * @return the cleaned application. If no-op this could be the same instance as this
+     */
+    @Override
+    public SubmittedApplication clean(User user) {
+        SubmittedApplication application = copy();
+        Collection<Permission> permissions = user.getRole().getPermissions();
+
+        if (status == ApplicationStatus.SUBMITTED || status == ApplicationStatus.REVIEW || status == ApplicationStatus.REVIEWED) {
+            if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+                application.comments.clear();
+                application.finalComment = null;
+            }
+        } else if (status == ApplicationStatus.RESUBMITTED) {
+            if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+                application.comments.clear();
+                application.finalComment = null;
+                application.previousCommitteeMembers.clear();
+            }
+        }
+
+        return application;
+    }
+
+    /**
+     * Make a copy of this application instance from top-level fields. If any fields are nested objects,
+     * they should be shallow copied, for example, a list will be a copy of the list but same objects contained within it.
+     *
+     * @return the copied instance
+     */
+    @Override
+    public SubmittedApplication copy() {
+        SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
+                new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment);
+        submitted.previousCommitteeMembers = new ArrayList<>(submitted.previousCommitteeMembers);
+
+        return submitted;
     }
 
     /**

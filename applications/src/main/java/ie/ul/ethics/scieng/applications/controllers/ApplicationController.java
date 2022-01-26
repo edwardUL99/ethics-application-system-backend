@@ -3,16 +3,10 @@ package ie.ul.ethics.scieng.applications.controllers;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
-import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
-import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
-import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
-import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
@@ -23,6 +17,7 @@ import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
+import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.http.HttpStatus;
@@ -35,15 +30,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
 
 /**
  * This class represents the controller for the applications endpoints
- * TODO add /api/applications/all/ get which allows retrieving all applications by id, lock with VIEW_ALL_APPLICATIONS permissions. In /api/applications/, if the user of the loaded application doesn't match the username of the authenticated username, throw insufficient permissions
- * or if username isn't equal to this username, check if the user has VIEW_ALL_APPLICATIONS permission and then retrieve it.
- * It will have a request object with a query (i.e. find all within certain date range) (have a interface query with an enum value with the implementation query assigned to it)
- * Or just find all and filter the retrieved list by the can be viewed by method with the user retrieving the applications
  */
 @RestController
 @RequestMapping("/api/applications")
@@ -127,12 +119,39 @@ public class ApplicationController {
             User user = userService.loadUser(authenticationInformation.getUsername());
 
             if (application.canBeViewedBy(user)) {
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application.clean(user)));
             } else {
                 return respondError(INSUFFICIENT_PERMISSIONS);
             }
         } else {
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    /**
+     * This endpoint is used to retrieve all applications by user
+     * @param viewable true to retrieve all viewable requests by this user, false to retrieve assigned requests
+     * @return the response body
+     */
+    @GetMapping("/user")
+    public ResponseEntity<?> getUserApplications(@RequestParam(required = false) boolean viewable) {
+        try {
+            String username = authenticationInformation.getUsername();
+            User user = userService.loadUser(username);
+
+            if (user == null) {
+                return ResponseEntity.notFound().build();
+            } else {
+                return ResponseEntity.ok(((viewable) ? applicationService.getViewableApplications(user):
+                        applicationService.getAssignedApplications(user))
+                        .stream()
+                        .map(a -> a.clean(user))
+                        .map(ApplicationResponseFactory::buildResponse)
+                        .collect(Collectors.toList()));
+            }
+        } catch (ApplicationException ex) {
+            ex.printStackTrace();
+            return respondError(INSUFFICIENT_PERMISSIONS);
         }
     }
 
@@ -307,6 +326,32 @@ public class ApplicationController {
                 application = applicationService.reviewApplication(application, request.isFinishReview());
                 return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
             }
+        } catch (InvalidStatusException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * This endpoint allows a reviewer to update a submitted application in review by adding comments to it
+     * @param request the request to review the application
+     * @return the response body
+     */
+    @PutMapping("/review")
+    public ResponseEntity<?> reviewApplication(@RequestBody @Valid ReviewSubmittedApplicationRequest request) {
+        try {
+            SubmittedApplication mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
+
+            if (mapped == null) {
+                return ResponseEntity.notFound().build();
+            } else {
+                Application updated = applicationService.createApplication(mapped, true);
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(updated));
+            }
+        } catch (MappingException ex) {
+            ex.printStackTrace();
+            return respondError(USER_NOT_FOUND);
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);

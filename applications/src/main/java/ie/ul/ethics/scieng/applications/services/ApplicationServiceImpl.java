@@ -11,6 +11,7 @@ import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTemplateRepository;
+import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -23,6 +24,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class is the implementation of the ApplicationService
@@ -103,6 +105,37 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Cacheable(value = "status_applications")
     public List<Application> getApplicationsWithStatus(ApplicationStatus status) {
         return applicationRepository.findByStatus(status);
+    }
+
+    /**
+     * Get all the applications assigned to the user
+     *
+     * @param assigned the user that is assigned to the application
+     * @return the list of assigned applications
+     * @throws ApplicationException if they do not have permissions to be assigned to applications
+     */
+    @Override
+    public List<Application> getAssignedApplications(User assigned) {
+        if (!assigned.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
+            throw new ApplicationException("The user must have the REVIEW_APPLICATIONS permission");
+
+        return applicationRepository.findUserAssignedApplications(assigned);
+    }
+
+    /**
+     * Get all the applications that can be viewed by the provided user
+     *
+     * @param user the user that wishes to retrieve the applications
+     * @return the list of applications that the user can view
+     */
+    @Override
+    public List<Application> getViewableApplications(User user) {
+        List<Application> all = new ArrayList<>();
+        applicationRepository.findAll().forEach(all::add);
+
+        return all.stream()
+                .filter(a -> a.canBeViewedBy(user))
+                .collect(Collectors.toList());
     }
 
     /**

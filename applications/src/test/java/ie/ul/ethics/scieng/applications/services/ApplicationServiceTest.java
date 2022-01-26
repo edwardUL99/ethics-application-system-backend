@@ -347,6 +347,59 @@ public class ApplicationServiceTest {
     }
 
     /**
+     * Tests that all assigned applications should be retrieved successfully
+     */
+    @Test
+    public void shouldGetAssignedApplications() {
+        Application draft = createDraftApplication(getTemplate());
+        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication((DraftApplication) draft);
+        User assigned = createTestUser();
+        assigned.setRole(Roles.CHAIR);
+        submitted.assignCommitteeMember(assigned);
+
+        List<Application> list = List.of(submitted);
+
+        given(applicationRepository.findUserAssignedApplications(assigned))
+                .willReturn(list);
+
+        List<Application> returned = applicationService.getAssignedApplications(assigned);
+
+        assertEquals(list, returned);
+        verify(applicationRepository).findUserAssignedApplications(assigned);
+    }
+
+    /**
+     * Tests that if the assignee is not a committee member, an exception will be thrown
+     */
+    @Test
+    public void shouldThrowExceptionGetAssignedApplications() {
+        User assigned = createTestUser();
+
+        assertThrows(ApplicationException.class, () -> applicationService.getAssignedApplications(assigned));
+
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that all viewable applications should be retrieved successfully
+     */
+    @Test
+    public void shouldGetAllViewableApplications() {
+        Application draft = createDraftApplication(getTemplate());
+        User user = createTestUser();
+
+        List<Application> list = List.of(draft);
+
+        given(applicationRepository.findAll())
+                .willReturn(list);
+
+        List<Application> returned = applicationService.getViewableApplications(user);
+
+        assertEquals(list, returned);
+        verify(applicationRepository).findAll();
+    }
+
+    /**
      * Tests that the application should be created
      */
     @Test

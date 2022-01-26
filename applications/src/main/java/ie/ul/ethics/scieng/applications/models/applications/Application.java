@@ -101,4 +101,21 @@ public abstract class Application {
      * @throws ApplicationException if the status is invalid for that application
      */
     public abstract void setStatus(ApplicationStatus status) throws ApplicationException;
+
+    /**
+     * If this application is being used in a response, it should be "cleaned" to remove information from it
+     * that may not be viewable by the user depending on their permissions. If the user can view everything regardless of
+     * permissions, this method can safely be a no-op
+     * If the method does need to clean an application, {@link #copy()} should be called, modify the copy and return it
+     * @param user the user that will be viewing the application
+     * @return the cleaned application. If no-op this could be the same instance as this
+     */
+    public abstract Application clean(User user);
+
+    /**
+     * Make a copy of this application instance from top-level fields. If any fields are nested objects,
+     * they should be shallow copied, for example, a list will be a copy of the list but same objects contained within it.
+     * @return the copied instance
+     */
+    public abstract Application copy();
 }

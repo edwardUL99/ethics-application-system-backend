@@ -3,15 +3,7 @@ package ie.ul.ethics.scieng.applications.controllers;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
-import ie.ul.ethics.scieng.applications.models.ApplicationResponse;
-import ie.ul.ethics.scieng.applications.models.ApplicationResponseFactory;
-import ie.ul.ethics.scieng.applications.models.ApplicationTemplateResponse;
-import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationResponse;
-import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
@@ -341,8 +333,123 @@ public class ApplicationControllerTest {
     }
 
     /**
+     * Tests that the list of assigned applications should be retrieved successfully
+     */
+    @Test
+    public void shouldGetAssignedApplicationsSuccessfully() throws Exception {
+        Application submittedApplication = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        User user = createTestUser();
+        user.setUsername("committee");
+        user.setRole(Roles.COMMITTEE_MEMBER);
+
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submittedApplication);
+        List<ApplicationResponse> applications = new ArrayList<>();
+        applications.add(response);
+
+        String result = JSON.convertJSON(applications);
+
+        given(authenticationInformation.getUsername())
+                .willReturn("committee");
+        given(userService.loadUser("committee"))
+                .willReturn(user);
+        given(applicationService.getAssignedApplications(user))
+                .willReturn(List.of(submittedApplication));
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "user"))
+                .param("viewable", "false"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(authenticationInformation).getUsername();
+        verify(userService).loadUser("committee");
+        verify(applicationService).getAssignedApplications(user);
+    }
+
+    /**
+     * Tests that the list of viewable applications should be retrieved successfully
+     */
+    @Test
+    public void shouldGetViewableApplicationsSuccessfully() throws Exception {
+        Application draft = createDraftApplication(templates[0]);
+
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(draft);
+        List<ApplicationResponse> applications = new ArrayList<>();
+        applications.add(response);
+        User user = draft.getUser();
+
+        String result = JSON.convertJSON(applications);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+        given(applicationService.getViewableApplications(user))
+                .willReturn(List.of(draft));
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "user"))
+                        .param("viewable", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(authenticationInformation).getUsername();
+        verify(userService).loadUser(USERNAME);
+        verify(applicationService).getViewableApplications(user);
+    }
+
+    /**
+     * Tests that a 404 error is thrown if the user does not exist
+     */
+    @Test
+    public void shouldThrowNotFoundOnGetUserApplications() throws Exception {
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(userService.loadUser(USERNAME))
+                .willReturn(null);
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "user"))
+                        .param("viewable", "true"))
+                .andExpect(status().isNotFound());
+
+        verify(authenticationInformation).getUsername();
+        verify(userService).loadUser(USERNAME);
+        verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * Tests that an insufficient permissions should be thrown if the user that attempts to retrieve assigned applications
+     * is not a committee member
+     */
+    @Test
+    public void shouldThrowInsufficientPermissionsOnGetAssignedApplications() throws Exception {
+        Application submittedApplication = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        User user = submittedApplication.getUser();
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INSUFFICIENT_PERMISSIONS);
+
+        String result = JSON.convertJSON(response);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+        doThrow(ApplicationException.class).when(applicationService).getAssignedApplications(user);
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "user"))
+                        .param("viewable", "false"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(authenticationInformation).getUsername();
+        verify(userService).loadUser(USERNAME);
+        verify(applicationService).getAssignedApplications(user);
+    }
+
+    /**
      * Tests that a draft application should be created
-     * TODO test normal createApplication also and create Postman tests
      */
     @Test
     public void shouldCreateDraftApplication() throws Exception {
@@ -962,6 +1069,123 @@ public class ApplicationControllerTest {
 
         verify(applicationService).getApplication(APPLICATION_ID);
         verify(applicationService).reviewApplication(application, true);
+    }
+
+    /**
+     * Tests that comments are successfully added to an application
+     */
+    @Test
+    public void shouldAddCommentsToApplication() throws Exception {
+        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application review = createSubmittedApplication(draft);
+        review.setStatus(ApplicationStatus.REVIEW);
+        SubmittedApplication mapped = (SubmittedApplication) createSubmittedApplication(draft);
+        mapped.setStatus(ApplicationStatus.REVIEW);
+
+        Comment comment = new Comment(null, null, "comment", "component", new ArrayList<>());
+        comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
+        mapped.addComment(comment);
+
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(ApplicationResponseFactory.buildResponse(mapped));
+
+        given(requestMapper.reviewSubmittedRequestToSubmitted(request))
+                .willReturn(mapped);
+        given(applicationService.createApplication(mapped, true))
+                .willReturn(mapped);
+
+        mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "review"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).reviewSubmittedRequestToSubmitted(request);
+        verify(applicationService).createApplication(mapped, true);
+    }
+
+    /**
+     * Tests that if any comment is null when mapping a review request, a USER_NOT_FOUND error is thrown
+     */
+    @Test
+    public void shouldThrowUserNullOnAddCommentsToApplication() throws Exception {
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, USER_NOT_FOUND);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        doThrow(MappingException.class).when(requestMapper).reviewSubmittedRequestToSubmitted(request);
+
+        mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "review"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).reviewSubmittedRequestToSubmitted(request);
+        verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * Tests that if application status is wrong when mapping a review request, an INVALID_APPLICATION_STATUS error is thrown
+     */
+    @Test
+    public void shouldThrowInvalidStatusOnAddCommentsToApplication() throws Exception {
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        doThrow(InvalidStatusException.class).when(requestMapper).reviewSubmittedRequestToSubmitted(request);
+
+        mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "review"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(requestMapper).reviewSubmittedRequestToSubmitted(request);
+        verifyNoInteractions(applicationService);
+    }
+
+    /**
+     * Tests that if an application is not found on adding comments to it, it should throw 404
+     */
+    @Test
+    public void shouldThrowNotFoundOnAddCommentsToApplication() throws Exception {
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
+
+        String json = JSON.convertJSON(request);
+
+        given(requestMapper.reviewSubmittedRequestToSubmitted(request))
+                .willReturn(null);
+
+        mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "review"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(requestMapper).reviewSubmittedRequestToSubmitted(request);
+        verifyNoInteractions(applicationService);
     }
 
     /**

@@ -1,19 +1,24 @@
 package ie.ul.ethics.scieng.applications.models.mapping;
 
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -130,5 +135,59 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
                 .collect(Collectors.toList());
 
         return new MappedAcceptResubmittedRequest(application, committeeMembers);
+    }
+
+    /**
+     * Map the request comment to the comment entity
+     * @param comment the request comment
+     * @return the mapped comment entity
+     */
+    private Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment) {
+        Comment mapped = new Comment(comment.getId(), userService.loadUser(comment.getUsername()), comment.getComment(),
+                comment.getComponentId(), new ArrayList<>());
+
+        if (mapped.getUser() == null)
+            throw new MappingException("A comment cannot exist with a null user");
+
+        for (ReviewSubmittedApplicationRequest.Comment sub : comment.getSubComments()) {
+            mapped.addSubComment(mapComment(sub));
+        }
+
+        return mapped;
+    }
+
+    /**
+     * Map the request comments to real comments
+     * @param comments the comments to map
+     * @return the list of comments
+     */
+    private List<Comment> mapComments(List<ReviewSubmittedApplicationRequest.Comment> comments) {
+        return comments.stream()
+                .map(this::mapComment)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Map the request to a submitted application with the comments mapped and added to the application
+     *
+     * @param request the request to map
+     * @return the submitted application
+     * @throws MappingException       if any user in the comments are null;
+     * @throws InvalidStatusException if the application is not in a review state
+     */
+    @Override
+    public SubmittedApplication reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException, InvalidStatusException {
+        Application loaded = applicationService.getApplication(request.getId());
+
+        if (loaded == null) {
+            return null;
+        } else if (loaded.getStatus() != ApplicationStatus.REVIEW) {
+            throw new InvalidStatusException("The application must be in a " + ApplicationStatus.REVIEW + " status");
+        } else {
+            SubmittedApplication submitted = (SubmittedApplication) loaded;
+            mapComments(request.getComments()).forEach(submitted::addComment);
+
+            return submitted;
+        }
     }
 }

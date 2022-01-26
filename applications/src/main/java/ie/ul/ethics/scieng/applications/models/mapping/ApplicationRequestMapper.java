@@ -1,12 +1,15 @@
 package ie.ul.ethics.scieng.applications.models.mapping;
 
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 
 /**
  * This interface represents a mapper that can map any requests to the applications module into mapped objects.
@@ -52,4 +55,14 @@ public interface ApplicationRequestMapper {
      * @return the mapped request
      */
     MappedAcceptResubmittedRequest mapAcceptResubmittedRequest(AcceptResubmittedRequest request);
+
+    /**
+     * Map the request to a submitted application with the comments mapped and added to the application
+     * @param request the request to map
+     * @return the submitted application
+     * @throws MappingException if any user in the comments are null;
+     * @throws InvalidStatusException if the application is not in a review state
+     */
+    SubmittedApplication reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException,
+            InvalidStatusException;
 }

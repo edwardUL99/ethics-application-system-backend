@@ -47,6 +47,21 @@ public interface ApplicationService {
     List<Application> getApplicationsWithStatus(ApplicationStatus status);
 
     /**
+     * Get all the applications assigned to the user
+     * @param assigned the user that is assigned to the application
+     * @return the list of assigned applications
+     * @throws ApplicationException if they do not have permissions to be assigned to applications
+     */
+    List<Application> getAssignedApplications(User assigned);
+
+    /**
+     * Get all the applications that can be viewed by the provided user
+     * @param user the user that wishes to retrieve the applications
+     * @return the list of applications that the user can view
+     */
+    List<Application> getViewableApplications(User user);
+
+    /**
      * Create/update the application
      * @param application the application to save
      * @param update true to update, false to create
