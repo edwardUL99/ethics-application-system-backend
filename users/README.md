@@ -11,12 +11,12 @@ are checked against the permissions and if they have the required permissions, t
 Otherwise, the request is responded to with status code 401 and error message `insufficient_permissions`.
 
 ## Endpoints
-All the endpoints in this module begin with the path `/api/users`. If the endpoint in the following table is blank, it means
+All the endpoints in this module begin with the path `/api/users`. If the endpoint in the following table is [blank], it means
 the request is just made with '/api/users' and no extra elements in the path
 
 | Endpoint     | Method | Description                                                                                                                                                                                        |
 |--------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-|              | GET    | When a get request is made to /users without any additional endpoints specified, a list of all the users in the system is returned (a shortened version of user profiles)                              |
+| [blank]             | GET    | When a get request is made to /users without any additional endpoints specified, a list of all the users in the system is returned (a shortened version of user profiles)                              |
 | /user        | GET    | Retrieves the user with the specified username as a URL parameter. A URL boolean parameter email can also be specified to treat username as an email and find the user for the given email address |
 |              | POST   | Allows a user to create their own user profile. The initial role is Standard User unless the email matches the configured chair person email and no chair already exists.                          |
 |              | PUT    | This endpoint allows a user to update their own user profile                                                                                                                                       |
@@ -55,15 +55,15 @@ is an example:
   ]
 }
 ```
-The file [PermissionsConfiguration.java](src/main/java/ie/ul/edward/ethics/users/config/PermissionsConfiguration.java) by default defines the paths
+The file [PermissionsConfiguration.java](FYP/ethics-application-system/backend/users/src/main/java/ie/ul/ethics/scieng/users/config/PermissionsConfiguration.java) by default defines the paths
 that are equivalent to the above JSON file.
 
 The `path` can be an ANT path so that it will match any path that matches the pattern, or a concrete path. The permissions field
 allows a comma-separated list of permissions to be defined. The names are the names of the constant permissions fields defined in
-[Permissions.java](src/main/java/ie/ul/edward/ethics/users/authorization/Permissions.java).
+[Permissions.java](FYP/ethics-application-system/backend/users/src/main/java/ie/ul/ethics/scieng/users/authorization/Permissions.java).
 
 A field `requestMethod` can be set with a String matching one of the request methods in the following file:
-[RequestMethods.java](src/main/java/ie/ul/edward/ethics/users/authorization/RequestMethod.java) and specifies that authorization
+[RequestMethods.java](FYP/ethics-application-system/backend/users/src/main/java/ie/ul/ethics/scieng/users/authorization/RequestMethod.java) and specifies that authorization
 should only be carried out if the request is made using that method. If not specified, the default is `ALL` which means any request
 requires authorization.
 

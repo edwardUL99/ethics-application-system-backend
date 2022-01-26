@@ -8,6 +8,36 @@
       "path": "/api/**/admin/**",
       "permissions": "ADMIN",
       "requireAll": true
+    },
+    {
+      "path": "/api/applications/draft/",
+      "permissions": "CREATE_APPLICATION,EDIT_APPLICATION"
+    },
+    {
+      "path": "/api/applications",
+      "permissions": "VIEW_OWN_APPLICATIONS",
+      "requestMethod": "GET"
+    },
+    {
+      "path": "/api/applications/id/",
+      "permissions": "CREATE_APPLICATION",
+      "requestMethod": "GET"
+    },
+    {
+      "path": "/api/applications/review/",
+      "permissions": "REVIEW_APPLICATIONS"
+    },
+    {
+      "path": "/api/applications/approve/",
+      "permissions": "APPROVE_APPLICATIONS"
+    },
+    {
+      "path": "/api/applications/refer/",
+      "permissions": "REFER_APPLICATIONS"
+    },
+    {
+      "path": "/api/applications/resubmit/",
+      "permissions": "ASSIGN_APPLICATIONS"
     }
   ]
 }

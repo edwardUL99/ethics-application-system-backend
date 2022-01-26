@@ -5,8 +5,9 @@ function checkStatus() {
 		echo "Build failed..."
 		exit "$1"
 	fi
-} 
+}
 
+start=`date +%s`
 mvn clean install -pl '!app'
 
 checkStatus $?
@@ -16,7 +17,9 @@ cd app
 mvn clean package spring-boot:repackage
 
 checkStatus $?
+end=`date +%s`
+runtime=$((end - start))
 
 cd ..
 
-echo "Build complete. Executable JAR can be found in $PWD/app/target/"
+echo -e "Full Build Complete\nTime Elapsed: $runtime seconds\nExecutable JAR can be found in $PWD/app/target/"

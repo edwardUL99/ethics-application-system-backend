@@ -1,0 +1,565 @@
+{
+  "id": "expedited",
+  "name": "Expedited Ethics Application Form",
+  "description": "This form provides the questions for the expedited application to the ethics committee",
+  "version": "1.0",
+  "components": [
+    {
+      "type": "section",
+      "title": "Applicant Details",
+      "components": [
+        {
+          "type": "text-question",
+          "title": "Principal Investigator (supervisor)",
+          "name": "principal_investigator_name",
+          "singleLine": true,
+          "questionType": "text",
+          "_comment": "A Text Question represents a standard HTML input/textarea. It is a textarea if singleLine is false. True is default"
+        },
+        {
+          "type": "text-question",
+          "title": "Principal Investigator E-mail",
+          "name": "principal_investigator_email",
+          "questionType": "email"
+        },
+        {
+          "type": "checkbox-question",
+          "title": "",
+          "name": "supervisor_review_confirmation",
+          "options": [
+            {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "agree"}
+          ]
+        },
+        {
+          "type": "text-question",
+          "title": "Student Name",
+          "name": "student_name",
+          "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "ID Number",
+          "name": "student_id",
+          "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "E-mail Address",
+          "name": "email_address",
+          "questionType": "email"
+        },
+        {
+          "type": "text-question",
+          "title": "Programme of Study",
+          "name": "study_programme",
+          "questionType": "text"
+        },
+        {
+          "type": "select-question",
+          "title": "FYP, MSc or PhD Dissertation",
+          "name": "research_type",
+          "multiple": false,
+          "options": [
+            "FYP",
+            "MSc",
+            "PhD"
+          ]
+        },
+        {
+          "type": "text-question",
+          "title": "Working Title of Study",
+          "name": "study_title",
+          "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "End date of which approval is sought",
+          "name": "approval_end_date",
+          "questionType": "date"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "expedited-body",
+      "components": [
+        {
+          "type": "text",
+          "title": "Note on the following 3 sections",
+          "content": [
+            "If the research is to be conducted during or after/associated with School Placement, and within the Department of Education subject syllabus outline,",
+            " and provided the student has the permission of the class teacher and the school principal and that parent/guardians consent to participation,",
+            " you do not need to tick any box in the next 3 sections.",
+            " A Child Protection form, signed by all researchers involved, must be attached to the application. Please note that",
+            " if the Faculty Ethics Committee deems it necessary, you may be asked to fill in the full application form"
+          ],
+          "_comment": "This component represents a component that can display a block of text. The content can be defined as a single string, or an array of strings. The array will be concatenated into one string when parsed"
+        },
+        {
+          "type": "section",
+          "title": "Human Participants",
+          "description": "If any of the following options are checked, a full application will have to be filled out",
+          "components": [
+            {
+              "type": "checkbox-group",
+              "title": "Does the research proposal involve any of the below",
+              "defaultBranch": {
+                "type": "replacement",
+                "replacements": [
+                  {
+                    "expedited-body": "full-body"
+                  }
+                ]
+              },
+              "checkboxes": [
+                {
+                  "title": "Working with vulnerable participants?"
+                },
+                {
+                  "title": "Any person under the age of 18?"
+                },
+                {
+                  "title": "Adult patients?"
+                },
+                {
+                  "title": "Adults with psychological impairments?"
+                },
+                {
+                  "title": "Adults with learning difficulties?"
+                },
+                {
+                  "title": "Relatives of ill people (e.g. parents of sick children)?"
+                },
+                {
+                  "title": "Adults under the protection/control/influence of others (e.g. in care/prison)?"
+                },
+                {
+                  "title": "People who may only have a basic knowledge of English?"
+                },
+                {
+                  "title": "Hospital or GP patients (or HSE members of staff) recruited in medical facility?",
+                  "branch":{
+                    "type": "action",
+                    "action": "terminate",
+                    "comment": "We cannot process this application. Please contact HSE's ethics committee"
+                  }
+                }
+              ],
+              "_comment": "A checkbox group allows a branch (either defaultBranch or a defined branch) to be executed if one of the checkboxes are checked"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Subject Matter",
+          "description": "If any of the following options are checked, a full application will have to be filled out",
+          "components": [
+            {
+              "type": "checkbox-group",
+              "title": "Does the research proposal involve any of the below",
+              "defaultBranch": {
+                "type": "replacement",
+                "replacements": [
+                  {
+                    "expedited-body": "full-body"
+                  }
+                ]
+              },
+              "checkboxes": [
+                {
+                  "title": "Sensitive personal issues? (e.g. suicide, bereavement, gender identity, sexuality, fertility, abortion, gambling)?"
+                },
+                {
+                  "title": "Illegal activities, illicit drug taking, substance abuse or the self reporting of criminal behaviour?"
+                },
+                {
+                  "title": "Any act that might diminish self-respect or cause shame, embarrassment or regret?"
+                },
+                {
+                  "title": "Research into politically and/or racially/ethnically and/or commercially sensitive areas?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Procedures",
+          "description": "If any of the following options are checked, a full application will have to be filled out",
+          "components": [
+            {
+              "type": "checkbox-group",
+              "title": "Does the research proposal involve any of the below",
+              "defaultBranch": {
+                "type": "replacement",
+                "replacements": [
+                  {
+                    "expedited-body": "full-body"
+                  }
+                ]
+              },
+              "checkboxes": [
+                {
+                  "title": "Use of personal records without consent?"
+                },
+                {
+                  "title": "Deception of participants?"
+                },
+                {
+                  "title": "The offer of large inducements to participate?"
+                },
+                {
+                  "title": "Audio or visual recording without consent?"
+                },
+                {
+                  "title": "Invasive physical interventions or treatments?"
+                },
+                {
+                  "title": "Research that might put researchers or participants at risk?"
+                },
+                {
+                  "title": "Storage of results data for less than 7 years?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Research Project Information",
+          "description": [
+            "Please remember to give enough detail on what the participants will be doing in the study so that",
+            " full ethical consideration can be given in assessing the study (i.e. help the committee understand the project methods)"
+          ],
+          "_comment": "Since descriptions can be also long, they can be broken into array of strings also",
+          "components": [
+            {
+              "type": "text-question",
+              "title": "Give a description of the research",
+              "description": "Give details of what you and the participant will be doing for this study, e.g. Interview, Online survey, Workshop, Prototype testing.",
+              "singleLine": false,
+              "name": "research_description"
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Will the participants be recorded?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    },
+                    {
+                      "part": "4",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "checkbox-question",
+                    "title": "Which of the following will the recordings be (can be both)?",
+                    "name": "recording_type",
+                    "options": [
+                      "Video",
+                      "Audio"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "3",
+                      "value": "Video"
+                    }
+                  ]
+                },
+                "3": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Please state what will be recorded - participant's face, or just hands/gestures",
+                    "name": "what_will_be_recorded"
+                  },
+                  "branches": []
+                },
+                "4": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Why is the recording required?",
+                    "name": "why_recording_required",
+                    "description": "Recording must be destroyed after transcription, please state this",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Will a prototype be developed?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "If Yes, what format will the prototype take, what will it do, how will it be used?",
+                    "singleLine": false,
+                    "name": "prototype_format"
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "text-question",
+              "title": "How many participants will be involved?",
+              "name": "num_participants_involved",
+              "description": "Please state the minimum number of participants needed for this study and the ideal maximum number of participants.",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "How do you plan to gain access to/contact/approach potential participants?",
+              "name": "participants_access",
+              "description": [
+                "If using emails, how will you get the email addresses? It is important that you have permission to contact certain",
+                " groups, e.g. Class list, sports organisation, UL society or club. If using social media, please provide",
+                " the advert/text/tweet/message used to contact participants"
+              ],
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What are the criteria for including/excluding individuals from the study?",
+              "name": "study_inclusion_criteria",
+              "singleLine": false
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Have arrangements been made to accommodate individuals who do not wish to participate in the research?",
+                    "description": "NB This mainly relates to research taking place in a classroom setting, please tick N/A if your research is not taking place in a classroom",
+                    "options": [
+                      "Yes",
+                      "No",
+                      "N/A"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Please state what these arrangements are.",
+                    "name": "accommodate_arrangements",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "text-question",
+              "title": "Can you identify any particular vulnerability of your participants other than those mentioned in previous sections?",
+              "description": "Please review the other sections before completing",
+              "name": "other_vulnerabilities",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "Where will the study take place?",
+              "description": [
+                "Please ensure that it is based in UL(where possible). Please state where in UL(or otherwise) it is",
+                " taking place. Please detail how COVID restrictions will be considered and ensured in your study."
+              ],
+              "name": "study_location",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What arrangements have you made for anonymity and confidentiality?",
+              "description": "How will participants be referenced in the final report? Please ensure a code is used",
+              "name": "anonymity_arrangements",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What are the safety issues (if any) arising from this study, and how will you deal with them?",
+              "description": "How will the participants safety be guaranteed in the studies where there is an activity or intervention?",
+              "name": "safety_issues",
+              "singleLine": false
+            },
+            {
+              "type": "multipart-question",
+              "conditional": false,
+              "title": "All data must be stored for 7 years following completion of the project.",
+              "parts": {
+                "1": {
+                  "question": {
+                      "type": "text-question",
+                      "title": "How do you propose to store the information once the project is completed? Will the file/computer be password protected?",
+                      "description": "Information must not be stored on student's PC or on a USB key",
+                      "name": "store_information",
+                      "singleLine": false
+                    },
+                    "branches": []
+                  },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Where will the information be stored (room number)?",
+                    "description": "This would normally be the supervisor's room number. They take responsibility of this",
+                    "name": "information_storage_room"
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "signature",
+              "title": "Insurance Cover",
+              "description": [
+                "Insurance cover is required for all research carried out by UL employees. Principal Investigators/Supervisors ",
+                "should carefully view the University’s ‘Guidelines on Insurance Cover for Research’ document and the University’s ",
+                "Insurance cover to ascertain if their proposed research is covered. These documents are available at www.ul.ie/insurance. \\n",
+                "Where any query arises about whether or not proposed research is covered by insurance, the Principal Investigator/Supervisor must ",
+                "contact the University’s Insurance Administrator at cliona.donnellan@ul.ie to confirm that the required level of insurance cover is in place.\\n",
+                "Please indicate by way of signature that the research project is covered by UL's insurance policies"
+              ],
+              "name": "insurance_signature",
+              "label": "PI/Supervisor signature"
+            },
+            {
+              "type": "signature",
+              "title": "Research Privacy Notice",
+              "description": [
+                "The Research Privacy Notice must be provided to all participants. It is the responsibility of the Principal Investigator to make sure",
+                " that it has been completed correctly. This form will not be reviewed by the S&E Research Ethics Committee.\\n",
+                "Please indicate by way of signature that the Research Privacy Notice form has been completed:"
+              ],
+              "name": "insurance_signature",
+              "label": "PI/Supervisor signature"
+            },
+            {
+              "type": "checkbox-group",
+              "title": "Please attach relevant information documents and complete the following checklist to indicate which documents are included with the application",
+              "multiple": true,
+              "defaultBranch": {
+                "type": "action",
+                "action": "attach-file"
+              },
+              "checkboxes": [
+                {
+                  "title": "Participant Information Sheet"
+                },
+                {
+                  "title": "Participant Informed Consent Form"
+                },
+                {
+                  "title": "Parent/Guardian Information Sheet"
+                },
+                {
+                  "title": "Parent/Guardian Informed Consent Form"
+                },
+                {
+                  "title": "School Principal Information Sheet"
+                },
+                {
+                  "title": "School Principal Informed Consent Form"
+                },
+                {
+                  "title": "Teacher Information Sheet"
+                },
+                {
+                  "title": "Teacher Consent Form"
+                },
+                {
+                  "title": "Child Protection Form (must be included if dealing with <18 year olds)"
+                },
+                {
+                  "title": "Questionnaire & Explanatory Cover Letter"
+                },
+                {
+                  "title": "Interview/Survey Questions"
+                },
+                {
+                  "title": "Link to Questionnaire/Survey Questions"
+                },
+                {
+                  "title": "Recruitment letters/Advertisements/Emails/Social Media text, etc."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Declaration",
+          "description": [
+            "The information in this form is accurate to the best of my knowledge and belief and I ",
+            "take full responsibility for it. I undertake to abide by the guidelines outlined in the UL",
+            "Research Ethics Committee guidelines http://www.ul.ie/researchethics/\n\n",
+            "I undertake to inform S&EEC of any changes to the study from those detailed in this application."
+          ],
+          "components": [
+            {
+              "type": "text-question",
+              "title": "Student Name",
+              "name": "student_declaration_name"
+            },
+            {
+              "type": "signature",
+              "title": "Student Signature",
+              "name": "student_declaration_signature",
+              "label": "Student"
+            },
+            {
+              "type": "text-question",
+              "title": "Principal Investigator Name*",
+              "description": "*In the case where the principal investigator is not a permanent employee of the University, the relevant head of department must sign this declaration in their place",
+              "name": "pi_declaration_name"
+            },
+            {
+              "type": "signature",
+              "title": "Principal Investigator Signature",
+              "name": "pi_declaration_signature",
+              "label": "Principal Investigator"
+            }
+          ]
+        }
+      ],
+      "_comment": "A container provides a means of grouping sections together under one container. It is not a visual component, but can be replaced with another container"
+    }
+  ]
+}

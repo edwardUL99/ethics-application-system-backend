@@ -1,0 +1,813 @@
+{
+  "id": "full",
+  "name": "Full Ethics Application Form",
+  "description": "This form provides the question for the full application to the ethics committee. This form is filled in when the expedited application form is not sufficient",
+  "version": "1.0",
+  "components": [
+    {
+      "type": "section",
+      "title": "Applicant Details",
+      "components": [
+        {
+          "type": "text-question",
+          "title": "Principal Investigator (supervisor)",
+          "name": "principal_investigator_name",
+          "singleLine": true,
+          "questionType": "text",
+          "_comment": "A Text Question represents a standard HTML input/textarea. It is a textarea if singleLine is false. True is default"
+        },
+        {
+          "type": "text-question",
+          "title": "Principal Investigator E-mail",
+          "name": "principal_investigator_email",
+          "questionType": "email"
+        },
+        {
+          "type": "checkbox-question",
+          "title": "",
+          "name": "supervisor_review_confirmation",
+          "options": [
+            {
+              "label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review",
+              "value": "agree"
+            }
+          ]
+        },
+        {
+          "type": "text-question",
+          "title": "Student Name",
+          "name": "student_name",
+          "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "ID Number",
+          "name": "student_id",
+          "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "E-mail Address",
+          "name": "email_address",
+          "questionType": "email"
+        },
+        {
+          "type": "text-question",
+          "title": "Programme of Study",
+          "name": "study_programme",
+          "questionType": "text"
+        },
+        {
+          "type": "select-question",
+          "title": "FYP, MSc or PhD Dissertation",
+          "name": "research_type",
+          "multiple": false,
+          "options": [
+            "FYP",
+            "MSc",
+            "PhD"
+          ]
+        },
+        {
+          "type": "text-question",
+          "title": "Working Title of Study",
+          "name": "study_title",
+          "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "End date of which approval is sought",
+          "name": "approval_end_date",
+          "questionType": "date"
+        }
+      ]
+    },
+    {
+      "type": "container",
+      "id": "full-body",
+      "components": [
+        {
+          "type": "section",
+          "title": "Project Investigators",
+          "description": "This section requests extra information not provided in the Applicant Details section",
+          "components": [
+            {
+              "type": "section",
+              "title": "Principal Investigator (Supervisor)",
+              "autoSave": false,
+              "components": [
+                {
+                  "type": "text-question",
+                  "title": "Department",
+                  "name": "pi_department"
+                },
+                {
+                  "type": "text-question",
+                  "title": "Position",
+                  "name": "pi_position"
+                },
+                {
+                  "type": "text-question",
+                  "title": "Qualifications",
+                  "name": "pi_qualifications"
+                },
+                {
+                  "type": "text-question",
+                  "title": "Telephone Number",
+                  "name": "pi_telephone"
+                }
+              ],
+              "_comment": "Only save when the parent section is auto-saved. Sub-sections only get saved when the parent section is filled"
+            },
+            {
+              "type": "section",
+              "title": "Other Investigators (Student)",
+              "autoSave": false,
+              "components": [
+                {
+                  "type": "question-table",
+                  "columns": {
+                    "Name": {
+                      "type": "text-question",
+                      "name": "other_investigator_name"
+                    },
+                    "Qualifications & Affiliation": {
+                      "type": "text-question",
+                      "name": "other_investigator_qualifications"
+                    },
+                    "Signature": {
+                      "type": "signature",
+                      "name": "other_investigator_signature",
+                      "label": null
+                    }
+                  },
+                  "numRows": 2,
+                  "_comment": "The name of each component will be suffixed with _n, where n is the row number. This element allows a table of columns being the name of the input and rows of cells where the cells are duplicated inputs to answer the columns"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Head of Department(s)",
+          "description": [
+            "I have read through this application and I am aware of the possible risks to participants involved in this study.",
+            " I hereby authorise the Principal Investigator named above to conduct this research project"
+          ],
+          "components": [
+            {
+              "type": "question-table",
+              "columns": {
+                "Name": {
+                  "type": "text-question",
+                  "name": "hod_name"
+                },
+                "Department": {
+                  "type": "text-question",
+                  "name": "hod_department"
+                },
+                "Date": {
+                  "type": "text-question",
+                  "name": "hod_date",
+                  "questionType": "date"
+                },
+                "Signature": {
+                  "type": "signature",
+                  "name": "hod_signature",
+                  "label": null
+                }
+              },
+              "numRows": 1
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Study Descriptors",
+          "components": [
+            {
+              "type": "checkbox-group",
+              "title": "Please indicate the terms that apply to this research project",
+              "multiple": true,
+              "defaultBranch": null,
+              "checkboxes": [
+                {
+                  "title": "Healthy Adults"
+                },
+                {
+                  "title": "Healthy Children (< 18 yrs)"
+                },
+                {
+                  "title": "Patient Adults"
+                },
+                {
+                  "title": "Patient Children (< 18 yrs)"
+                },
+                {
+                  "title": "'Potentially Vulnerable' Adults"
+                },
+                {
+                  "title": "'Potentially Vulnerable' Children"
+                },
+                {
+                  "title": "Physical Activity"
+                },
+                {
+                  "title": "Questionnaire/Interview"
+                },
+                {
+                  "title": "Medical Devices/Drugs"
+                },
+                {
+                  "title": "Video Recording/Photography"
+                },
+                {
+                  "title": "Food/Drink Supplementation"
+                },
+                {
+                  "title": "Collection of Personal Details"
+                },
+                {
+                  "title": "Measure Physical In Nature"
+                },
+                {
+                  "title": "Measure Psychological In Nature"
+                },
+                {
+                  "title": "Body Tissue Samples"
+                },
+                {
+                  "title": "Observational"
+                },
+                {
+                  "title": "Body Fluids Samples (e.g. blood)"
+                },
+                {
+                  "title": "Record Based"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Project Description",
+          "components": [
+            {
+              "type": "text-question",
+              "title": "Justification for Research Project",
+              "description": "Include reference to published work",
+              "singleLine": false,
+              "name": "research_justification"
+            },
+            {
+              "type": "text-question",
+              "title": "Hypotheses or questions to be answered",
+              "name": "hypotheses",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "Plan of investigation",
+              "description": [
+                "Please detail the research methods used in context of the work that includes participants. ",
+                "Please include the logistical considerations of the participants (incl. COVID restrictions in your plan, if appropriate)"
+              ],
+              "name": "investigation_plan",
+              "singleLine": false
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Will the participants be recorded?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    },
+                    {
+                      "part": "4",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "checkbox-question",
+                    "title": "Which of the following will the recordings be (can be both)?",
+                    "name": "recording_type",
+                    "options": [
+                      "Video",
+                      "Audio"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "3",
+                      "value": "Video"
+                    }
+                  ]
+                },
+                "3": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Please state what will be recorded - participant's face, or just hands/gestures",
+                    "name": "what_will_be_recorded"
+                  },
+                  "branches": []
+                },
+                "4": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Why is the recording required?",
+                    "name": "why_recording_required",
+                    "description": "Recording must be destroyed after transcription, please state this",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Will a prototype be developed?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "If Yes, what format will the prototype take, what will it do, how will it be used?",
+                    "singleLine": false,
+                    "name": "prototype_format"
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "text-question",
+              "title": "Research procedures",
+              "name": "research_procedures",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "Associated risks to subjects",
+              "name": "subjects_risk",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "Statistical approach to be used and source of any statistical advice",
+              "name": "statistical_approach_source",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "Location(s) of Project",
+              "name": "project_locations",
+              "singleLine": false
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Subjects",
+          "components": [
+            {
+              "type": "text-question",
+              "title": "How will potential research participants be sourced and identified?",
+              "name": "participant_identification",
+              "singleLine": false
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Will research participants be recruited via advertisement (poster, e-mail, letter)?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Please provide details below, or attach the recruitment advertisement if written.",
+                    "name": "advertisement_details",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "multipart-question",
+              "title": "How many participants will be recruited?",
+              "conditional": false,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Male",
+                    "name": "male_participants",
+                    "questionType": "number"
+                  },
+                  "branches": []
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Female",
+                    "name": "female_participants",
+                    "questionType": "number"
+                  },
+                  "branches": []
+                },
+                "3": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Provide further information if necessary",
+                    "name": "participants_recruitment_information",
+                    "singleLine": false,
+                    "required": false
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "text-question",
+              "title": "What are the principal inclusion criteria?",
+              "description": "Please justify",
+              "name": "principal_inclusion_criteria",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What are the principal exclusion criteria?",
+              "description": "Please justify",
+              "name": "principal_exclusion_criteria",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What is the expected duration of participation for each participant?",
+              "name": "participation_duration",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What is the potential for pain, discomfort, embarrassment, changes to lifestyle for the research participants?",
+              "name": "pain_potential",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "What arrangements have been made for participants who might not adequately understand verbal explanations or written information in English?",
+              "name": "non_english_speaking_arrangements",
+              "singleLine": false
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Have arrangements been made to accommodate individuals who do not wish to participate in the research?",
+                    "description": "NB This mainly relates to research taking place in a classroom setting, please tick N/A if your research is not taking place in a classroom",
+                    "options": [
+                      "Yes",
+                      "No",
+                      "N/A"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Please state what these arrangements are.",
+                    "name": "accommodate_arrangements",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            },
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Will subjects receive any payments or incentives, or reimbursement of expenses for taking part in this research project?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Please provide details below, and indicate source of funding:",
+                    "name": "funding_source_details",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Confidentiality of collected data",
+          "components": [
+            {
+              "type": "text-question",
+              "title": "What measures will be put in place to ensure confidentiality of collected data?",
+              "name": "confidentiality_measures",
+              "singleLine": false
+            },
+            {
+              "type": "text-question",
+              "title": "Where will data be stored, i.e. Room Number?",
+              "name": "data_storage_location"
+            },
+            {
+              "type": "text-question",
+              "title": "Who will have custody and access to the data?",
+              "name": "data_custody_access",
+              "singleLine": false
+            },
+            {
+              "type": "multipart-question",
+              "conditional": false,
+              "title": "All data must be stored for 7 years following completion of the project.",
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "How do you propose to store the information once the project is completed? Will the file/computer be password protected?",
+                    "description": "Information must not be stored on student's PC or on a USB key",
+                    "name": "store_information",
+                    "singleLine": false
+                  },
+                  "branches": []
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Where will the information be stored (room number)?",
+                    "description": "This would normally be the supervisor's room number. They take responsibility of this",
+                    "name": "information_storage_room"
+                  },
+                  "branches": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Drugs or Medical Devices",
+          "components": [
+            {
+              "type": "multipart-question",
+              "conditional": true,
+              "parts": {
+                "1": {
+                  "question": {
+                    "type": "radio-question",
+                    "title": "Are Drugs or Medical Devices to be used?",
+                    "options": [
+                      "Yes",
+                      "No"
+                    ]
+                  },
+                  "branches": [
+                    {
+                      "part": "2",
+                      "value": "Yes"
+                    },
+                    {
+                      "part": "3",
+                      "value": "Yes"
+                    },
+                    {
+                      "part": "4",
+                      "value": "Yes"
+                    }
+                  ]
+                },
+                "2": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Details of the Drugs or Devices (including name, strength, dosage, route of administration)",
+                    "name": "drugs_devices_details",
+                    "singleLine": false
+                  },
+                  "branches": []
+                },
+                "3": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Details of Clinical Trial Certificate, Exemption Certificate or Product Licence (The Product Licence must cover the proposed use in the Project)",
+                    "name": "clinical_trial_details",
+                    "singleLine": false
+                  },
+                  "branches": []
+                },
+                "4": {
+                  "question": {
+                    "type": "text-question",
+                    "title": "Details of any Risks (Both to subjects and staff; indicate current experience with the drug or device)",
+                    "name": "risks_details",
+                    "singleLine": false
+                  },
+                  "branches": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Insurance Cover",
+          "components": [
+            {
+              "type": "signature",
+              "title": null,
+              "description": [
+                "Insurance cover is required for all research carried out by UL employees. Principal Investigators/Supervisors ",
+                "should carefully view the University’s ‘Guidelines on Insurance Cover for Research’ document and the University’s ",
+                "Insurance cover to ascertain if their proposed research is covered. These documents are available at www.ul.ie/insurance. \\n",
+                "Where any query arises about whether or not proposed research is covered by insurance, the Principal Investigator/Supervisor must ",
+                "contact the University’s Insurance Administrator at cliona.donnellan@ul.ie to confirm that the required level of insurance cover is in place.\\n",
+                "Please indicate by way of signature that the research project is covered by UL's insurance policies"
+              ],
+              "name": "insurance_signature",
+              "label": "PI/Supervisor signature"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Research Privacy Notice",
+          "components": [
+            {
+              "type": "signature",
+              "title": null,
+              "description": [
+                "The Research Privacy Notice must be provided to all participants. It is the responsibility of the Principal Investigator to make sure",
+                " that it has been completed correctly. This form will not be reviewed by the S&E Research Ethics Committee.\\n",
+                "Please indicate by way of signature that the Research Privacy Notice form has been completed:"
+              ],
+              "name": "insurance_signature",
+              "label": "PI/Supervisor signature"
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Information Documents",
+          "components": [
+            {
+              "type": "checkbox-group",
+              "title": "Please attach relevant information documents and complete the following checklist to indicate which documents are included with the application",
+              "multiple": true,
+              "defaultBranch": {
+                "type": "action",
+                "action": "attach-file"
+              },
+              "checkboxes": [
+                {
+                  "title": "Participant Information Sheet"
+                },
+                {
+                  "title": "Participant Informed Consent Form"
+                },
+                {
+                  "title": "Parent/Guardian Information Sheet"
+                },
+                {
+                  "title": "Parent/Guardian Informed Consent Form"
+                },
+                {
+                  "title": "School Principal Information Sheet"
+                },
+                {
+                  "title": "School Principal Informed Consent Form"
+                },
+                {
+                  "title": "Teacher Information Sheet"
+                },
+                {
+                  "title": "Teacher Consent Form"
+                },
+                {
+                  "title": "Child Protection Form (must be included if dealing with <18 year olds)"
+                },
+                {
+                  "title": "Questionnaire & Explanatory Cover Letter"
+                },
+                {
+                  "title": "Interview/Survey Questions"
+                },
+                {
+                  "title": "Link to Questionnaire/Survey Questions"
+                },
+                {
+                  "title": "Recruitment letters/Advertisements/Emails/Social Media text, etc."
+                }
+              ]
+            },
+            {
+              "type": "text",
+              "title": "Note on additional documents",
+              "content": [
+                "Please ensure any additional documents are included with this application.",
+                " These should be attached as a single document."
+              ]
+            }
+          ]
+        },
+        {
+          "type": "section",
+          "title": "Declaration",
+          "description": [
+            "The information in this form is accurate to the best of my knowledge and belief and I ",
+            "take full responsibility for it. I undertake to abide by the ethical principles outlined in the Science & Engineering Research Ethics Committee guidelines.\\n",
+            "If the research project is approved, I undertake to adhere to the study protocol without unagreed deviation, and to comply with any conditions sent out in the ",
+            "letter sent by the Science & Engineering Research Ethics Committee notifying me of this.\\n\\n",
+            "I undertake to inform the Science & Engineering Research Ethics Committee of any changes in the protocol, and to submit a Report Form upon completion of the research project."
+          ],
+          "components": [
+            {
+              "type": "text-question",
+              "title": "Principal Investigator Name*",
+              "description": "*In the case where the principal investigator is not a permanent employee of the University, the relevant head of department must sign this declaration in their place",
+              "name": "pi_declaration_name"
+            },
+            {
+              "type": "signature",
+              "title": "Principal Investigator Signature",
+              "name": "pi_declaration_signature",
+              "label": "Principal Investigator"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
