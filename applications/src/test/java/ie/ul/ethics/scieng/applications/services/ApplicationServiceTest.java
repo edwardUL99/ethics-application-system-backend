@@ -52,7 +52,8 @@ import static org.mockito.Mockito.*;
 }, properties = {
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
         "auth.jwt.token.validity=2",
-        "permissions.authorization.enabled=true"
+        "permissions.authorization.enabled=true",
+        "files.antivirus.enabled=true"
 })
 public class ApplicationServiceTest {
     /**

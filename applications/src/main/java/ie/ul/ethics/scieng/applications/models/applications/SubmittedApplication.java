@@ -72,7 +72,28 @@ public class SubmittedApplication extends Application {
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
                                 List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment) {
-        super(id, applicationId, user, status, applicationTemplate, answers);
+        this(id, applicationId, user, status, applicationTemplate, answers, new ArrayList<>(), comments, assignedCommitteeMembers,
+                finalComment);
+    }
+
+    /**
+     * Create an Application
+     *
+     * @param id                  the database ID of the application
+     * @param applicationId       the ethics committee application ID
+     * @param user                the user that owns the application
+     * @param status              the status of the application
+     * @param applicationTemplate the template that this application was answered on
+     * @param answers              the answers to the application
+     * @param attachedFiles         the list of attached files
+     * @param comments            the list of comments on this application
+     * @param assignedCommitteeMembers the list of assigned committee members
+     * @param finalComment        the final comment given to the application if approved/rejected
+     */
+    public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
+                                ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
+                                List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment) {
+        super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
         this.comments = new HashMap<>();
         comments.forEach(this::addComment);
         assignedCommitteeMembers.forEach(this::assignCommitteeMember);
@@ -218,7 +239,7 @@ public class SubmittedApplication extends Application {
     @Override
     public SubmittedApplication copy() {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment);
+                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment);
         submitted.previousCommitteeMembers = new ArrayList<>(submitted.previousCommitteeMembers);
 
         return submitted;
@@ -234,6 +255,7 @@ public class SubmittedApplication extends Application {
         SubmittedApplication that = (SubmittedApplication) o;
         return Objects.equals(id, that.id) && Objects.equals(applicationId, that.applicationId) && Objects.equals(user, that.user)
                 && Objects.equals(applicationTemplate, that.applicationTemplate) && Objects.equals(answers, that.answers)
+                && Objects.equals(attachedFiles, that.attachedFiles)
                 && Objects.equals(comments, that.comments) && Objects.equals(assignedCommitteeMembers, that.assignedCommitteeMembers)
                 && Objects.equals(finalComment, that.finalComment) && Objects.equals(previousCommitteeMembers, that.previousCommitteeMembers);
     }
@@ -243,6 +265,6 @@ public class SubmittedApplication extends Application {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, comments, assignedCommitteeMembers, finalComment, previousCommitteeMembers);
+        return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, attachedFiles, comments, assignedCommitteeMembers, finalComment, previousCommitteeMembers);
     }
 }

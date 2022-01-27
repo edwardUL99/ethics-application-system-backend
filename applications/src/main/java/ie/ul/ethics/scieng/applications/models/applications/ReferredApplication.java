@@ -60,7 +60,29 @@ public class ReferredApplication extends SubmittedApplication {
     public ReferredApplication(Long id, String applicationId, User user,
                                ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<Comment> comments,
                                List<User> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
-        super(id, applicationId, user, ApplicationStatus.REFERRED, applicationTemplate, answers, comments, assignedCommitteeMembers, finalComment);
+        this(id, applicationId, user, applicationTemplate, answers, new ArrayList<>(), comments, assignedCommitteeMembers,
+                finalComment, editableFields, referredBy);
+    }
+
+    /**
+     * Create an Application
+     *
+     * @param id                       the database ID of the application
+     * @param applicationId            the ethics committee application ID
+     * @param user                     the user that owns the application
+     * @param applicationTemplate      the template that this application was answered on
+     * @param answers                   the answers to the application
+     * @param attachedFiles             the ist of attached files
+     * @param comments                 the list of comments on this application
+     * @param assignedCommitteeMembers the list of assigned committee members
+     * @param finalComment             the last comment left on the application
+     * @param editableFields           the list of component IDs that can be edited in the referred application
+     * @param referredBy               the user that referred the application (must have ADMIN permission)
+     */
+    public ReferredApplication(Long id, String applicationId, User user,
+                               ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles, List<Comment> comments,
+                               List<User> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
+        super(id, applicationId, user, ApplicationStatus.REFERRED, applicationTemplate, answers, attachedFiles, comments, assignedCommitteeMembers, finalComment);
         this.editableFields = editableFields;
         this.setReferredBy(referredBy);
     }
@@ -123,8 +145,8 @@ public class ReferredApplication extends SubmittedApplication {
     @Override
     public ReferredApplication copy() {
         return new ReferredApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, new ArrayList<>(editableFields),
-                referredBy);
+                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()),
+                new ArrayList<>(assignedCommitteeMembers), finalComment, new ArrayList<>(editableFields), referredBy);
     }
 
     /**
@@ -137,6 +159,7 @@ public class ReferredApplication extends SubmittedApplication {
         ReferredApplication that = (ReferredApplication) o;
         return Objects.equals(id, that.id) && Objects.equals(applicationId, that.applicationId) && Objects.equals(user, that.user)
                 && Objects.equals(applicationTemplate, that.applicationTemplate) && Objects.equals(answers, that.answers)
+                && Objects.equals(attachedFiles, that.attachedFiles)
                 && Objects.equals(editableFields, that.editableFields) && Objects.equals(referredBy, that.referredBy);
     }
 
@@ -145,6 +168,6 @@ public class ReferredApplication extends SubmittedApplication {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, applicationId, user, applicationTemplate, answers, editableFields, referredBy);
+        return Objects.hash(id, applicationId, user, applicationTemplate, answers, attachedFiles, editableFields, referredBy);
     }
 }

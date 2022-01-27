@@ -9,7 +9,9 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -59,6 +61,15 @@ public abstract class Application {
     @MapKey(name = "componentId")
     protected Map<String, Answer> answers;
     /**
+     * The map of component IDs to the attached files
+     */
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(name = "attachments_mapping",
+            joinColumns = {@JoinColumn(name = "database_ID", referencedColumnName = "id")},
+            inverseJoinColumns = {@JoinColumn(name = "files_id", referencedColumnName = "id")})
+    @MapKey(name = "componentId")
+    protected Map<String, AttachedFile> attachedFiles;
+    /**
      * The timestamp of when the application was last updated
      */
     protected LocalDateTime lastUpdated;
@@ -80,12 +91,37 @@ public abstract class Application {
      * @param answers the answers to the application
      */
     public Application(Long id, String applicationId, User user, ApplicationStatus status, ApplicationTemplate applicationTemplate, Map<String, Answer> answers) {
+        this(id, applicationId, user, status, applicationTemplate, answers, new ArrayList<>());
+    }
+
+    /**
+     * Create an Application
+     * @param id the database ID of the application
+     * @param applicationId the ethics committee application ID
+     * @param user the user that owns the application
+     * @param status the status of the application
+     * @param applicationTemplate the template that this application was answered on
+     * @param answers the answers to the application
+     * @param attachedFiles a list of attached files
+     */
+    public Application(Long id, String applicationId, User user, ApplicationStatus status, ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
+                       List<AttachedFile> attachedFiles) {
         this.id = id;
         this.applicationId = applicationId;
         this.user = user;
         this.setStatus(status);
         this.applicationTemplate = applicationTemplate;
         this.answers = answers;
+        this.attachedFiles = new HashMap<>();
+        attachedFiles.forEach(this::attachFile);
+    }
+
+    /**
+     * Attach the given file to the application
+     * @param file the file to attach
+     */
+    public void attachFile(AttachedFile file) {
+        this.attachedFiles.put(file.getComponentId(), file);
     }
 
     /**

@@ -34,7 +34,21 @@ public class DraftApplication extends Application {
      * @param answers the map of component IDs to the answers object
      */
     public DraftApplication(Long id, String applicationId, User user, ApplicationTemplate applicationTemplate, Map<String, Answer> answers) {
-        super(id, applicationId, user, ApplicationStatus.DRAFT, applicationTemplate, answers);
+        this(id, applicationId, user, applicationTemplate, answers, new ArrayList<>());
+    }
+
+    /**
+     * Create a DraftApplication
+     *
+     * @param id                  the database ID of the application
+     * @param applicationId       the ethics committee application ID
+     * @param user                the user that owns the application
+     * @param applicationTemplate the template that this application was answered on
+     * @param answers             the answers to the application
+     * @param attachedFiles       a list of attached files
+     */
+    public DraftApplication(Long id, String applicationId, User user, ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles) {
+        super(id, applicationId, user, ApplicationStatus.DRAFT, applicationTemplate, answers, attachedFiles);
     }
 
     /**
@@ -87,7 +101,7 @@ public class DraftApplication extends Application {
      */
     @Override
     public DraftApplication copy() {
-        return new DraftApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers));
+        return new DraftApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers), new ArrayList<>(attachedFiles.values()));
     }
 
     /**
@@ -99,7 +113,8 @@ public class DraftApplication extends Application {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         DraftApplication that = (DraftApplication) o;
         return Objects.equals(id, that.id) && Objects.equals(applicationId, that.applicationId) && Objects.equals(user, that.user)
-                && Objects.equals(applicationTemplate, that.applicationTemplate) && Objects.equals(answers, that.answers);
+                && Objects.equals(applicationTemplate, that.applicationTemplate) && Objects.equals(answers, that.answers)
+                && Objects.equals(attachedFiles, that.attachedFiles);
     }
 
     /**
@@ -107,6 +122,6 @@ public class DraftApplication extends Application {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, applicationId, user, applicationTemplate, answers);
+        return Objects.hash(id, applicationId, user, applicationTemplate, answers, attachedFiles);
     }
 }
