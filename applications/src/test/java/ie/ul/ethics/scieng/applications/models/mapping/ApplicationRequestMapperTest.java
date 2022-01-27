@@ -10,6 +10,7 @@ import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
@@ -21,6 +22,7 @@ import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 import ie.ul.ethics.scieng.authentication.jwt.JWT;
 import ie.ul.ethics.scieng.authentication.jwt.JwtRequestFilter;
 import ie.ul.ethics.scieng.authentication.models.Account;
+import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
@@ -40,7 +42,6 @@ import java.util.Map;
 import static ie.ul.ethics.scieng.test.utils.constants.Users.*;
 import static ie.ul.ethics.scieng.test.utils.constants.Authentication.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -56,7 +57,8 @@ import static org.mockito.Mockito.*;
 }, properties = {
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
         "auth.jwt.token.validity=2",
-        "permissions.authorization.enabled=true"
+        "permissions.authorization.enabled=true",
+        "files.antivirus.enabled=false"
 })
 public class ApplicationRequestMapperTest {
     /**
@@ -69,6 +71,11 @@ public class ApplicationRequestMapperTest {
      */
     @MockBean
     private ApplicationService applicationService;
+    /**
+     * The mocked file service
+     */
+    @MockBean
+    private FileService fileService;
     /**
      * The request mapper under test
      */
@@ -189,6 +196,42 @@ public class ApplicationRequestMapperTest {
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoInteractions(fileService);
+    }
+
+    /**
+     * Tests that when updating a draft, old files should be removed from the file service if they are being updated
+     */
+    @Test
+    public void shouldMapUpdateDraftRequestAndDeleteOldFiles() {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        ApplicationTemplate template = draftApplication.getApplicationTemplate();
+        template.setDatabaseId(TEMPLATE_DB_ID);
+
+        Map<String, Answer> oldValues = draftApplication.getAnswers();
+        Map<String, Answer> newValues = new HashMap<>(oldValues);
+        newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
+
+        AttachedFile old = new AttachedFile(null, "filename", "directory", "component6");
+        AttachedFile newFile = new AttachedFile(null, "filename1", "directory", "component6");
+
+        draftApplication.attachFile(old);
+
+        UpdateDraftApplicationRequest request =
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, Map.of("component6", newFile));
+
+        assertNotEquals(oldValues, newValues);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(draftApplication);
+        doNothing().when(fileService).deleteFile("filename", "directory");
+
+        DraftApplication returned = requestMapper.updateDraftRequestToDraft(request);
+
+        assertEquals(draftApplication, returned);
+        assertEquals(draftApplication.getAnswers(), newValues);
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(fileService).deleteFile("filename", "directory");
     }
 
     /**

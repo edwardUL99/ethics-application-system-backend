@@ -7,12 +7,15 @@ import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
+import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -36,16 +40,22 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * The application service to help with mapping
      */
     private final ApplicationService applicationService;
+    /**
+     * The file service used for deleting old files
+     */
+    private final FileService fileService;
 
     /**
      * Create an ApplicationRequestMapperImpl
      * @param userService the user service to help with mapping
      * @param applicationService the application service to help with mapping
+     * @param fileService the fileService to delete old files
      */
     @Autowired
-    public ApplicationRequestMapperImpl(UserService userService, ApplicationService applicationService) {
+    public ApplicationRequestMapperImpl(UserService userService, ApplicationService applicationService, FileService fileService) {
         this.userService = userService;
         this.applicationService = applicationService;
+        this.fileService = fileService;
     }
 
     /**
@@ -76,7 +86,21 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
                 throw new MappingException("The application with ID " + id + " is not a DraftApplication");
 
             DraftApplication draftApplication = (DraftApplication) loaded;
-            draftApplication.setAnswers(request.getValues());
+            draftApplication.getAnswers().putAll(request.getAnswers());
+
+            Map<String, AttachedFile> currentFiles = draftApplication.getAttachedFiles();
+            Map<String, AttachedFile> newFiles = request.getAttachedFiles();
+
+            for (Map.Entry<String, AttachedFile> e : newFiles.entrySet()) {
+                String key = e.getKey();
+                AttachedFile value = e.getValue();
+                AttachedFile current = currentFiles.get(key);
+
+                if (current != null && !current.equals(value))
+                    fileService.deleteFile(current.getFilename(), current.getDirectory());
+
+                currentFiles.put(key, value);
+            }
 
             return draftApplication;
         } else {

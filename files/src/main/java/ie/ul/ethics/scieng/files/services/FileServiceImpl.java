@@ -111,4 +111,29 @@ public class FileServiceImpl implements FileService {
             throw new FileException("Failed to load file", ex);
         }
     }
+
+    /**
+     * Delete the file with filename and directory from the filesystem
+     *
+     * @param filename  the name of the file
+     * @param directory the directory the file is contained in
+     * @throws FileException if an error occurs
+     */
+    @Override
+    public void deleteFile(String filename, String directory) throws FileException {
+        Path file;
+
+        if (directory == null) {
+            file = this.storageLocation.resolve(filename);
+        } else {
+            Path dir = this.storageLocation.resolve(directory);
+            file = dir.resolve(filename);
+        }
+
+        try {
+            Files.delete(file);
+        } catch (IOException ex) {
+            throw new FileException("Failed to delete file " + file, ex);
+        }
+    }
 }

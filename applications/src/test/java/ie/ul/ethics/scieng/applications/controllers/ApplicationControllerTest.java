@@ -61,7 +61,8 @@ import java.util.Map;
         TestConfiguration.class
 }, properties = {
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
-        "auth.jwt.token.validity=2"
+        "auth.jwt.token.validity=2",
+        "files.antivirus.enabled=false"
 })
 public class ApplicationControllerTest {
     /**

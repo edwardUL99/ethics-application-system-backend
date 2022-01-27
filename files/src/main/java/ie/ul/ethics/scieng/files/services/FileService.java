@@ -25,4 +25,12 @@ public interface FileService {
      * @throws FileException if an error occurs
      */
     Resource loadFile(String filename) throws FileException;
+
+    /**
+     * Delete the file with filename and directory from the filesystem
+     * @param filename the name of the file
+     * @param directory the directory the file is contained in
+     * @throws FileException if an error occurs
+     */
+    void deleteFile(String filename, String directory) throws FileException;
 }

@@ -23,16 +23,16 @@ public class FilesConfigurationProperties {
     /**
      * The storage directory
      */
-    private String storageDir;
+    private String storageDir = "/tmp/uploads";
     /**
      * The supported MIME-Types
      */
     @Getter(AccessLevel.NONE)
-    private String supportedTypes;
+    private String supportedTypes = "application/pdf,image/jpeg,image/png";
     /**
      * The antivirus configuration properties
      */
-    private Antivirus antivirus;
+    private Antivirus antivirus = new Antivirus();
 
     /**
      * Get the list of supported types
