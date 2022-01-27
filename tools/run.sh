@@ -19,5 +19,7 @@ fi
 
 echo "Starting $work_dir/app/target/$jar_file"
 
-java -jar "$jar_file"
+jvm_args="$@"
+
+java $jvm_args -jar "$jar_file"
 

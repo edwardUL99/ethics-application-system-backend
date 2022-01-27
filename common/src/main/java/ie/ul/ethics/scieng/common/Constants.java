@@ -103,6 +103,11 @@ public final class Constants {
     public static final String VIRUS_FOUND_FILE = "virus_found_file";
 
     /**
+     * An error thrown when a user tries to download a file they do not have permissions to access
+     */
+    public static final String FILE_PERMISSION_DENIED = "file_permission_denied";
+
+    /**
      * The message for when an application is updated
      */
     public static final String APPLICATION_UPDATED = "application_updated";

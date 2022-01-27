@@ -1,8 +1,10 @@
 package ie.ul.ethics.scieng.files.controllers;
 
+import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
 import ie.ul.ethics.scieng.files.antivirus.AntivirusScanner;
 import ie.ul.ethics.scieng.files.config.FilesConfigurationProperties;
 import ie.ul.ethics.scieng.files.exceptions.FileException;
+import ie.ul.ethics.scieng.files.exceptions.PermissionDeniedException;
 import ie.ul.ethics.scieng.files.models.UploadFileRequest;
 import static ie.ul.ethics.scieng.common.Constants.*;
 
@@ -41,6 +43,11 @@ public class FileController {
      * The scanner for antivirus in uploaded files
      */
     private final AntivirusScanner antivirusScanner;
+    /**
+     * The authentication information object
+     */
+    @javax.annotation.Resource(name = "authenticationInformation")
+    private AuthenticationInformation authenticationInformation;
 
     /**
      * Create the controller with the provided file service
@@ -104,7 +111,8 @@ public class FileController {
                 return respondError(UNSUPPORTED_FILE_TYPE);
             }
 
-            String fileName = fileService.storeFile(file, request.getDirectory(), request.getTarget());
+            String username = authenticationInformation.getUsername();
+            String fileName = fileService.storeFile(file, request.getDirectory(), request.getTarget(), username);
             String[] resolved = resolveUploadedFilename(fileName);
             String directory = resolved[0];
             fileName = resolved[1];
@@ -125,15 +133,16 @@ public class FileController {
      * The endpoint for downloading a file
      * @param filename the name of the file to download
      * @param directory the directory to retrieve the file from
+     * @param username the username of the file to retrieve. Defaults to authentication information
      * @param request the request object
      * @return the response body
      */
     @GetMapping("/download/{filename:.+}")
-    public ResponseEntity<?> downloadFile(@PathVariable String filename, @RequestParam(required = false) String directory, HttpServletRequest request) {
+    public ResponseEntity<?> downloadFile(@PathVariable String filename, @RequestParam(required = false) String directory,
+                                          @RequestParam(required = false) String username, HttpServletRequest request) {
         try {
-            if (directory != null)
-                filename = directory + "/" + filename;
-            Resource resource = fileService.loadFile(filename);
+            username = (username == null) ? authenticationInformation.getUsername():username;
+            Resource resource = fileService.loadFile(filename, directory, username);
 
             if (resource == null)
                 return ResponseEntity.notFound().build();
@@ -150,7 +159,11 @@ public class FileController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);
+        } catch (PermissionDeniedException ex) {
+            ex.printStackTrace();
+            return respondError(FILE_PERMISSION_DENIED);
         } catch (FileException ex) {
+            ex.printStackTrace();
             return respondError(FILE_ERROR);
         }
     }

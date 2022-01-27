@@ -7,7 +7,6 @@ import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
@@ -15,9 +14,11 @@ import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
+import ie.ul.ethics.scieng.files.exceptions.FileException;
 import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
  * This provides the default implementation for the mapper
  */
 @Component
+@Log4j2
 public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
     /**
      * The user service to help with mapping
@@ -91,13 +93,20 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
             Map<String, AttachedFile> currentFiles = draftApplication.getAttachedFiles();
             Map<String, AttachedFile> newFiles = request.getAttachedFiles();
 
+            String username = loaded.getUser().getUsername();
+
             for (Map.Entry<String, AttachedFile> e : newFiles.entrySet()) {
                 String key = e.getKey();
                 AttachedFile value = e.getValue();
                 AttachedFile current = currentFiles.get(key);
 
-                if (current != null && !current.equals(value))
-                    fileService.deleteFile(current.getFilename(), current.getDirectory());
+                try {
+                    if (current != null && !current.equals(value))
+                        fileService.deleteFile(current.getFilename(), current.getDirectory(), username);
+                } catch (FileException ex) {
+                    ex.printStackTrace();
+                    log.error("Failed to delete an AttachedFile that was meant to exist, overwriting with new file");
+                }
 
                 currentFiles.put(key, value);
             }

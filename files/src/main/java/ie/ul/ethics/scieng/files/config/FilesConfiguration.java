@@ -59,6 +59,10 @@ public class FilesConfiguration {
     @Bean
     public AntivirusScanner antivirusScanner() {
         FilesConfigurationProperties.Antivirus antivirus = properties.getAntivirus();
+
+        if (System.getProperty("antivirus.disable") != null)
+            antivirus.setEnabled(false);
+
         AntivirusScanner scanner = new ClamAvAntivirusScanner(antivirus.isEnabled(), antivirus.getHost(), antivirus.getPort(), antivirus.getPlatform());
 
         if (scanner.isEnabled())

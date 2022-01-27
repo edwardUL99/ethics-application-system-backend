@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.files.services;
 
 import ie.ul.ethics.scieng.files.config.FilesConfigurationProperties;
 import ie.ul.ethics.scieng.files.exceptions.FileException;
+import ie.ul.ethics.scieng.files.exceptions.PermissionDeniedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -25,16 +26,22 @@ public class FileServiceImpl implements FileService {
      * The path object representing the storage location
      */
     private final Path storageLocation;
+    /**
+     * The service for managing a user's directory
+     */
+    private final UserDirectoryService userDirectoryService;
 
     /**
      * Construct a FileService with the provided properties
      * @param properties the properties configuration
+     * @param userDirectoryService the service for managing a user's directory
      */
     @Autowired
-    public FileServiceImpl(FilesConfigurationProperties properties) {
+    public FileServiceImpl(FilesConfigurationProperties properties, UserDirectoryService userDirectoryService) {
         this.storageLocation = Paths.get(properties.getStorageDir())
                 .toAbsolutePath().normalize();
         createStorageLocation();
+        this.userDirectoryService = userDirectoryService;
     }
 
     /**
@@ -54,11 +61,12 @@ public class FileServiceImpl implements FileService {
      * @param file   the file to store
      * @param directory the directory to create the file in
      * @param target the target file name
+     * @param username the username of the user storing the file
      * @return the name of the saved file
      * @throws FileException if an error occurs
      */
     @Override
-    public String storeFile(MultipartFile file, String directory, String target) throws FileException {
+    public String storeFile(MultipartFile file, String directory, String target, String username) throws FileException {
         String name = file.getOriginalFilename();
 
         if (name == null)
@@ -72,20 +80,11 @@ public class FileServiceImpl implements FileService {
         try {
             createStorageLocation();
 
-            Path targetFile;
-            String targetPath;
+            String targetPath = (directory == null) ? target:directory + "/" + target;
 
-            if (directory == null) {
-                targetFile = this.storageLocation.resolve(target);
-                targetPath = target;
-            } else {
-                Path dir = this.storageLocation.resolve(directory);
-                Files.createDirectories(dir);
-                targetFile = dir.resolve(target);
-                targetPath = directory + "/" + target;
-            }
+            Path path = userDirectoryService.createFilePath(storageLocation, target, directory, username);
 
-            Files.copy(file.getInputStream(), targetFile, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(file.getInputStream(), path, StandardCopyOption.REPLACE_EXISTING);
 
             return targetPath;
         } catch (IOException ex) {
@@ -98,13 +97,18 @@ public class FileServiceImpl implements FileService {
      *
      * @param filename the name of the file to load
      * @return the loaded file as a resource, null if not found
+     * @param username the username of the user viewing the file
      * @throws FileException if an error occurs
      */
     @Override
-    public Resource loadFile(String filename) throws FileException {
+    public Resource loadFile(String filename, String directory, String username) throws FileException {
+        if (!userDirectoryService.canViewFile(storageLocation, filename, directory, username))
+            throw new PermissionDeniedException("The user cannot view the file", null);
+
         try {
-            Path filePath = storageLocation.resolve(filename);
-            Resource resource = new UrlResource(filePath.toUri());
+            Path path = userDirectoryService.createFilePath(storageLocation, filename, directory, username);
+
+            Resource resource = new UrlResource(path.toUri());
 
             return (resource.exists()) ? resource:null;
         } catch (MalformedURLException ex) {
@@ -117,18 +121,15 @@ public class FileServiceImpl implements FileService {
      *
      * @param filename  the name of the file
      * @param directory the directory the file is contained in
+     * @param username the username of the user deleting
      * @throws FileException if an error occurs
      */
     @Override
-    public void deleteFile(String filename, String directory) throws FileException {
-        Path file;
+    public void deleteFile(String filename, String directory, String username) throws FileException {
+        if (!userDirectoryService.canDeleteFile(storageLocation, filename, directory, username))
+            throw new PermissionDeniedException("The user cannot delete this file", null);
 
-        if (directory == null) {
-            file = this.storageLocation.resolve(filename);
-        } else {
-            Path dir = this.storageLocation.resolve(directory);
-            file = dir.resolve(filename);
-        }
+        Path file = userDirectoryService.createFilePath(storageLocation, filename, directory, username);
 
         try {
             Files.delete(file);
