@@ -17,7 +17,6 @@ import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
-import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.http.HttpStatus;

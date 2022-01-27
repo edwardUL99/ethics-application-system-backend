@@ -42,7 +42,6 @@ import java.util.Map;
 import static ie.ul.ethics.scieng.test.utils.constants.Users.*;
 import static ie.ul.ethics.scieng.test.utils.constants.Authentication.*;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
@@ -59,7 +58,7 @@ import static org.mockito.Mockito.*;
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
         "auth.jwt.token.validity=2",
         "permissions.authorization.enabled=true",
-        "files.antivirus.enabled=true"
+        "files.antivirus.enabled=false"
 })
 public class ApplicationRequestMapperTest {
     /**
