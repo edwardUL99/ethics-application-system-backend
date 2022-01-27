@@ -91,13 +91,15 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
             Map<String, AttachedFile> currentFiles = draftApplication.getAttachedFiles();
             Map<String, AttachedFile> newFiles = request.getAttachedFiles();
 
+            String username = loaded.getUser().getUsername();
+
             for (Map.Entry<String, AttachedFile> e : newFiles.entrySet()) {
                 String key = e.getKey();
                 AttachedFile value = e.getValue();
                 AttachedFile current = currentFiles.get(key);
 
                 if (current != null && !current.equals(value))
-                    fileService.deleteFile(current.getFilename(), current.getDirectory());
+                    fileService.deleteFile(current.getFilename(), current.getDirectory(), username);
 
                 currentFiles.put(key, value);
             }

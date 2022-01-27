@@ -224,14 +224,14 @@ public class ApplicationRequestMapperTest {
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(draftApplication);
-        doNothing().when(fileService).deleteFile("filename", "directory");
+        doNothing().when(fileService).deleteFile("filename", "directory", USERNAME);
 
         DraftApplication returned = requestMapper.updateDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_ID);
-        verify(fileService).deleteFile("filename", "directory");
+        verify(fileService).deleteFile("filename", "directory", USERNAME);
     }
 
     /**
