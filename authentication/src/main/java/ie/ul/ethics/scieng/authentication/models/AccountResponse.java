@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.authentication.models;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -8,6 +9,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@AllArgsConstructor
 public class AccountResponse {
     /**
      * The username for the account
@@ -17,6 +19,10 @@ public class AccountResponse {
      * The email for the account
      */
     protected String email;
+    /**
+     * The value for if the response is confirmed or not
+     */
+    protected boolean confirmed = false;
 
     /**
      * Create a default account response

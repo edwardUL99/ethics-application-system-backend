@@ -121,7 +121,7 @@ public class AuthenticationControllerTest {
         RegistrationRequest request = new RegistrationRequest(account);
         request.setConfirmationKey(CONFIRMATION_KEY);
         String json = JSON.convertJSON(request);
-        String resultJson = JSON.convertJSON(new AccountResponse(USERNAME, EMAIL));
+        String resultJson = JSON.convertJSON(new AccountResponse(USERNAME, EMAIL, true));
 
         given(accountService.createAccount(USERNAME, EMAIL, PASSWORD, true))
                 .willReturn(account);

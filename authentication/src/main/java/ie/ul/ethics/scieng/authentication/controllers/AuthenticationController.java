@@ -10,6 +10,7 @@ import ie.ul.ethics.scieng.authentication.services.AccountService;
 import ie.ul.ethics.scieng.common.email.EmailSender;
 import ie.ul.ethics.scieng.common.email.exceptions.EmailException;
 import ie.ul.ethics.scieng.authentication.models.*;
+import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -103,7 +104,7 @@ public class AuthenticationController {
                 + "<p>Your username is: <b>%s</b></p>"
                 + "<p>Follow this link to confirm your account: <a href=\"%s\">Reset Password</a></p>"
                 + "<br>"
-                + "<p>If for some reason, the link doesn't work, go to the <a href=\"http://localhost:8080/ethics-app/confirm-account\">confirm account</a> page"
+                + "<p>If for some reason, the link doesn't work, go to the <a href=\"%s\">confirm account</a> page"
                 + " and enter the following details in the first 2 fields:</p>"
                 + "<ul>"
                 + "<li><b>E-mail:</b> %s</li>"
@@ -116,12 +117,17 @@ public class AuthenticationController {
                 + "<p>Thank You,<p>"
                 + "<p>The Team</p>";
 
+
+        String urlBase = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url"); // find either by system/config property or environment variable
+        urlBase = (urlBase == null) ? "http://localhost:4200":urlBase;
+        urlBase = urlBase + "/confirm-account";
+
         String username = account.getUsername();
         String email = account.getEmail();
         String token = confirmationToken.getToken();
         content = String.format(content, username, username,
-                String.format("http://localhost:8080/ethics-app/confirm-account?email=%s&token=%s", email, token),
-                email, token);
+                String.format("%s?email=%s&token=%s", urlBase, email, token),
+                urlBase, email, token);
 
         emailSender.sendEmail(email, "Confirm Account Registration", content);
     }
@@ -139,13 +145,14 @@ public class AuthenticationController {
             String email = request.getEmail();
 
             createdAccount = accountService.createAccount(username, email, request.getPassword(), alwaysConfirm(request.getConfirmationKey()));
+            boolean confirmed = createdAccount.isConfirmed();
 
             AccountResponse response;
-            if (!createdAccount.isConfirmed()) {
+            if (!confirmed) {
                 ConfirmationToken token = accountService.generateConfirmationToken(createdAccount);
                 sendConfirmationEmail(createdAccount, token);
             }
-            response = new AccountResponse(username, email);
+            response = new AccountResponse(username, email, confirmed);
 
             return ResponseEntity.status(HttpStatus.CREATED).body(response);
         } catch (UsernameExistsException ex) {
@@ -208,7 +215,7 @@ public class AuthenticationController {
     public ResponseEntity<?> getAccount(@RequestParam String username, @RequestParam(required = false) boolean email) {
         Account account = accountService.getAccount(username, email);
 
-        return (account == null) ? ResponseEntity.notFound().build():ResponseEntity.ok(new AccountResponse(account.getUsername(), account.getEmail()));
+        return (account == null) ? ResponseEntity.notFound().build():ResponseEntity.ok(new AccountResponse(account.getUsername(), account.getEmail(), account.isConfirmed()));
     }
 
     /**
