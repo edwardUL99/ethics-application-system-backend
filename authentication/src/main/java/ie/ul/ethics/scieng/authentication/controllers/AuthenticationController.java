@@ -102,7 +102,7 @@ public class AuthenticationController {
                 " the email address before we can proceed with registration</p>"
                 + "<br>"
                 + "<p>Your username is: <b>%s</b></p>"
-                + "<p>Follow this link to confirm your account: <a href=\"%s\">Reset Password</a></p>"
+                + "<p>Follow this link to confirm your account: <a href=\"%s\">Confirm Account</a></p>"
                 + "<br>"
                 + "<p>If for some reason, the link doesn't work, go to the <a href=\"%s\">confirm account</a> page"
                 + " and enter the following details in the first 2 fields:</p>"
