@@ -84,7 +84,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                         createApiPath(Endpoint.AUTHENTICATION, "register"),
                         createApiPath(Endpoint.AUTHENTICATION, "login"),
                         createApiPath(Endpoint.AUTHENTICATION, true,"account", "confirmed"),
-                        createApiPath(Endpoint.AUTHENTICATION, "account", "confirm")
+                        createApiPath(Endpoint.AUTHENTICATION, "account", "confirm"),
+                        createApiPath(Endpoint.AUTHENTICATION, true, "account", "confirm", "resend")
                 ).permitAll()
                 .anyRequest().authenticated().and()
                 .exceptionHandling().authenticationEntryPoint(entrypoint)

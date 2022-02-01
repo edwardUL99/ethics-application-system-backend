@@ -204,6 +204,10 @@ public class AccountServiceImpl implements AccountService {
      * @return true if confirmed, false if not
      */
     @Override
+    @Caching(evict = {
+            @CacheEvict(value = "account", allEntries = true),
+            @CacheEvict(value = "userdetail", allEntries = true)
+    })
     public boolean confirmAccount(Account account, String token) {
         ConfirmationToken confirmationToken = tokenRepository.findByEmail(account.getEmail()).orElse(null);
 

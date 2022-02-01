@@ -21,6 +21,8 @@ import javax.annotation.Resource;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
@@ -96,40 +98,48 @@ public class AuthenticationController {
      * @param confirmationToken the token for confirmation
      */
     private void sendConfirmationEmail(Account account, ConfirmationToken confirmationToken) {
-        // TODO update the email with correct links and styling etc
-        String content = "<h2>Confirm Account</h2>"
-                + "<p>Hello %s,<br>We have received a registration request for an account. You will need to confirm" +
-                " the email address before we can proceed with registration</p>"
-                + "<br>"
-                + "<p>Your username is: <b>%s</b></p>"
-                + "<p>Follow this link to confirm your account: <a href=\"%s\">Confirm Account</a></p>"
-                + "<br>"
-                + "<p>If for some reason, the link doesn't work, go to the <a href=\"%s\">confirm account</a> page"
-                + " and enter the following details in the first 2 fields:</p>"
-                + "<ul>"
-                + "<li><b>E-mail:</b> %s</li>"
-                + "<li><b>Confirmation Token:</b> %s</li>"
-                + "</ul>"
-                + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
-                + "<br>"
-                + "<p>If you did not request an account, you can safely ignore this e-mail</p>"
-                + "<br>"
-                + "<p>Thank You,<p>"
-                + "<p>The Team</p>";
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        executorService.submit(() -> {
+            // TODO update the email with correct links and styling etc
+            String content = "<h2>Confirm Account</h2>"
+                    + "<p>Hello %s,<br>We have received a registration request for an account. You will need to confirm" +
+                    " the email address before we can proceed with registration</p>"
+                    + "<br>"
+                    + "<p>Your username is: <b>%s</b></p>"
+                    + "<p>Follow this link to confirm your account: <a href=\"%s\">Confirm Account</a></p>"
+                    + "<br>"
+                    + "<p>If for some reason, the link doesn't work, go to the <a href=\"%s\">confirm account</a> page"
+                    + " and enter the following details in the first 2 fields:</p>"
+                    + "<ul>"
+                    + "<li><b>E-mail:</b> %s</li>"
+                    + "<li><b>Confirmation Token:</b> %s</li>"
+                    + "</ul>"
+                    + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
+                    + "<br>"
+                    + "<p>If you did not request an account, you can safely ignore this e-mail</p>"
+                    + "<br>"
+                    + "<p>Thank You,<p>"
+                    + "<p>The Team</p>";
 
 
-        String urlBase = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url"); // find either by system/config property or environment variable
-        urlBase = (urlBase == null) ? "http://localhost:4200":urlBase;
-        urlBase = urlBase + "/confirm-account";
+            String urlBase = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url"); // find either by system/config property or environment variable
+            urlBase = (urlBase == null) ? "http://localhost:4200" : urlBase;
+            urlBase = urlBase + "/confirm-account";
 
-        String username = account.getUsername();
-        String email = account.getEmail();
-        String token = confirmationToken.getToken();
-        content = String.format(content, username, username,
-                String.format("%s?email=%s&token=%s", urlBase, email, token),
-                urlBase, email, token);
+            String username = account.getUsername();
+            String email = account.getEmail();
+            String token = confirmationToken.getToken();
+            content = String.format(content, username, username,
+                    String.format("%s?email=%s&token=%s", urlBase, email, token),
+                    urlBase, email, token);
 
-        emailSender.sendEmail(email, "Confirm Account Registration", content);
+            try {
+                emailSender.sendEmail(email, "Confirm Account Registration", content);
+            } catch (EmailException ex) {
+                ex.printStackTrace();
+            }
+        });
     }
 
     /**
@@ -139,7 +149,8 @@ public class AuthenticationController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody @Valid RegistrationRequest request) {
-        Account createdAccount = null;
+        Account createdAccount;
+
         try {
             String username = request.getUsername();
             String email = request.getEmail();
@@ -161,13 +172,28 @@ public class AuthenticationController {
         } catch (EmailExistsException ex) {
             log.error(ex);
             return respondError(EMAIL_EXISTS);
-        } catch (EmailException ex) {
-            log.error(ex);
+        }
+    }
 
-            if (createdAccount != null)
-                accountService.deleteAccount(createdAccount);
+    /**
+     * Resends the confirmation email to the account with the given username
+     * @param username the username of the user
+     * @param email true if the username should be treated as an email
+     * @return the response body
+     */
+    @PostMapping("/account/confirm/resend")
+    public ResponseEntity<?> resendConfirmation(@RequestParam String username, @RequestParam(required = false) boolean email) {
+        Account account = accountService.getAccount(username, email);
 
-            return respondError(REGISTRATION_FAILED);
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else if (account.isConfirmed()) {
+            return ResponseEntity.badRequest().build();
+        } else {
+            ConfirmationToken token = accountService.generateConfirmationToken(account);
+            sendConfirmationEmail(account, token);
+
+            return ResponseEntity.ok().build();
         }
     }
 
@@ -184,12 +210,8 @@ public class AuthenticationController {
         Account account = accountService.getAccount(username, request.isEmail());
 
         if (account == null) {
-            return respondError(INVALID_CREDENTIALS);
-        } else if (!account.isConfirmed()) {
-            return respondError(ACCOUNT_NOT_CONFIRMED);
+            return respondError(ACCOUNT_NOT_EXISTS);
         } else {
-            username = account.getUsername();
-
             AtomicReference<String> error = new AtomicReference<>();
             authenticateInternal(account, password, error);
             String errorMsg = error.get();
@@ -290,6 +312,8 @@ public class AuthenticationController {
     private void authenticateInternal(Account account, String password, AtomicReference<String> error) {
         if (!accountService.authenticateAccount(account, password)) {
             error.set(INVALID_CREDENTIALS);
+        } else if (!account.isConfirmed()) {
+            error.set(ACCOUNT_NOT_CONFIRMED)    ;
         }
     }
 

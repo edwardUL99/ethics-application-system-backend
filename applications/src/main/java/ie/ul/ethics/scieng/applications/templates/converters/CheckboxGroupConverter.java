@@ -26,7 +26,7 @@ public class CheckboxGroupConverter implements ComponentConverter {
             throw new ApplicationParseException("The defaultBranch field must be a map");
 
         if (!List.class.isAssignableFrom(map.get("checkboxes").getClass()))
-            throw new ApplicationParseException("The options field must map to a List");
+            throw new ApplicationParseException("The checkboxes field must map to a list");
     }
 
     /**

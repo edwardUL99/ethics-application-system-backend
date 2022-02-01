@@ -41,7 +41,7 @@ public class ContainerConverter implements ComponentConverter {
         List<ApplicationComponent> subComponents = new ArrayList<>();
 
         for (Map<String, Object> sub : (List<Map<String, Object>>)map.get("components"))
-        subComponents.add(Converters.getConverter((String)sub.get("type")).convert(sub));
+            subComponents.add(Converters.getConverter((String)sub.get("type")).convert(sub));
 
         return new ContainerComponent((String)map.get("id"), subComponents);
     }

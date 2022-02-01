@@ -157,8 +157,7 @@ public class AuthenticationControllerTest {
         given(accountService.generateConfirmationToken(account))
                 .willReturn(token);
 
-        mockMvc.perform(
-                        post(createApiPath(Endpoint.AUTHENTICATION, "register"))
+        mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "register"))
                                 .contentType(JSON.MEDIA_TYPE)
                                 .content(json))
                 .andExpect(status().isCreated())
@@ -264,7 +263,9 @@ public class AuthenticationControllerTest {
     @Test
     public void shouldNotAuthenticateIfNotConfirmed() throws Exception {
         Account account = createTestAccount();
-        AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), account.getPassword(), null, null);
+        String password = account.getPassword();
+
+        AuthenticationRequest authenticationRequest = new AuthenticationRequest(account.getUsername(), password, null, null);
         String json = JSON.convertJSON(authenticationRequest);
 
         Map<String, Object> authenticationResponse = new HashMap<>();
@@ -273,6 +274,8 @@ public class AuthenticationControllerTest {
 
         given(accountService.getAccount(USERNAME, false))
                 .willReturn(account);
+        given(accountService.authenticateAccount(account, password))
+                .willReturn(true);
 
         mockMvc.perform(post(createApiPath(Endpoint.AUTHENTICATION, "login"))
                         .contentType(JSON.MEDIA_TYPE)
@@ -282,6 +285,7 @@ public class AuthenticationControllerTest {
                 .andExpect(content().json(resultJson));
 
         verify(accountService).getAccount(USERNAME, false);
+        verify(accountService).authenticateAccount(account, password);
     }
 
     /**
