@@ -30,6 +30,14 @@ public abstract class QuestionComponent extends SimpleComponent {
      * Determines if this question is required or not
      */
     protected boolean required;
+    /**
+     * Determines if the component is editable or not
+     */
+    protected boolean editable;
+    /**
+     * The specified string to autofill the field from
+     */
+    protected String autofill;
 
     /**
      * The default value for required
@@ -56,5 +64,7 @@ public abstract class QuestionComponent extends SimpleComponent {
         this.name = name;
         this.description = description;
         this.required = required;
+        this.editable = true;
+        this.autofill = "";
     }
 }

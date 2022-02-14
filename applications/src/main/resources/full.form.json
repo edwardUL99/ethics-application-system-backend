@@ -37,7 +37,9 @@
           "type": "text-question",
           "title": "Student Name",
           "name": "student_name",
-          "questionType": "text"
+          "questionType": "text",
+          "autofill": "user.name",
+          "_comment": "Make this field editable if changes need to be made and autofill with the user's name if the user object exists on the front-end with a name attribute"
         },
         {
           "type": "text-question",
@@ -49,7 +51,10 @@
           "type": "text-question",
           "title": "E-mail Address",
           "name": "email_address",
-          "questionType": "email"
+          "questionType": "email",
+          "editable": false,
+          "autofill": "user.account.email",
+          "_comment": "Make this field not editable and autofill with the user's account email if the user account object exists on the front-end with a name attribute"
         },
         {
           "type": "text-question",
@@ -73,6 +78,16 @@
           "title": "Working Title of Study",
           "name": "study_title",
           "questionType": "text"
+        },
+        {
+          "type": "text-question",
+          "title": "Start date of which approval is sought",
+          "description": "This field is populated when the application is approved",
+          "name": "approval_start_date",
+          "questionType": "date",
+          "editable": false,
+          "autofill": "application.approvalTime",
+          "_comment": "Make this field not editable and it will be filled by the front-end with the application object if it exists and the time it was approved if that field exists"
         },
         {
           "type": "text-question",

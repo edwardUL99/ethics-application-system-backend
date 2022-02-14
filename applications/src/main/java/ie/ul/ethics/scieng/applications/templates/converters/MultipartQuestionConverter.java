@@ -9,7 +9,7 @@ import java.util.*;
  * This class represents a converter that can convert a map into a MultipartQuestion
  */
 @Converter(ComponentType.MULTIPART_QUESTION)
-public class MultipartQuestionConverter implements ComponentConverter {
+public class MultipartQuestionConverter extends QuestionConverter {
     /**
      * Validates the map for conversion
      *
@@ -34,17 +34,15 @@ public class MultipartQuestionConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base question component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
+    protected QuestionComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         Map<String, MultipartQuestionComponent.QuestionPart> parts = new HashMap<>();
         MultipartQuestionComponent multipart = new MultipartQuestionComponent();
 

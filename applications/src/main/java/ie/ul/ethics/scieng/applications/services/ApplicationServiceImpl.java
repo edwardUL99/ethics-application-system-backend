@@ -314,7 +314,9 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ApplicationStatus target = (approve) ? ApplicationStatus.APPROVED:ApplicationStatus.REJECTED;
         application.setStatus(target);
-        ((SubmittedApplication)application).setFinalComment(finalComment);
+        SubmittedApplication submittedApplication = (SubmittedApplication) application;
+        submittedApplication.setFinalComment(finalComment);
+        submittedApplication.setApprovalTime((approve) ? LocalDateTime.now():null);
         createApplication(application, true);
 
         return application;

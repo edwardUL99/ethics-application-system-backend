@@ -9,7 +9,7 @@ import java.util.*;
  * This converter provides conversion of an object to a checkbox
  */
 @Converter(ComponentType.RADIO_QUESTION)
-public class RadioQuestionConverter implements ComponentConverter {
+public class RadioQuestionConverter extends QuestionConverter {
     /**
      * Validates the map for conversion
      *
@@ -25,17 +25,15 @@ public class RadioQuestionConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base question component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
+    protected QuestionComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         List<SelectQuestionComponent.Option> options = new ArrayList<>();
 
         for (Object option : (List<?>)map.get("options")) {

@@ -9,7 +9,7 @@ import java.util.Map;
  * This class converts maps into text questions
  */
 @Converter(ComponentType.TEXT_QUESTION)
-public class TextQuestionConverter implements ComponentConverter {
+public class TextQuestionConverter extends QuestionConverter {
     /**
      * Validates the map for conversion
      *
@@ -22,17 +22,14 @@ public class TextQuestionConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base question component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
-
+    protected QuestionComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         return new TextQuestionComponent((String)map.get("title"), (String)map.get("name"),
                 Converters.parseLongString(ComponentType.TEXT_QUESTION, "description", map.getOrDefault("description", null)),
                 (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), (boolean)map.getOrDefault("singleLine", true),

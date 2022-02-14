@@ -688,9 +688,12 @@ public class ApplicationServiceTest {
         ((SubmittedApplication)saved).setFinalComment(finalComment);
 
         Application returned = applicationService.approveApplication(submitted, true, finalComment);
+        LocalDateTime approvalTime = ((SubmittedApplication)returned).getApprovalTime();
 
         assertSame(returned, submitted);
         assertEquals(ApplicationStatus.APPROVED, returned.getStatus());
+        assertNotNull(approvalTime);
+        ((SubmittedApplication) saved).setApprovalTime(approvalTime);
         verify(applicationRepository).save(saved);
 
         saved.setStatus(ApplicationStatus.REJECTED);
@@ -699,8 +702,10 @@ public class ApplicationServiceTest {
         assertEquals(ApplicationStatus.REVIEWED, submitted.getStatus());
         returned = applicationService.approveApplication(submitted, false, finalComment);
 
+        ((SubmittedApplication) saved).setApprovalTime(null);
         assertSame(returned, submitted);
         assertEquals(ApplicationStatus.REJECTED, returned.getStatus());
+        assertNull(((SubmittedApplication)returned).getApprovalTime());
         verify(applicationRepository, times(2)).save(saved);
     }
 
