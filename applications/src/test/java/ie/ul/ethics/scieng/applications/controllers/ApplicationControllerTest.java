@@ -1461,4 +1461,42 @@ public class ApplicationControllerTest {
         verify(requestMapper, times(2)).mapReferApplicationRequest(request);
         verify(applicationService, times(0)).referApplication(reviewed, new ArrayList<>(), referrer);
     }
+
+    /**
+     * Tests that a template should be retrieved successfully
+     */
+    @Test
+    public void shouldGetTemplateSuccessfully() throws Exception {
+        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        ApplicationTemplate template = draftApplication.getApplicationTemplate();
+        template.setDatabaseId(TEMPLATE_DB_ID);
+
+        given(applicationService.getApplicationTemplate(TEMPLATE_DB_ID))
+                .willReturn(template);
+
+        String result = JSON.convertJSON(template);
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "template"))
+                .param("id", "" + TEMPLATE_DB_ID))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplicationTemplate(TEMPLATE_DB_ID);
+    }
+
+    /**
+     * Tests that a 404 should be thrown if a template is not found
+     */
+    @Test
+    public void shouldThrowNotFoundOnGetTemplate() throws Exception {
+        given(applicationService.getApplicationTemplate(TEMPLATE_DB_ID))
+                .willReturn(null);
+
+        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "template"))
+                        .param("id", "" + TEMPLATE_DB_ID))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplicationTemplate(TEMPLATE_DB_ID);
+    }
 }

@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
@@ -101,6 +102,18 @@ public class ApplicationController {
     }
 
     /**
+     * This endpoint retrieves a single template with the given ID
+     * @param id the ID of the template
+     * @return the response body
+     */
+    @GetMapping("/template")
+    public ResponseEntity<?> getTemplate(@RequestParam Long id) {
+        return Optional.ofNullable(applicationService.getApplicationTemplate(id))
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /**
      * This endpoint retrieves the application with the given ID
      * @param id the id of the application
      * @param applicationId the applicationId if wants to be found by that
@@ -129,7 +142,7 @@ public class ApplicationController {
 
     /**
      * This endpoint is used to retrieve all applications by user
-     * @param viewable true to retrieve all viewable requests by this user, false to retrieve assigned requests
+     * @param viewable true to retrieve all viewable applications by this user, false to retrieve assigned applications
      * @return the response body
      */
     @GetMapping("/user")
@@ -247,12 +260,6 @@ public class ApplicationController {
             return respondError(INVALID_APPLICATION_STATUS);
         }
     }
-
-    /*
-     * TODO the put mapping for submit should be locked down to those with review application permissions (and view own assigned).
-     * The update involves assigning comments to the application
-     * since an applicant cannot update their own submitted application
-     */
 
     /**
      * This endpoint represents the submission point for a draft or referred application

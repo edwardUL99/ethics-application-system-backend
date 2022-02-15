@@ -4,6 +4,7 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -50,6 +51,10 @@ public abstract class ApplicationResponse {
      * The timestamp of when the application was last updated
      */
     protected LocalDateTime lastUpdated;
+    /**
+     * The files attached to the application
+     */
+    protected Map<String, AttachedFile> attachedFiles;
 
     /**
      * Create a response from the application
@@ -65,6 +70,7 @@ public abstract class ApplicationResponse {
         this.templateId = application.getApplicationTemplate().getDatabaseId();
         this.answers = application.getAnswers();
         this.lastUpdated = application.getLastUpdated();
+        this.attachedFiles = application.getAttachedFiles();
     }
 
     /**

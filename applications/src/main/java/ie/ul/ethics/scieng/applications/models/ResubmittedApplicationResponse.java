@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 @Setter
 @EqualsAndHashCode(callSuper = false)
 @ApplicationResponseRegistration(status = ApplicationStatus.RESUBMITTED, applicationClass = SubmittedApplication.class)
-public class ReSubmittedApplicationResponse extends SubmittedApplicationResponse {
+public class ResubmittedApplicationResponse extends SubmittedApplicationResponse {
     /**
      * The list of previous committee members
      */
@@ -31,7 +31,7 @@ public class ReSubmittedApplicationResponse extends SubmittedApplicationResponse
      *
      * @param application the application to create the response from
      */
-    public ReSubmittedApplicationResponse(SubmittedApplication application) {
+    public ResubmittedApplicationResponse(SubmittedApplication application) {
         super(application);
         previousCommitteeMembers = application.getPreviousCommitteeMembers()
                 .stream()
