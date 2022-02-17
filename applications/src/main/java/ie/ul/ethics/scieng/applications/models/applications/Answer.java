@@ -74,6 +74,10 @@ public class Answer {
         /**
          * An answer that is one or more options selected (stored in this class as a comma-separated string
          */
-        OPTIONS
+        OPTIONS,
+        /**
+         * An answer that is an image in base64 format
+         */
+        IMAGE
     }
 }
