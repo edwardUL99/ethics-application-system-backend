@@ -53,6 +53,6 @@ public class SelectQuestionConverter extends QuestionConverter {
         return new SelectQuestionComponent((String)map.get("title"), (String)map.get("name"),
                 Converters.parseLongString(ComponentType.SELECT_QUESTION, "description", map.getOrDefault("description", null)),
                 (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED),
-                (boolean)map.get("multiple"), options, (boolean)map.getOrDefault("addOther", false));
+                (boolean)map.get("multiple"), options);
     }
 }

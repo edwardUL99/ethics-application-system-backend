@@ -49,6 +49,7 @@ public class CheckboxQuestionConverter extends QuestionConverter {
 
         return new CheckboxQuestionComponent((String)map.get("title"), (String)map.get("name"),
                 Converters.parseLongString(ComponentType.CHECKBOX_QUESTION, "description", map.getOrDefault("description", null)),
-                (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), options);
+                (boolean)map.getOrDefault("required", QuestionComponent.DEFAULT_REQUIRED), options,
+                (boolean)map.getOrDefault("inline", false));
     }
 }

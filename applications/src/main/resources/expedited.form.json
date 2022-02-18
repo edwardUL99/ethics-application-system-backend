@@ -271,7 +271,9 @@
                     "options": [
                       "Yes",
                       "No"
-                    ]
+                    ],
+                    "inline": false,
+                    "_comment": "inline can be set to true to render the radios/checkboxes as a horizontal row"
                   },
                   "branches": [
                     {

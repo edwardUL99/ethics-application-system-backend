@@ -10,6 +10,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * This class represents a component that represents a group of checkboxes which each execute a default
@@ -58,11 +59,10 @@ public class CheckboxGroupComponent extends SimpleComponent {
     /**
      * This class represents a checkbox in the group
      */
-    @AllArgsConstructor
-    @NoArgsConstructor
     @Getter
     @Setter
     @Entity
+    @NoArgsConstructor
     public static class Checkbox {
         /**
          * The database ID
@@ -79,6 +79,22 @@ public class CheckboxGroupComponent extends SimpleComponent {
          */
         @OneToOne(cascade = CascadeType.ALL)
         private Branch branch;
+        /**
+         * A unique UUID to uniquely identify this checkbox group
+         */
+        private String identifier = UUID.randomUUID().toString();
+
+        /**
+         * Create a Checkbox
+         * @param id the database ID
+         * @param title the title of the checkbox
+         * @param branch the checkbox branch to override default branch
+         */
+        public Checkbox(Long id, String title, Branch branch) {
+            this.id = id;
+            this.title = title;
+            this.branch = branch;
+        }
 
         /**
          * {@inheritDoc}

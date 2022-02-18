@@ -227,6 +227,7 @@ public class ApplicationController {
             Map<String, Object> response = new HashMap<>();
             applicationService.createApplication(draftApplication, true);
             response.put(MESSAGE, APPLICATION_UPDATED);
+            response.put("lastUpdated", draftApplication.getLastUpdated());
 
             return ResponseEntity.ok(response);
         } catch (IllegalStateException ex) {

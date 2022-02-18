@@ -1,5 +1,7 @@
 package ie.ul.ethics.scieng.applications.templates.components;
 
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.Hibernate;
 
 import javax.persistence.Entity;
@@ -11,12 +13,19 @@ import java.util.Objects;
  * This component represents a question that has radios that can have only one answer
  */
 @Entity
+@Getter
+@Setter
 public class RadioQuestionComponent extends SelectQuestionComponent {
+    /**
+     * Determines if the radios should be rendered inline in a row
+     */
+    private boolean inline;
+
     /**
      * Create a default RadioQuestionComponent
      */
     public RadioQuestionComponent() {
-        this(null, null, null, DEFAULT_REQUIRED, new ArrayList<>());
+        this(null, null, null, DEFAULT_REQUIRED, new ArrayList<>(), false);
     }
 
     /**
@@ -26,10 +35,13 @@ public class RadioQuestionComponent extends SelectQuestionComponent {
      * @param name the name to give to the question
      * @param required true if required or not
      * @param options the options for the checkbox
+     * @param inline determine if radios should be rendered inline
      */
-    public RadioQuestionComponent(String title, String name, String description, boolean required, List<SelectQuestionComponent.Option> options) {
-        super(title, name, description, required, false, options, false);
+    public RadioQuestionComponent(String title, String name, String description, boolean required, List<SelectQuestionComponent.Option> options,
+                                  boolean inline) {
+        super(title, name, description, required, false, options);
         setType(ComponentType.RADIO_QUESTION);
+        this.inline = inline;
     }
 
     /**

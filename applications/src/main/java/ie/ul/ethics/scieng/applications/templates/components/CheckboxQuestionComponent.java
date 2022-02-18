@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.templates.components;
 
+import lombok.Getter;
 import org.hibernate.Hibernate;
 
 import javax.persistence.Entity;
@@ -11,12 +12,18 @@ import java.util.Objects;
  * This component represents a question that has checkboxes that can have multiple answers
  */
 @Entity
+@Getter
 public class CheckboxQuestionComponent extends SelectQuestionComponent {
+    /**
+     * Determines if the checkboxes should be rendered inline in a row
+     */
+    private boolean inline;
+
     /**
      * Create a default CheckboxQuestionComponent
      */
     public CheckboxQuestionComponent() {
-        this(null, null, null, DEFAULT_REQUIRED, new ArrayList<>());
+        this(null, null, null, DEFAULT_REQUIRED, new ArrayList<>(), false);
     }
 
     /**
@@ -26,10 +33,13 @@ public class CheckboxQuestionComponent extends SelectQuestionComponent {
      * @param description question description
      * @param required true if required or not
      * @param options the options for the checkbox
+     * @param inline if true, checkboxes will be rendered inline
      */
-    public CheckboxQuestionComponent(String title, String name, String description, boolean required, List<Option> options) {
-        super(title, name, description, required, true, options, false);
+    public CheckboxQuestionComponent(String title, String name, String description, boolean required, List<Option> options,
+                                     boolean inline) {
+        super(title, name, description, required, true, options);
         setType(ComponentType.CHECKBOX_QUESTION);
+        this.inline = inline;
     }
 
     /**

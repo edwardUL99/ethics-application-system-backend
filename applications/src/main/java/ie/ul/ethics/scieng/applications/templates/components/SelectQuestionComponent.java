@@ -9,6 +9,7 @@ import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * This component represents a component that has options to choose from as the answer
@@ -26,16 +27,12 @@ public class SelectQuestionComponent extends QuestionComponent {
      */
     @OneToMany(cascade = CascadeType.ALL)
     private List<Option> options;
-    /**
-     * Determines if this question should add a field to allow the specification of another answer that's not provided
-     */
-    private boolean addOther;
 
     /**
      * Create a default select question component
      */
     public SelectQuestionComponent() {
-        this(null, null, null, DEFAULT_REQUIRED, false, new ArrayList<>(), false);
+        this(null, null, null, DEFAULT_REQUIRED, false, new ArrayList<>());
     }
 
     /**
@@ -46,13 +43,11 @@ public class SelectQuestionComponent extends QuestionComponent {
      * @param required true if the question requires an answer, false if not
      * @param multiple true if multiple responses are allowed
      * @param options the list of options to add to the question
-     * @param addOther true if an 'Other' text field should be added
      */
-    public SelectQuestionComponent(String title, String name, String description, boolean required, boolean multiple, List<Option> options, boolean addOther) {
+    public SelectQuestionComponent(String title, String name, String description, boolean required, boolean multiple, List<Option> options) {
         super(ComponentType.SELECT_QUESTION, title, name, description, required);
         this.multiple = multiple;
         this.options = options;
-        this.addOther = addOther;
     }
 
     /**
@@ -77,6 +72,10 @@ public class SelectQuestionComponent extends QuestionComponent {
          * The value to send in the post request
          */
         private String value;
+        /**
+         * A uniwue UUID identifier to uniquely identify this option
+         */
+        private String identifier;
 
         /**
          * Create an Option where the value is the same as the label
@@ -94,6 +93,7 @@ public class SelectQuestionComponent extends QuestionComponent {
         public Option(String label, String value) {
             this.label = label;
             this.value = value;
+            this.identifier = UUID.randomUUID().toString();
         }
 
         /**
@@ -104,7 +104,8 @@ public class SelectQuestionComponent extends QuestionComponent {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Option option = (Option) o;
-            return Objects.equals(id, option.id) && Objects.equals(label, option.label) && Objects.equals(value, option.value);
+            return Objects.equals(id, option.id) && Objects.equals(label, option.label) && Objects.equals(value, option.value)
+                    && Objects.equals(identifier, option.identifier);
         }
 
         /**
@@ -112,7 +113,7 @@ public class SelectQuestionComponent extends QuestionComponent {
          */
         @Override
         public int hashCode() {
-            return Objects.hash(id, label, value);
+            return Objects.hash(id, label, value, identifier);
         }
     }
 
