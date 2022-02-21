@@ -28,6 +28,10 @@ public abstract class Authorization {
      * A short description of the authorization. Excluded from equals and hash code
      */
     protected String description;
+    /**
+     * The "tag" name to identify the role programmatically. Usually equals the name of the constant declared in a list of authorisations
+     */
+    protected String tag;
 
     /**
      * Creates a default authorization object
@@ -94,5 +98,21 @@ public abstract class Authorization {
      */
     public void setDescription(String description) {
         this.description = description;
+    }
+
+    /**
+     * Set the "tag" name to identify the role programmatically. Usually equals the name of the constant declared in a list of authorisations
+     * @param tag the new tag to set
+     */
+    public void setTag(String tag) {
+        this.tag = tag;
+    }
+
+    /**
+     * Retrieve the tag name
+     * @return the tag
+     */
+    public String getTag() {
+        return tag;
     }
 }

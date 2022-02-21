@@ -70,7 +70,10 @@ public final class Roles {
                         Modifier.isFinal(f.getModifiers()))
                 .map(f -> {
                     try {
-                        return (Role)f.get(roleObj);
+                        Role r = (Role)f.get(roleObj);
+                        r.setTag(f.getName());
+
+                        return r;
                     } catch (IllegalAccessException ex) {
                         ex.printStackTrace();
                         return null;

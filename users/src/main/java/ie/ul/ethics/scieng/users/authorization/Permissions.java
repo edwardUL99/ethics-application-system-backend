@@ -107,7 +107,10 @@ public final class Permissions {
                         Modifier.isFinal(f.getModifiers()))
                 .map(f -> {
                     try {
-                        return (Permission) f.get(permissionObj);
+                        Permission p = (Permission) f.get(permissionObj);
+                        p.setTag(f.getName());
+
+                        return p;
                     } catch (IllegalAccessException ex) {
                         ex.printStackTrace();
                         return null;
