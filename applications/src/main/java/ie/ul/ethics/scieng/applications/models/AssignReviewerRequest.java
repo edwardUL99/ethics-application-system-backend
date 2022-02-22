@@ -7,24 +7,25 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
+import java.util.List;
 
 /**
- * This class represents a request to finish a review on an application
+ * This class represents a request to assign committee members to the application
  */
-@EqualsAndHashCode
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-public class FinishReviewRequest {
+@EqualsAndHashCode
+public class AssignReviewerRequest {
     /**
      * The ID of the application
      */
     @NotNull
     private String id;
     /**
-     * The username of the committee member
+     * The list of committee member usernames
      */
     @NotNull
-    private String member;
+    private List<String> members;
 }

@@ -803,6 +803,162 @@ public class ApplicationControllerTest {
     }
 
     /**
+     * Tests that a committee member should be assigned
+     */
+    @Test
+    public void shouldAssignCommitteeMember() throws Exception {
+        SubmittedApplication submitted =
+                (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        submitted.setId(APPLICATION_DB_ID);
+        User user = submitted.getUser();
+        user.setRole(Roles.COMMITTEE_MEMBER);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(submitted);
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+
+        List<User> users = List.of(user);
+        given(applicationService.assignCommitteeMembers(submitted, users))
+                .willReturn(submitted);
+
+        AssignReviewerRequest request = new AssignReviewerRequest(APPLICATION_ID, List.of(USERNAME));
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submitted);
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "assign"))
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
+        verify(applicationService).assignCommitteeMembers(submitted, users);
+    }
+
+    /**
+     * Tests that if the application is not found on assigning a reviewer, a 404 will be thrown
+     */
+    @Test
+    public void shouldThrowNotFoundIfApplicationNotFoundOnAssignReviewer() throws Exception {
+        User user = createTestUser();
+        user.setRole(Roles.COMMITTEE_MEMBER);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(null);
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+
+        AssignReviewerRequest request = new AssignReviewerRequest(APPLICATION_ID, List.of(USERNAME));
+        String json = JSON.convertJSON(request);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "assign"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoInteractions(userService);
+        verifyNoMoreInteractions(applicationService);
+    }
+
+    /**
+     * Tests that if the user is not found on assigning a reviewer, a 404 will be thrown
+     */
+    @Test
+    public void shouldThrowNotFoundIfUserNotFoundOnAssignReviewer() throws Exception {
+        Application application = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(application);
+        given(userService.loadUser(USERNAME))
+                .willReturn(null);
+
+        AssignReviewerRequest request = new AssignReviewerRequest(APPLICATION_ID, List.of(USERNAME));
+        String json = JSON.convertJSON(request);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "assign"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
+        verifyNoMoreInteractions(applicationService);
+    }
+
+    /**
+     * Tests that an error is thrown if the application cannot be assigned to
+     */
+    @Test
+    public void shouldThrowOnAssignCommitteeMemberIfWrongStatus() throws Exception {
+        Application draftApplication = createDraftApplication(templates[0]);
+        User user = draftApplication.getUser();
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(draftApplication);
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+
+        List<User> users = List.of(user);
+        doThrow(InvalidStatusException.class).when(applicationService).assignCommitteeMembers(draftApplication, users);
+
+        AssignReviewerRequest request = new AssignReviewerRequest(APPLICATION_ID, List.of(USERNAME));
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_APPLICATION_STATUS);
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "assign"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
+        verify(applicationService).assignCommitteeMembers(draftApplication, users);
+    }
+
+    /**
+     * Tests that an error should be thrown when committee member with wrong permissions is assigned
+     */
+    @Test
+    public void shouldThrowOnAssignCommitteeMemberIfWrongPermissions() throws Exception {
+        Application submitted = createDraftApplication(templates[0]);
+        User user = submitted.getUser();
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(submitted);
+        given(userService.loadUser(USERNAME))
+                .willReturn(user);
+
+        List<User> users = List.of(user);
+        doThrow(new ApplicationException(ApplicationService.CANT_REVIEW)).when(applicationService).assignCommitteeMembers(submitted, users);
+
+        AssignReviewerRequest request = new AssignReviewerRequest(APPLICATION_ID, List.of(USERNAME));
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INSUFFICIENT_PERMISSIONS);
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "assign"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(userService).loadUser(USERNAME);
+        verify(applicationService).assignCommitteeMembers(submitted, users);
+    }
+
+    /**
      * Create a test resubmitted application
      * @return the test application instance
      */

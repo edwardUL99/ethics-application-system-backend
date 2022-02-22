@@ -24,6 +24,10 @@
       "requestMethod": "GET"
     },
     {
+      "path": "/api/applications/assign/",
+      "permissions": "ASSIGN_APPLICATIONS"
+    },
+    {
       "path": "/api/applications/review/",
       "permissions": "REVIEW_APPLICATIONS"
     },

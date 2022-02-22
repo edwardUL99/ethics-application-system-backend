@@ -96,6 +96,21 @@ public interface ApplicationService {
     Application submitApplication(Application application) throws InvalidStatusException;
 
     /**
+     * The message assignCommitteeMembers should throw if not valid
+     */
+    String CANT_REVIEW = "CANT_REVIEW";
+
+    /**
+     * Assign the list of committee members to the application
+     * @param application the application to assign the committee members to
+     * @param committeeMembers the list of committee members to assign
+     * @return the application after updating it
+     * @throws ApplicationException if the status is incorrect or an exception with message
+     * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
+     */
+    Application assignCommitteeMembers(Application application, List<User> committeeMembers) throws ApplicationException;
+
+    /**
      * Accept an application that has been re-submitted and assign the list of committee members to the application.
      * After this method is called, the application will be "reset" to the submitted state with the assigned committee members
      * @param application the application to accept

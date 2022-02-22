@@ -229,6 +229,39 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
+     * Assign the list of committee members to the application
+     *
+     * @param application      the application to assign the committee members to
+     * @param committeeMembers the list of committee members to assign
+     * @return the application after updating it
+     * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application assignCommitteeMembers(Application application, List<User> committeeMembers) throws ApplicationException {
+        if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
+            throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
+
+        SubmittedApplication submitted = (SubmittedApplication) application;
+
+        for (User user : committeeMembers) {
+            try {
+                submitted.assignCommitteeMember(user);
+            } catch (ApplicationException ex) {
+                throw new ApplicationException(CANT_REVIEW, ex);
+            }
+        }
+
+        this.createApplication(submitted, true);
+
+        return submitted;
+    }
+
+    /**
      * Accept an application that has been re-submitted and assign the list of committee members to the application.
      * After this method is called, the application will be "reset" to the submitted state with the assigned committee members
      *

@@ -290,6 +290,44 @@ public class ApplicationController {
     }
 
     /**
+     * Assigns the provided committee members to the application
+     * @param request the request to assign committee members
+     * @return the response body
+     */
+    @PostMapping("/assign")
+    public ResponseEntity<?> assignCommitteeMember(@RequestBody @Valid AssignReviewerRequest request) {
+        Application application = this.applicationService.getApplication(request.getId());
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            List<User> members = request.getMembers().stream()
+                    .map(this.userService::loadUser)
+                    .collect(Collectors.toList());
+
+            if (members.stream().anyMatch(Objects::isNull)) {
+                return ResponseEntity.notFound().build();
+            } else {
+                try {
+                    Application assigned = this.applicationService.assignCommitteeMembers(application, members);
+                    return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(assigned));
+                } catch (InvalidStatusException ex) {
+                    ex.printStackTrace();
+                    return respondError(INVALID_APPLICATION_STATUS);
+                } catch (ApplicationException ex) {
+                    ex.printStackTrace();
+
+                    if (ex.getMessage().equals(ApplicationService.CANT_REVIEW)) {
+                        return respondError(INSUFFICIENT_PERMISSIONS);
+                    } else {
+                        return respondError(ex.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * The endpoint to accept a re-submitted application
      * @param request the request to accept the application and assign it to committee members
      * @return the response body

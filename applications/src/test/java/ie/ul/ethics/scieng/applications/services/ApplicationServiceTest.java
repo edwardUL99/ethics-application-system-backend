@@ -572,6 +572,54 @@ public class ApplicationServiceTest {
     }
 
     /**
+     * Tests that a committee member should be assigned to the application successfully
+     */
+    @Test
+    public void shouldAssignCommitteeMember() {
+        SubmittedApplication submitted =
+                (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        submitted.setId(APPLICATION_DB_ID);
+        User user = submitted.getUser();
+        user.setRole(Roles.COMMITTEE_MEMBER);
+
+        List<User> users = List.of(user);
+
+        SubmittedApplication returned = (SubmittedApplication) applicationService.assignCommitteeMembers(submitted, users);
+
+        assertSame(returned, submitted);
+        assertEquals(1, returned.getAssignedCommitteeMembers().size());
+        assertEquals(user, returned.getAssignedCommitteeMembers().get(0).getUser());
+        verify(applicationRepository).save(returned);
+    }
+
+    /**
+     * Tests that if the application is in the wrong status when assigning a committee member, an exception will be thrown
+     */
+    @Test
+    public void shouldThrowIfInvalidStatusOnAssignCommitteeMember() {
+        Application application = createDraftApplication(templates[0]);
+        List<User> users = List.of(application.getUser());
+
+        assertThrows(InvalidStatusException.class, () -> this.applicationService.assignCommitteeMembers(application, users));
+
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
+     * Tests that if a committee member being assigned cannot review applications, an error will be thrown
+     */
+    @Test
+    public void shouldThrowIfMemberCannotReviewOnAssign() {
+        Application application = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        List<User> users = List.of(application.getUser());
+
+        ApplicationException ex = assertThrows(ApplicationException.class, () -> this.applicationService.assignCommitteeMembers(application, users));
+
+        assertEquals(ex.getMessage(), ApplicationService.CANT_REVIEW);
+        verifyNoInteractions(applicationRepository);
+    }
+
+    /**
      * Tests that an application that has been referred and resubmitted can be accepted by the committee
      */
     @Test
