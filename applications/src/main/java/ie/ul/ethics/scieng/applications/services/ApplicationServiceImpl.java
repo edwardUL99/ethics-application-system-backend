@@ -215,7 +215,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (status == ApplicationStatus.REFERRED) {
             ReferredApplication referred = (ReferredApplication) application;
             submittedApplication.assignCommitteeMember(referred.getReferredBy());
-            referred.getAssignedCommitteeMembers().forEach(referred::assignCommitteeMember);
+            referred.getAssignedCommitteeMembers().forEach(u -> referred.assignCommitteeMember(u.getUser()));
             submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
             submittedApplication.assignCommitteeMembersToPrevious();
         }
@@ -263,10 +263,8 @@ public class ApplicationServiceImpl implements ApplicationService {
      * Mark an application as being in review and no longer submitted.
      *
      * @param application  the application to put into review
-     * @param finishReview if true, the application is marked as reviewed
      * @return the application instance after it being updated
-     * @throws InvalidStatusException if the application is not in the submitted state and finishReview is false. If
-     *                              finishReview is true and the application is not in a review state, this exception will be thrown
+     * @throws InvalidStatusException if the application is not in the submitted state and finishReview is false
      */
     @Override
     @Caching(evict = {
@@ -278,18 +276,46 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationStatus status = application.getStatus();
 
         if (!finishReview && status != ApplicationStatus.SUBMITTED)
-            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
+            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.SUBMITTED + " if it is in the "
                 + ApplicationStatus.SUBMITTED + " status");
         else if (finishReview && status != ApplicationStatus.REVIEW)
-            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEWED + " if it is in the "
-                    + ApplicationStatus.REVIEW + " status");
+            throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);
 
-        ApplicationStatus target = (finishReview) ? ApplicationStatus.REVIEWED:ApplicationStatus.REVIEW;
-
-        application.setStatus(target);
+        application.setStatus((finishReview) ? ApplicationStatus.REVIEWED:ApplicationStatus.REVIEW);
         createApplication(application, true);
 
         return application;
+    }
+
+    /**
+     * Mark the committee member as their review being finished if they are assigned to the application
+     *
+     * @param application the application being modified
+     * @param member      the username of the member that is finished their review
+     * @return the modified application
+     * @throws InvalidStatusException if the application is not in review
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application markMemberReviewComplete(Application application, String member) throws InvalidStatusException {
+        if (application.getStatus() != ApplicationStatus.SUBMITTED)
+            throw new InvalidStatusException("You can only mark a committee member as having finished their review on an application in " +
+                    "the status " + ApplicationStatus.SUBMITTED);
+
+        SubmittedApplication submitted = (SubmittedApplication) application;
+        submitted.getAssignedCommitteeMembers()
+                .stream()
+                .filter(u -> u.getUser().getUsername().equals(member))
+                .filter(u -> u.getUser().getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
+                .findFirst().ifPresent(assigned -> assigned.setFinishReview(true));
+
+        this.createApplication(submitted, true);
+
+        return submitted;
     }
 
     /**

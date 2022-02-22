@@ -1,6 +1,5 @@
 package ie.ul.ethics.scieng.applications.templates.converters;
 
-import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.applications.templates.components.ComponentType;
 import ie.ul.ethics.scieng.applications.templates.components.QuestionComponent;
 import ie.ul.ethics.scieng.applications.templates.components.SelectQuestionComponent;

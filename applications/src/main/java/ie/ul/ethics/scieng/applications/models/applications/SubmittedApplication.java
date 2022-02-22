@@ -7,7 +7,9 @@ import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
@@ -36,7 +38,7 @@ public class SubmittedApplication extends Application {
      */
     @OneToMany
     @Getter(AccessLevel.NONE)
-    protected List<User> assignedCommitteeMembers = new ArrayList<>();
+    protected List<AssignedCommitteeMember> assignedCommitteeMembers = new ArrayList<>();
     /**
      * This comment is the final comment given to the application (i.e. when approved or rejected). Is not set through a
      * constructor but can be set through {@link #setFinalComment(Comment)}
@@ -76,7 +78,7 @@ public class SubmittedApplication extends Application {
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
-                                List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment) {
+                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment) {
         this(id, applicationId, user, status, applicationTemplate, answers, new ArrayList<>(), comments, assignedCommitteeMembers,
                 finalComment);
     }
@@ -97,11 +99,11 @@ public class SubmittedApplication extends Application {
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
-                                List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment) {
+                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment) {
         super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
         this.comments = new HashMap<>();
         comments.forEach(this::addComment);
-        assignedCommitteeMembers.forEach(this::assignCommitteeMember);
+        this.assignedCommitteeMembers = assignedCommitteeMembers;
         this.finalComment = finalComment;
     }
 
@@ -122,13 +124,13 @@ public class SubmittedApplication extends Application {
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
-                                List<Comment> comments, List<User> assignedCommitteeMembers, Comment finalComment, LocalDateTime approvalTime) {
+                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime approvalTime) {
         super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
         this.comments = new HashMap<>();
         comments.forEach(this::addComment);
-        assignedCommitteeMembers.forEach(this::assignCommitteeMember);
+        this.assignedCommitteeMembers = assignedCommitteeMembers;
         this.finalComment = finalComment;
-        this.approvalTime = LocalDateTime.now();
+        this.approvalTime = approvalTime;
     }
 
     /**
@@ -137,15 +139,25 @@ public class SubmittedApplication extends Application {
      * @throws ApplicationException if the user does not have REVIEW_APPLICATIONS permissions
      */
     public void assignCommitteeMember(User user) {
-        assignCommitteeMember(user, assignedCommitteeMembers);
+        verifyMemberReview(user);
+        this.assignedCommitteeMembers.add(new AssignedCommitteeMember(null, user, false));
     }
 
     /**
      * Get an unmodifiable view of this application's committee members
      * @return the unmodifiable list of assigned committee members
      */
-    public List<User> getAssignedCommitteeMembers() {
+    public List<AssignedCommitteeMember> getAssignedCommitteeMembers() {
         return Collections.unmodifiableList(assignedCommitteeMembers);
+    }
+
+    /**
+     * Verify that the member can review an application
+     * @param member the member to verify
+     */
+    private static void verifyMemberReview(User member) {
+        if (!member.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
+            throw new ApplicationException("The user being assigned to the SubmittedApplication must have the REVIEW_APPLICATIONS permission");
     }
 
     /**
@@ -155,9 +167,7 @@ public class SubmittedApplication extends Application {
      * @throws ApplicationException if the member does not have the correct permissions
      */
     private static void assignCommitteeMember(User member, List<User> userList) {
-        if (!member.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
-            throw new ApplicationException("The user being assigned to the SubmittedApplication must have the REVIEW_APPLICATIONS permission");
-
+        verifyMemberReview(member);
         userList.add(member);
     }
 
@@ -170,7 +180,7 @@ public class SubmittedApplication extends Application {
             throw new InvalidStatusException("You cannot assign the assigned committee members to the previous members list if the " +
                     "status is not " + ApplicationStatus.RESUBMITTED);
 
-        assignedCommitteeMembers.forEach(member -> assignCommitteeMember(member, previousCommitteeMembers));
+        assignedCommitteeMembers.forEach(member -> assignCommitteeMember(member.user, previousCommitteeMembers));
         assignedCommitteeMembers.clear();
     }
 
@@ -207,8 +217,11 @@ public class SubmittedApplication extends Application {
     public boolean canBeViewedBy(User user) {
         Collection<Permission> permissions = user.getRole().getPermissions();
 
+        boolean isAssigned = assignedCommitteeMembers.stream().map(AssignedCommitteeMember::getUser)
+                .anyMatch(u -> u.equals(user));
+
         return (this.user.getUsername().equals(user.getUsername()) && permissions.contains(Permissions.VIEW_OWN_APPLICATIONS))
-                || (permissions.contains(Permissions.REVIEW_APPLICATIONS) && assignedCommitteeMembers.contains(user))
+                || (permissions.contains(Permissions.REVIEW_APPLICATIONS) && isAssigned)
                 || permissions.contains(Permissions.VIEW_ALL_APPLICATIONS);
     }
 
@@ -299,5 +312,51 @@ public class SubmittedApplication extends Application {
     public int hashCode() {
         return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, attachedFiles, comments,
                 assignedCommitteeMembers, finalComment, previousCommitteeMembers, approvalTime);
+    }
+
+    /**
+     * This class represents a committee member that is assigned to the application. It holds the user that is assigned
+     * and the status of whether they are assigned or not
+     */
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @Setter
+    @Entity
+    public static class AssignedCommitteeMember {
+        /**
+         * The database ID of this object
+         */
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
+        /**
+         * The committee member that is assigned
+         */
+        @OneToOne
+        private User user;
+        /**
+         * Determine if the committee member has finished their review
+         */
+        private boolean finishReview;
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
+            AssignedCommitteeMember that = (AssignedCommitteeMember) o;
+            return Objects.equals(id, that.id) && Objects.equals(user, that.user) && Objects.equals(finishReview, that.finishReview);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return Objects.hash(id, user, finishReview);
+        }
     }
 }

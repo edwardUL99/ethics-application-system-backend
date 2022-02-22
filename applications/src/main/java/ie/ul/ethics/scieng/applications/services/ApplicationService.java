@@ -108,12 +108,20 @@ public interface ApplicationService {
     /**
      * Mark an application as being in review and no longer submitted.
      * @param application the application to put into review
-     * @param finishReview if true, the application is marked as reviewed
+     * @param finishReview if true finish the review
      * @return the application instance after it being updated
-     * @throws InvalidStatusException if the application is not in the submitted state and finishReview is false. If
-     * finishReview is true and the application is not in a review state, this exception will be thrown
+     * @throws InvalidStatusException if the application is not in the submitted state
      */
     Application reviewApplication(Application application, boolean finishReview) throws InvalidStatusException;
+
+    /**
+     * Mark the committee member as their review being finished if they are assigned to the application
+     * @param application the application being modified
+     * @param member the username of the member that is finished their review
+     * @return the modified application
+     * @throws InvalidStatusException if the application is not in review
+     */
+    Application markMemberReviewComplete(Application application, String member) throws InvalidStatusException;
 
     /**
      * Mark the approval status on the application. The only user's that should have access to this method are those

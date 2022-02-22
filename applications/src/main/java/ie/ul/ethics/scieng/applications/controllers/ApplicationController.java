@@ -12,7 +12,6 @@ import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.mapping.ReviewApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
@@ -362,6 +361,28 @@ public class ApplicationController {
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * Finish the review for a particular assigned committee member
+     * @param request the request to mark the committee member as finished reviewing
+     * @return the response body
+     */
+    @PostMapping("/review/finish")
+    public ResponseEntity<?> finishReview(@RequestBody @Valid FinishReviewRequest request) {
+        Application application = this.applicationService.getApplication(request.getId());
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            try {
+                application = applicationService.markMemberReviewComplete(application, request.getMember());
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+            } catch (InvalidStatusException ex) {
+                ex.printStackTrace();
+                return respondError(INVALID_APPLICATION_STATUS);
+            }
         }
     }
 
