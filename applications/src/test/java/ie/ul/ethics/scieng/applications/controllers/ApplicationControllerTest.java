@@ -15,7 +15,6 @@ import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
-import ie.ul.ethics.scieng.applications.models.mapping.ReviewApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -1070,6 +1069,61 @@ public class ApplicationControllerTest {
 
         verify(applicationService).getApplication(APPLICATION_ID);
         verify(applicationService).reviewApplication(application, true);
+    }
+
+    /**
+     * Tests that a review for a user should be marked as finished
+     */
+    @Test
+    public void shouldFinishReview() throws Exception {
+        SubmittedApplication submittedApplication =
+                (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        User user = submittedApplication.getUser();
+        user.setRole(Roles.COMMITTEE_MEMBER);
+        submittedApplication.assignCommitteeMember(user);
+
+        SubmittedApplication.AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
+        assigned.setFinishReview(true);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(submittedApplication);
+        given(applicationService.markMemberReviewComplete(submittedApplication, USERNAME))
+                .willReturn(submittedApplication);
+
+        FinishReviewRequest request = new FinishReviewRequest(APPLICATION_ID, USERNAME);
+        String json = JSON.convertJSON(request);
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submittedApplication);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "review", "finish"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(applicationService).markMemberReviewComplete(submittedApplication, USERNAME);
+    }
+
+    /**
+     * Tests that 404 is thrown if application is not found for the request
+     */
+    @Test
+    public void shouldThrowNotFoundOnFinishReview() throws Exception {
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(null);
+
+        FinishReviewRequest request = new FinishReviewRequest(APPLICATION_ID, USERNAME);
+        String json = JSON.convertJSON(request);
+
+        mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "review", "finish"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoMoreInteractions(applicationService);
     }
 
     /**

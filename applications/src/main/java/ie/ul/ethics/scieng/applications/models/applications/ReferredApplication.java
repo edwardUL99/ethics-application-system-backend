@@ -59,7 +59,7 @@ public class ReferredApplication extends SubmittedApplication {
      */
     public ReferredApplication(Long id, String applicationId, User user,
                                ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<Comment> comments,
-                               List<User> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
+                               List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
         this(id, applicationId, user, applicationTemplate, answers, new ArrayList<>(), comments, assignedCommitteeMembers,
                 finalComment, editableFields, referredBy);
     }
@@ -81,7 +81,7 @@ public class ReferredApplication extends SubmittedApplication {
      */
     public ReferredApplication(Long id, String applicationId, User user,
                                ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles, List<Comment> comments,
-                               List<User> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
+                               List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
         super(id, applicationId, user, ApplicationStatus.REFERRED, applicationTemplate, answers, attachedFiles, comments, assignedCommitteeMembers, finalComment);
         this.editableFields = editableFields;
         this.setReferredBy(referredBy);

@@ -45,6 +45,7 @@ public class PermissionsConfiguration {
                     .requireOneOfPermissions(createApiPath(Endpoint.APPLICATIONS, true), RequestMethod.GET, Permissions.VIEW_OWN_APPLICATIONS)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "id"), RequestMethod.GET, Permissions.CREATE_APPLICATION)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "review"), Permissions.REVIEW_APPLICATIONS)
+                    .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "review", "finish"), Permissions.REVIEW_APPLICATIONS)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "approve"), Permissions.APPROVE_APPLICATIONS)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "refer"), Permissions.REFER_APPLICATIONS)
                     .requireAllPermissions(createApiPath(Endpoint.APPLICATIONS, "resubmit"), Permissions.ASSIGN_APPLICATIONS);

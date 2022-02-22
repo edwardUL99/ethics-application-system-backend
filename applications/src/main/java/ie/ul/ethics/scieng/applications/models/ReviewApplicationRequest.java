@@ -1,4 +1,4 @@
-package ie.ul.ethics.scieng.applications.models.mapping;
+package ie.ul.ethics.scieng.applications.models;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

@@ -6,9 +6,10 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
-import ie.ul.ethics.scieng.users.models.User;
+import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
@@ -34,7 +35,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
     /**
      * The list of usernames of the assigned committee members
      */
-    private List<String> assignedCommitteeMembers;
+    private List<AssignedCommitteeMemberResponse> assignedCommitteeMembers;
     /**
      * The final comment left on the application if it is approved/rejected
      */
@@ -51,7 +52,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
         this.comments = application.getComments();
         this.assignedCommitteeMembers = application.getAssignedCommitteeMembers()
                 .stream()
-                .map(User::getUsername)
+                .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getUser().getUsername(), u.isFinishReview()))
                 .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
     }
@@ -70,5 +71,28 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
 
         if (!permissible.contains(status))
             throw new InvalidStatusException("The application must have one of the following states: " + permissible);
+    }
+
+    /**
+     * The response for an assigned committee member
+     */
+    @EqualsAndHashCode
+    @Getter
+    @Setter
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class AssignedCommitteeMemberResponse {
+        /**
+         * The database ID
+         */
+        private Long id;
+        /**
+         * The username of the committee member
+         */
+        private String username;
+        /**
+         * Determines if the committee member has finished their review
+         */
+        private boolean finishReview;
     }
 }

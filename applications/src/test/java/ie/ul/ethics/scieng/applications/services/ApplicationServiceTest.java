@@ -589,8 +589,11 @@ public class ApplicationServiceTest {
 
         SubmittedApplication returned = (SubmittedApplication) applicationService.acceptResubmitted(submitted, List.of(referrer));
 
+        boolean containsReferrer = returned.getAssignedCommitteeMembers().stream()
+                        .anyMatch(u -> u.getUser().equals(referrer));
+
         assertEquals(0, returned.getPreviousCommitteeMembers().size());
-        assertTrue(returned.getAssignedCommitteeMembers().contains(referrer));
+        assertTrue(containsReferrer);
         assertEquals(ApplicationStatus.REVIEW, returned.getStatus());
         verify(applicationRepository).save(any());
     }
@@ -671,6 +674,29 @@ public class ApplicationServiceTest {
     }
 
     /**
+     * Tests that an assigned committee member is marked as being finished review
+     */
+    @Test
+    public void shouldFinishCommitteeMemberReview() {
+        SubmittedApplication submittedApplication = (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        submittedApplication.setId(APPLICATION_DB_ID);
+
+        User user = submittedApplication.getUser();
+        user.setRole(Roles.COMMITTEE_MEMBER);
+
+        submittedApplication.assignCommitteeMember(user);
+        SubmittedApplication.AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
+
+        assertFalse(assigned.isFinishReview());
+
+        Application returned = applicationService.markMemberReviewComplete(submittedApplication, USERNAME);
+
+        assertSame(returned, submittedApplication);
+        assertTrue(assigned.isFinishReview());
+        verify(applicationRepository).save(submittedApplication);
+    }
+
+    /**
      * Tests that an application should be approved/rejected successfully
      */
     @Test
@@ -701,8 +727,8 @@ public class ApplicationServiceTest {
         submitted.setStatus(ApplicationStatus.REVIEWED);
         assertEquals(ApplicationStatus.REVIEWED, submitted.getStatus());
         returned = applicationService.approveApplication(submitted, false, finalComment);
-
         ((SubmittedApplication) saved).setApprovalTime(null);
+
         assertSame(returned, submitted);
         assertEquals(ApplicationStatus.REJECTED, returned.getStatus());
         assertNull(((SubmittedApplication)returned).getApprovalTime());

@@ -28,6 +28,10 @@
       "permissions": "REVIEW_APPLICATIONS"
     },
     {
+      "path": "/api/applications/review/finish/",
+      "permissions": "REVIEW_APPLICATIONS"
+    },
+    {
       "path": "/api/applications/approve/",
       "permissions": "APPROVE_APPLICATIONS"
     },
