@@ -823,9 +823,8 @@ public class ApplicationControllerTest {
                 .willReturn(submitted);
 
         AssignReviewerRequest request = new AssignReviewerRequest(APPLICATION_ID, List.of(USERNAME));
-        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submitted);
         String json = JSON.convertJSON(request);
-        String result = JSON.convertJSON(response);
+        String result = JSON.convertJSON(new AssignMembersResponse(submitted));
 
         mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "assign"))
                 .contentType(JSON.MEDIA_TYPE)

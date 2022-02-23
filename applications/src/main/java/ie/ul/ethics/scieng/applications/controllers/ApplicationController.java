@@ -310,7 +310,7 @@ public class ApplicationController {
             } else {
                 try {
                     Application assigned = this.applicationService.assignCommitteeMembers(application, members);
-                    return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(assigned));
+                    return ResponseEntity.ok(new AssignMembersResponse((SubmittedApplication) assigned));
                 } catch (InvalidStatusException ex) {
                     ex.printStackTrace();
                     return respondError(INVALID_APPLICATION_STATUS);

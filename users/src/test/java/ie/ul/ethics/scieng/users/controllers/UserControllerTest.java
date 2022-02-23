@@ -111,7 +111,43 @@ public class UserControllerTest {
                 .andExpect(content().json(result));
 
         verify(userService).getAllUsers();
+    }
 
+    /**
+     * This test tests that all users should be retrieved
+     */
+    @Test
+    public void shouldGetAllUsersWithPermission() throws Exception {
+        List<User> users = new ArrayList<>();
+        List<User> returnedUsers = new ArrayList<>();
+
+        for (int i = 0; i < 5; i++) {
+            User user = UserServiceTest.createTestUser();
+            user.setName("User " + i);
+            users.add(user);
+
+            if (i >= 3) {
+                user.setRole(Roles.COMMITTEE_MEMBER);
+                returnedUsers.add(user);
+            }
+        }
+
+        given(userService.getAllUsers())
+                .willReturn(users);
+
+        List<UserResponseShortened> response = returnedUsers.stream()
+                .map(UserResponseShortened::new)
+                .collect(Collectors.toList());
+
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(get(createApiPath(Endpoint.USERS))
+                        .param("permission", Permissions.REVIEW_APPLICATIONS.getTag()))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(userService).getAllUsers();
     }
 
     /**

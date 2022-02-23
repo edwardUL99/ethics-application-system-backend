@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.models.*;
+import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import ie.ul.ethics.scieng.users.models.authorization.Role;
 import ie.ul.ethics.scieng.users.services.UserService;
 import static ie.ul.ethics.scieng.common.Constants.*;
@@ -47,13 +48,17 @@ public class UserController {
     }
 
     /**
-     * This endpoint retrieves all the users in the system
+     * This endpoint retrieves all the users in the system or users with a given permission
+     * @param permission return the list of users with the given permission. Expected to be the tag name
      * @return the response body
      */
     @GetMapping
-    public ResponseEntity<?> getAllUsers() {
+    public ResponseEntity<?> getAllUsers(@RequestParam(required = false) String permission) {
+        Permission mappedPermission = (permission != null) ? Permissions.getPermissionByFieldName(permission):null;
+
         return ResponseEntity.ok(userService.getAllUsers()
                 .stream()
+                .filter(user -> mappedPermission == null || user.getRole().getPermissions().contains(mappedPermission))
                 .map(UserResponseShortened::new)
                 .collect(Collectors.toList()));
     }
