@@ -10,6 +10,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Type;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -49,6 +50,10 @@ public class Comment {
      */
     @OneToMany(cascade = CascadeType.ALL)
     private List<Comment> subComments = new ArrayList<>();
+    /**
+     * The time when the comment was created
+     */
+    private LocalDateTime createdAt;
 
     /**
      * Create a Comment
@@ -59,11 +64,25 @@ public class Comment {
      * @param subComments the sub-comments added to this comment
      */
     public Comment(Long id, User user, String comment, String componentId, List<Comment> subComments) {
+        this(id, user, comment, componentId, subComments, LocalDateTime.now());
+    }
+
+    /**
+     * Create a Comment
+     * @param id the database ID for the comment
+     * @param user the user that made the comment
+     * @param comment the comment left
+     * @param componentId the ID of the component the comment is attached to
+     * @param subComments the sub-comments added to this comment
+     * @param createdAt the timestamp the comment was created at
+     */
+    public Comment(Long id, User user, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt) {
         this.id = id;
         this.user = user;
         this.comment = comment;
         this.componentId = componentId;
         subComments.forEach(this::addSubComment);
+        this.createdAt = createdAt;
     }
 
     /**
@@ -93,7 +112,7 @@ public class Comment {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         Comment comment = (Comment) o;
         return Objects.equals(id, comment.id) && Objects.equals(user, comment.user) && Objects.equals(this.comment, comment.comment)
-                && Objects.equals(componentId, comment.componentId) && Objects.equals(subComments, comment.subComments);
+                && Objects.equals(componentId, comment.componentId) && Objects.equals(subComments, comment.subComments) && Objects.equals(createdAt, comment.createdAt);
     }
 
     /**
@@ -101,6 +120,6 @@ public class Comment {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, comment, componentId, subComments);
+        return Objects.hash(id, user, comment, componentId, subComments, createdAt);
     }
 }

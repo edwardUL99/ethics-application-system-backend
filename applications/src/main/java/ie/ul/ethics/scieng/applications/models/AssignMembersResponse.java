@@ -1,7 +1,6 @@
 package ie.ul.ethics.scieng.applications.models;
 
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
-import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.models.UserResponseShortened;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;

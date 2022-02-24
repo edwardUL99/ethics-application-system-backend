@@ -177,7 +177,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      */
     private Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment) {
         Comment mapped = new Comment(comment.getId(), userService.loadUser(comment.getUsername()), comment.getComment(),
-                comment.getComponentId(), new ArrayList<>());
+                comment.getComponentId(), new ArrayList<>(), comment.getCreatedAt());
 
         if (mapped.getUser() == null)
             throw new MappingException("A comment cannot exist with a null user");

@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -55,5 +56,9 @@ public class ReviewSubmittedApplicationRequest {
          * Sub-comments left on the comment
          */
         private List<Comment> subComments;
+        /**
+         * The timestamp of when the application was created
+         */
+        private LocalDateTime createdAt;
     }
 }

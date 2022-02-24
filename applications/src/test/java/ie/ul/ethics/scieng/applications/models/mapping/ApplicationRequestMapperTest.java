@@ -34,6 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -405,12 +406,14 @@ public class ApplicationRequestMapperTest {
 
         User user = createTestUser();
 
-        Comment comment = new Comment(null, user, "comment", "component", new ArrayList<>());
-        comment.addSubComment(new Comment(null, user, "comment1", "component1", new ArrayList<>()));
+        LocalDateTime createdAt = LocalDateTime.now();
+
+        Comment comment = new Comment(null, user, "comment", "component", new ArrayList<>(), createdAt);
+        comment.addSubComment(new Comment(null, user, "comment1", "component1", new ArrayList<>(), createdAt));
         mapped.addComment(comment);
 
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), createdAt);
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), createdAt));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         given(userService.loadUser(USERNAME))
@@ -431,8 +434,8 @@ public class ApplicationRequestMapperTest {
      */
     @Test
     public void shouldReturnNullOnReviewSubmitted() {
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         given(applicationService.getApplication(APPLICATION_ID))
@@ -459,8 +462,8 @@ public class ApplicationRequestMapperTest {
         comment.addSubComment(new Comment(null, user, "comment1", "component1", new ArrayList<>()));
         mapped.addComment(comment);
 
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         given(userService.loadUser(USERNAME))
@@ -488,8 +491,8 @@ public class ApplicationRequestMapperTest {
         comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
         mapped.addComment(comment);
 
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         given(userService.loadUser(USERNAME))

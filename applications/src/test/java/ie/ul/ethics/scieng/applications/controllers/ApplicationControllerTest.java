@@ -47,6 +47,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1296,8 +1297,8 @@ public class ApplicationControllerTest {
         comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
         mapped.addComment(comment);
 
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         String json = JSON.convertJSON(request);
@@ -1324,8 +1325,8 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowUserNullOnAddCommentsToApplication() throws Exception {
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         Map<String, Object> response = new HashMap<>();
@@ -1352,8 +1353,8 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInvalidStatusOnAddCommentsToApplication() throws Exception {
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         Map<String, Object> response = new HashMap<>();
@@ -1380,8 +1381,8 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowNotFoundOnAddCommentsToApplication() throws Exception {
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>());
-        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>()));
+        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
         String json = JSON.convertJSON(request);
