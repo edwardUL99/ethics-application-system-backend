@@ -153,12 +153,14 @@ public class ApplicationController {
             if (user == null) {
                 return ResponseEntity.notFound().build();
             } else {
-                return ResponseEntity.ok(((viewable) ? applicationService.getViewableApplications(user):
+                List<ApplicationResponse> responses = ((viewable) ? applicationService.getViewableApplications(user):
                         applicationService.getAssignedApplications(user))
                         .stream()
                         .map(a -> a.clean(user))
                         .map(ApplicationResponseFactory::buildResponse)
-                        .collect(Collectors.toList()));
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(responses);
             }
         } catch (ApplicationException ex) {
             ex.printStackTrace();

@@ -22,20 +22,25 @@ public class TextComponent extends SimpleComponent {
     @Lob
     @Type(type = "org.hibernate.type.TextType")
     private String content;
+    /**
+     * Determines if the text component is nested beneath a section or is outside of the section
+     */
+    private boolean nested;
 
     /**
      * Create a default TextComponent object
      */
     public TextComponent() {
-        this(null, null);
+        this(null, null, false);
     }
 
     /**
      * Create a TextComponent object
      * @param title the title of the text component
      * @param content the text content to display
+     * @param nested true if nested, false if not
      */
-    public TextComponent(String title, String content) {
+    public TextComponent(String title, String content, boolean nested) {
         super(ComponentType.TEXT, title);
         this.content = content;
     }

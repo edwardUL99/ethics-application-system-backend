@@ -39,8 +39,15 @@ public class SectionConverter implements ComponentConverter {
         validate(map);
         List<ApplicationComponent> subComponents = new ArrayList<>();
 
-        for (Map<String, Object> sub : (List<Map<String, Object>>)map.get("components"))
-            subComponents.add(Converters.getConverter((String)sub.get("type")).convert(sub));
+        for (Map<String, Object> sub : (List<Map<String, Object>>)map.get("components")) {
+            String type = (String) sub.get("type");
+
+            if (type.equals(ComponentType.TEXT.label())) {
+                sub.put("nested", true);
+            }
+
+            subComponents.add(Converters.getConverter((String) sub.get("type")).convert(sub));
+        }
 
         return new SectionComponent((String)map.get("title"),
                 Converters.parseLongString(ComponentType.SECTION, "description", map.getOrDefault("description", null)), subComponents,

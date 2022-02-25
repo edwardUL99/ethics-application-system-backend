@@ -52,7 +52,6 @@
           "title": "E-mail Address",
           "name": "email_address",
           "questionType": "email",
-          "editable": false,
           "autofill": "user.account.email",
           "_comment": "Make this field not editable and autofill with the user's account email if the user account object exists on the front-end with a name attribute"
         },
@@ -728,7 +727,7 @@
                 " that it has been completed correctly. This form will not be reviewed by the S&E Research Ethics Committee.\\n",
                 "Please indicate by way of signature that the Research Privacy Notice form has been completed:"
               ],
-              "name": "insurance_signature",
+              "name": "research_privacy_notice_signature",
               "label": "PI/Supervisor signature"
             }
           ]

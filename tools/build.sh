@@ -7,8 +7,10 @@ function checkStatus() {
 	fi
 }
 
+args=$1
+
 start=`date +%s`
-mvn clean install -pl '!app'
+mvn clean install -pl '!app' $args
 
 checkStatus $?
 

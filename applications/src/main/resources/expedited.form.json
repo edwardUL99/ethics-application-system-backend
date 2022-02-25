@@ -49,7 +49,6 @@
           "title": "E-mail Address",
           "name": "email_address",
           "questionType": "email",
-          "editable": false,
           "autofill": "user.account.email",
           "_comment": "Make this field not editable and autofill with the user's account email if the user account object exists on the front-end with a name attribute"
         },
@@ -490,7 +489,7 @@
                 " that it has been completed correctly. This form will not be reviewed by the S&E Research Ethics Committee.\\n",
                 "Please indicate by way of signature that the Research Privacy Notice form has been completed:"
               ],
-              "name": "insurance_signature",
+              "name": "research_privacy_notice_signature",
               "label": "PI/Supervisor signature"
             },
             {
@@ -550,7 +549,7 @@
           "title": "Declaration",
           "description": [
             "The information in this form is accurate to the best of my knowledge and belief and I ",
-            "take full responsibility for it. I undertake to abide by the guidelines outlined in the UL",
+            "take full responsibility for it. I undertake to abide by the guidelines outlined in the UL ",
             "Research Ethics Committee guidelines http://www.ul.ie/researchethics/\n\n",
             "I undertake to inform S&EEC of any changes to the study from those detailed in this application."
           ],

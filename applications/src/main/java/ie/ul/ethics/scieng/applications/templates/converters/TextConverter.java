@@ -38,6 +38,6 @@ public class TextConverter implements ComponentConverter {
         Object contentObj = map.get("content");
         String content = Converters.parseLongString(ComponentType.TEXT, "content", contentObj);
 
-        return new TextComponent((String)map.get("title"), content);
+        return new TextComponent((String)map.get("title"), content, (boolean)map.getOrDefault("nested", false));
     }
 }
