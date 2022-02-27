@@ -11,7 +11,7 @@ import java.util.*;
  * This class represents a converter to convert a map to a container component
  */
 @Converter(ComponentType.CONTAINER)
-public class ContainerConverter implements ComponentConverter {
+public class ContainerConverter extends BaseConverter {
     /**
      * Validates the map for conversion
      *
@@ -27,17 +27,15 @@ public class ContainerConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
+    protected ApplicationComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         List<ApplicationComponent> subComponents = new ArrayList<>();
 
         for (Map<String, Object> sub : (List<Map<String, Object>>)map.get("components"))

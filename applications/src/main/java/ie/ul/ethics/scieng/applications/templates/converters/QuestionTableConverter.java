@@ -15,7 +15,7 @@ import java.util.Map;
  * This represents a converter for converting a QuestionTable component
  */
 @Converter(ComponentType.QUESTION_TABLE)
-public class QuestionTableConverter implements ComponentConverter {
+public class QuestionTableConverter extends BaseConverter {
     /**
      * Validates the map for conversion
      *
@@ -44,18 +44,15 @@ public class QuestionTableConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
-
+    protected ApplicationComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         Map<String, Map<String, Object>> columns = (Map<String, Map<String, Object>>) map.get("columns");
         int numRows = (int) map.get("numRows");
 

@@ -236,6 +236,41 @@ public class ApplicationRequestMapperTest {
     }
 
     /**
+     * Tests that an UpdateDraftRequest should be mapped correctly
+     */
+    @Test
+    public void shouldMapUpdateReferredRequest() {
+        Application draftApplication = createDraftApplication();
+        User referrer = createTestUser();
+        referrer.setUsername("referrer");
+        referrer.setRole(Roles.CHAIR);
+        Application referred = new ReferredApplication(null, APPLICATION_ID, draftApplication.getUser(), draftApplication.getApplicationTemplate(),
+                draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
+
+        ApplicationTemplate template = draftApplication.getApplicationTemplate();
+        template.setDatabaseId(TEMPLATE_DB_ID);
+
+        Map<String, Answer> oldValues = referred.getAnswers();
+        Map<String, Answer> newValues = new HashMap<>(oldValues);
+        newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
+
+        UpdateDraftApplicationRequest request =
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues);
+
+        assertNotEquals(oldValues, newValues);
+
+        given(applicationService.getApplication(APPLICATION_ID))
+                .willReturn(referred);
+
+        ReferredApplication returned = requestMapper.updateRequestToReferred(request);
+
+        assertEquals(referred, returned);
+        assertEquals(draftApplication.getAnswers(), newValues);
+        verify(applicationService).getApplication(APPLICATION_ID);
+        verifyNoInteractions(fileService);
+    }
+
+    /**
      * Get either a submitted or referred application
      * @param submitted true to retrieve a submitted application or false for referred
      * @return the created application

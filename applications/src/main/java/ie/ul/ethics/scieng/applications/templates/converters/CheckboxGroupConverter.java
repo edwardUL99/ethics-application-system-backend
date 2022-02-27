@@ -9,7 +9,7 @@ import java.util.*;
  * This class represents a converter that can convert a CheckboxGroup
  */
 @Converter(ComponentType.CHECKBOX_GROUP)
-public class CheckboxGroupConverter implements ComponentConverter {
+public class CheckboxGroupConverter extends BaseConverter {
     /**
      * Validates the map for conversion
      *
@@ -58,17 +58,15 @@ public class CheckboxGroupConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
+    protected ApplicationComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         Branch defaultBranch = parseBranch((Map<String, Object>)map.get("defaultBranch"));
         List<CheckboxGroupComponent.Checkbox> checkboxes = new ArrayList<>();
 
@@ -76,7 +74,15 @@ public class CheckboxGroupConverter implements ComponentConverter {
             String title = (String)checkbox.get("title");
             Branch branch = (checkbox.containsKey("branch")) ? parseBranch((Map<String, Object>) checkbox.get("branch")):null;
 
-            checkboxes.add(new CheckboxGroupComponent.Checkbox(null, title, branch));
+            CheckboxGroupComponent.Checkbox box = new CheckboxGroupComponent.Checkbox(null, title, branch);
+
+            String identifier = (String) checkbox.get("identifier");
+
+            if (identifier != null) {
+                box.setIdentifier(identifier);
+            }
+
+            checkboxes.add(box);
         }
 
         return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false));

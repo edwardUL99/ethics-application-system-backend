@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
@@ -219,16 +220,16 @@ public class ApplicationController {
     }
 
     /**
-     * Update the draft application internally
-     * @param draftApplication the draft application to update
+     * Update the draft/referred application internally
+     * @param application the draft application to update
      * @return the response body
      */
-    private ResponseEntity<?> updateDraftInternal(DraftApplication draftApplication) {
+    private ResponseEntity<?> updateInternal(Application application) {
         try {
             Map<String, Object> response = new HashMap<>();
-            applicationService.createApplication(draftApplication, true);
+            applicationService.createApplication(application, true);
             response.put(MESSAGE, APPLICATION_UPDATED);
-            response.put("lastUpdated", draftApplication.getLastUpdated());
+            response.put("lastUpdated", application.getLastUpdated());
 
             return ResponseEntity.ok(response);
         } catch (IllegalStateException ex) {
@@ -240,20 +241,22 @@ public class ApplicationController {
     /**
      * This endpoint allows a draft application to be updated
      * @param request the request to update the draft
+     * @param servletRequest the request from the server
      * @return the response body
      */
-    @PutMapping("/draft")
-    public ResponseEntity<?> updateDraftApplication(@RequestBody @Valid UpdateDraftApplicationRequest request) {
+    @PutMapping(value={"/draft", "/referred"})
+    public ResponseEntity<?> updateDraftReferredApplication(@RequestBody @Valid UpdateDraftApplicationRequest request, HttpServletRequest servletRequest) {
         try {
-            DraftApplication draftApplication = requestMapper.updateDraftRequestToDraft(request);
+            Application application =
+                    (servletRequest.getRequestURI().contains("/draft")) ? requestMapper.updateDraftRequestToDraft(request):requestMapper.updateRequestToReferred(request);
 
-            if (draftApplication != null) {
-                ResponseEntity<?> verification = verifyOwnUser(draftApplication.getUser().getUsername());
+            if (application != null) {
+                ResponseEntity<?> verification = verifyOwnUser(application.getUser().getUsername());
 
                 if (verification != null)
                     return verification;
 
-                return updateDraftInternal(draftApplication);
+                return updateInternal(application);
             } else {
                 return ResponseEntity.notFound().build();
             }

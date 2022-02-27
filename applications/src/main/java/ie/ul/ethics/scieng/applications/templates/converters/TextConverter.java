@@ -11,7 +11,7 @@ import java.util.Map;
  * This converter converts the map to a text component
  */
 @Converter(ComponentType.TEXT)
-public class TextConverter implements ComponentConverter {
+public class TextConverter extends BaseConverter {
     /**
      * Validates the map for conversion
      *
@@ -24,17 +24,14 @@ public class TextConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
-
+    protected ApplicationComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         Object contentObj = map.get("content");
         String content = Converters.parseLongString(ComponentType.TEXT, "content", contentObj);
 

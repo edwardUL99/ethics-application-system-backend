@@ -13,7 +13,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This class represents a request to update the draft application request
+ * This class represents a request to update the draft/referred application
  */
 @AllArgsConstructor
 @NoArgsConstructor

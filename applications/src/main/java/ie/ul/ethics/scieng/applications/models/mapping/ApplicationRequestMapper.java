@@ -9,6 +9,7 @@ import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 
 /**
@@ -31,6 +32,14 @@ public interface ApplicationRequestMapper {
      * @throws MappingException if the request ID does not match a DraftApplication
      */
     DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException;
+
+    /**
+     * Maps the update request to a referred application
+     * @param request the request to map
+     * @return the mapped referred application
+     * @throws MappingException if the request ID does not match a DraftApplication
+     */
+    ReferredApplication updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException;
 
     /**
      * Maps submit application request to an application. The application that is returned should be either a draft

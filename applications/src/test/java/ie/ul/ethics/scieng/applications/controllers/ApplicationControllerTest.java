@@ -698,6 +698,44 @@ public class ApplicationControllerTest {
     }
 
     /**
+     * Tests that a draft application should be updated
+     */
+    @Test
+    public void shouldUpdateReferredApplication() throws Exception {
+        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        User referrer = createTestUser();
+        referrer.setUsername("referrer");
+        referrer.setRole(Roles.CHAIR);
+        ReferredApplication referred = new ReferredApplication(null, APPLICATION_ID, draftApplication.getUser(), draftApplication.getApplicationTemplate(),
+                draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
+
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
+        Map<String, Object> response = new HashMap<>();
+        response.put(MESSAGE, APPLICATION_UPDATED);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(requestMapper.updateRequestToReferred(request))
+                .willReturn(referred);
+        given(applicationService.createApplication(referred, true))
+                .willReturn(referred);
+
+        mockMvc.perform(put(createApiPath(Endpoint.APPLICATIONS, "referred"))
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(authenticationInformation).getUsername();
+        verify(requestMapper).updateRequestToReferred(request);
+        verify(applicationService).createApplication(referred, true);
+    }
+
+    /**
      * This method tests that a draft application should be s
      */
     @Test

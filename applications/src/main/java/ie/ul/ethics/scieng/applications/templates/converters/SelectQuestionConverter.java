@@ -11,7 +11,7 @@ import java.util.*;
  * This class implements a converter for a SelectQuestionComponent
  */
 @Converter(ComponentType.SELECT_QUESTION)
-public class SelectQuestionConverter extends QuestionConverter {
+public class SelectQuestionConverter extends OptionsConverter {
     /**
      * Validates the map for conversion
      *
@@ -34,20 +34,8 @@ public class SelectQuestionConverter extends QuestionConverter {
      * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
-    @SuppressWarnings("unchecked")
     protected QuestionComponent createBase(Map<String, Object> map) throws ApplicationParseException {
-        List<SelectQuestionComponent.Option> options = new ArrayList<>();
-
-        for (Object option : (List<?>)map.get("options")) {
-            if (option instanceof Map) {
-                Map<String, Object> optionMap = (Map<String, Object>)option;
-                options.add(new SelectQuestionComponent.Option((String)optionMap.get("label"), (String)optionMap.get("value")));
-            } else if (option instanceof String) {
-                options.add(new SelectQuestionComponent.Option((String)option));
-            } else {
-                throw new ApplicationParseException("Unknown option type provided: " + option.getClass());
-            }
-        }
+        List<SelectQuestionComponent.Option> options = parseOptions(map);
 
         return new SelectQuestionComponent((String)map.get("title"), (String)map.get("name"),
                 Converters.parseLongString(ComponentType.SELECT_QUESTION, "description", map.getOrDefault("description", null)),

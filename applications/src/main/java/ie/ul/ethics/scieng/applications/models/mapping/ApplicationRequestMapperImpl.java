@@ -12,6 +12,7 @@ import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
+import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.files.exceptions.FileException;
@@ -73,24 +74,20 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
     }
 
     /**
-     * Maps the update draft request to the draft application
-     *
-     * @param request the request to map
-     * @return the mapped draft application
+     * Mao the application to a draft or referred application
+     * @param request the request being mapped
+     * @param loaded the loaded application
+     * @param status the expected status of the application
+     * @return the mapped application
      */
-    @Override
-    public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
-        String id = request.getId();
-        Application loaded = applicationService.getApplication(id);
-
+    private Application mapDraftOrReferred(UpdateDraftApplicationRequest request, Application loaded, ApplicationStatus status) {
         if (loaded != null) {
-            if (loaded.getStatus() != ApplicationStatus.DRAFT)
-                throw new MappingException("The application with ID " + id + " is not a DraftApplication");
+            if (loaded.getStatus() != status)
+                throw new MappingException("The application with ID " + request.getId() + " does not have the status " + status);
 
-            DraftApplication draftApplication = (DraftApplication) loaded;
-            draftApplication.getAnswers().putAll(request.getAnswers());
+            loaded.getAnswers().putAll(request.getAnswers());
 
-            Map<String, AttachedFile> currentFiles = draftApplication.getAttachedFiles();
+            Map<String, AttachedFile> currentFiles = loaded.getAttachedFiles();
             Map<String, AttachedFile> newFiles = request.getAttachedFiles();
 
             String username = loaded.getUser().getUsername();
@@ -111,10 +108,38 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
                 currentFiles.put(key, value);
             }
 
-            return draftApplication;
+            return loaded;
         } else {
             return null;
         }
+    }
+
+    /**
+     * Maps the update draft request to the draft application
+     *
+     * @param request the request to map
+     * @return the mapped draft application
+     */
+    @Override
+    public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
+        String id = request.getId();
+        Application loaded = applicationService.getApplication(id);
+
+        return (DraftApplication) this.mapDraftOrReferred(request, loaded, ApplicationStatus.DRAFT);
+    }
+
+    /**
+     * Maps the update request to a referred application
+     * @param request the request to map
+     * @return the mapped referred application
+     * @throws MappingException if the request ID does not match a DraftApplication
+     */
+    @Override
+    public ReferredApplication updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException {
+        String id = request.getId();
+        Application loaded = applicationService.getApplication(id);
+
+        return (ReferredApplication) this.mapDraftOrReferred(request, loaded, ApplicationStatus.REFERRED);
     }
 
     /**
