@@ -113,11 +113,6 @@ public final class Constants {
     public static final String INVALID_APPLICATION_STATUS = "invalid_application_status";
 
     /**
-     * The error message for when an application already exists
-     */
-    public static final String APPLICATION_ALREADY_EXISTS = "application_already_exists";
-
-    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

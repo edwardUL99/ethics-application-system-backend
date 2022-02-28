@@ -127,27 +127,7 @@ public class ApplicationControllerTest {
     }
 
     /**
-     * Tests that an ID should be generated successfully
-     */
-    @Test
-    public void shouldGenerateIDSuccessfully() throws Exception {
-        Map<String, Object> response = new HashMap<>();
-        response.put("id", APPLICATION_ID);
-        String result = JSON.convertJSON(response);
-
-        given(applicationIDPolicy.generate())
-                .willReturn(APPLICATION_ID);
-
-        mockMvc.perform(get(createApiPath(Endpoint.APPLICATIONS, "id")))
-                .andExpect(status().isOk())
-                .andExpect(content().contentType(JSON.MEDIA_TYPE))
-                .andExpect(content().json(result));
-
-        verify(applicationIDPolicy).generate();
-    }
-
-    /**
-     * This test tests that all the loaded templates should be loaded and retrieved
+     * This test tests verify(applicationIDPolicy).generate();that all the loaded templates should be loaded and retrieved
      */
     @Test
     public void shouldGetAllApplicationTemplates() throws Exception {
@@ -459,7 +439,7 @@ public class ApplicationControllerTest {
 
         CreateDraftApplicationResponse response = new CreateDraftApplicationResponse(draftApplication);
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, draftApplication.getAnswers());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getAnswers());
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
@@ -470,6 +450,8 @@ public class ApplicationControllerTest {
                 .willReturn(draftApplication);
         given(applicationService.createApplication(draftApplication, false))
                 .willReturn(draftApplication);
+        given(applicationIDPolicy.generate())
+                .willReturn(APPLICATION_ID);
 
         mockMvc.perform(post(createApiPath(Constants.Endpoint.APPLICATIONS, "draft"))
                 .contentType(JSON.MEDIA_TYPE)
@@ -479,45 +461,9 @@ public class ApplicationControllerTest {
                 .andExpect(content().json(result));
 
         verify(authenticationInformation).getUsername();
-        verify(applicationService).getApplication(APPLICATION_ID);
         verify(applicationService).createApplication(draftApplication, false);
         verify(requestMapper).createDraftRequestToDraft(request);
-    }
-
-    /**
-     * Tests that a draft application should not be created if it already exists
-     */
-    @Test
-    public void shouldNotCreateDraftApplicationIfAlreadyExists() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
-        templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
-
-        CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, draftApplication.getAnswers());
-
-        Map<String, Object> response = new HashMap<>();
-        response.put(ERROR, APPLICATION_ALREADY_EXISTS);
-
-        String json = JSON.convertJSON(request);
-        String result = JSON.convertJSON(response);
-
-        given(authenticationInformation.getUsername())
-                .willReturn(USERNAME);
-        given(requestMapper.createDraftRequestToDraft(request))
-                .willReturn(draftApplication);
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(draftApplication);
-
-        mockMvc.perform(post(createApiPath(Constants.Endpoint.APPLICATIONS, "draft"))
-                        .contentType(JSON.MEDIA_TYPE)
-                        .content(json))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().contentType(JSON.MEDIA_TYPE))
-                .andExpect(content().json(result));
-
-        verify(authenticationInformation).getUsername();
-        verify(applicationService).getApplication(APPLICATION_ID);
-        verify(requestMapper).createDraftRequestToDraft(request);
+        verify(applicationIDPolicy).generate();
     }
 
     /**
@@ -529,7 +475,7 @@ public class ApplicationControllerTest {
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, draftApplication.getAnswers());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], draftApplication.getAnswers());
 
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INSUFFICIENT_PERMISSIONS);
@@ -560,7 +506,7 @@ public class ApplicationControllerTest {
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
-                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], APPLICATION_ID, new HashMap<>());
+                new CreateDraftApplicationRequest(draftApplication.getUser().getUsername(), templates[0], new HashMap<>());
 
         draftApplication.setUser(null);
 

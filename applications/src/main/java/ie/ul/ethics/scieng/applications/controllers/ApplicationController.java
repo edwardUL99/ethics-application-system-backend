@@ -188,19 +188,13 @@ public class ApplicationController {
      */
     private ResponseEntity<?> createDraftApplicationInternal(CreateDraftApplicationRequest request) {
         DraftApplication draftApplication = requestMapper.createDraftRequestToDraft(request);
+        draftApplication.setApplicationId(this.applicationIDPolicy.generate());
 
         if (draftApplication.getUser() == null) {
             return respondError(USER_NOT_FOUND);
         } else {
-            Application application = applicationService.getApplication(draftApplication.getApplicationId());
-
-            if (application != null) {
-                return respondError(APPLICATION_ALREADY_EXISTS);
-            } else {
-                application = applicationService.createApplication(draftApplication, false);
-
-                return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
-            }
+            Application application = applicationService.createApplication(draftApplication, false);
+            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
         }
     }
 
