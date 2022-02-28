@@ -285,6 +285,7 @@ public class SubmittedApplication extends Application {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
                 new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, approvalTime);
         submitted.previousCommitteeMembers = new ArrayList<>(submitted.previousCommitteeMembers);
+        submitted.setLastUpdated(lastUpdated);
 
         return submitted;
     }

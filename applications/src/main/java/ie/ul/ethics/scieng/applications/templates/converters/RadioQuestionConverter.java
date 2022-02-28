@@ -18,7 +18,7 @@ public class RadioQuestionConverter extends OptionsConverter {
      */
     @Override
     public void validate(Map<String, Object> map) throws ApplicationParseException {
-        Converters.validateKeys(ComponentType.RADIO_QUESTION, map.keySet(), "title", "options");
+        Converters.validateKeys(ComponentType.RADIO_QUESTION, map.keySet(), "title", "options", "name");
 
         if (!List.class.isAssignableFrom(map.get("options").getClass()))
             throw new ApplicationParseException("The options field must map to a List");

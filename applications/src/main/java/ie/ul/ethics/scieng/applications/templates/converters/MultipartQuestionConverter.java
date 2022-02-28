@@ -46,7 +46,6 @@ public class MultipartQuestionConverter extends QuestionConverter {
         Map<String, MultipartQuestionComponent.QuestionPart> parts = new HashMap<>();
         MultipartQuestionComponent multipart = new MultipartQuestionComponent();
 
-        int sequenceId = 0;
         for (Map.Entry<String, Map<String, Object>> e : ((Map<String, Map<String, Object>>)map.get("parts")).entrySet()) {
             String part = e.getKey();
             Map<String, Object> partMap = e.getValue();
@@ -65,7 +64,6 @@ public class MultipartQuestionConverter extends QuestionConverter {
                 branches.add(convertBranch(branch));
             }
 
-            questionComponent.setComponentId(multipart.getComponentId() + "_" + ++sequenceId);
             parts.put(part, new MultipartQuestionComponent.QuestionPart(null, part, questionComponent, branches));
         }
 

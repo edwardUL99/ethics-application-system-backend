@@ -70,7 +70,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
     @Override
     public DraftApplication createDraftRequestToDraft(CreateDraftApplicationRequest request) {
         return new DraftApplication(null, null, userService.loadUser(request.getUsername()), request.getApplicationTemplate(),
-                request.getValues());
+                request.getAnswers());
     }
 
     /**
@@ -85,7 +85,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
             if (loaded.getStatus() != status)
                 throw new MappingException("The application with ID " + request.getId() + " does not have the status " + status);
 
-            loaded.getAnswers().putAll(request.getAnswers());
+            loaded.setAnswers(request.getAnswers());
 
             Map<String, AttachedFile> currentFiles = loaded.getAttachedFiles();
             Map<String, AttachedFile> newFiles = request.getAttachedFiles();

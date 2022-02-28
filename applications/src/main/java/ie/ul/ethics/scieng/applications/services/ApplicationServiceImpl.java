@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.services;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
@@ -22,7 +23,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -187,6 +190,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
+     * Prepare the answers for saving on a new application instance. Required to fix an issue with detached instances exceptions
+     * @param answers the answers to map
+     * @return tha map of answers
+     */
+    private Map<String, Answer> mapAnswers(Map<String, Answer> answers) {
+        Map<String, Answer> mapped = new HashMap<>(answers);
+        mapped.forEach((k, v) -> v.setId(null)); // FIXME this may not be ideal
+
+        return mapped;
+    }
+
+    /**
      * Submit an application from the applicant to the committee and convert the application to a submitted state.
      * The draft instance of the application will be removed and replaced with the submitted instance. The database IDs
      * will differ but the applicationId field will remain the same.
@@ -204,12 +219,13 @@ public class ApplicationServiceImpl implements ApplicationService {
     public Application submitApplication(Application application) throws InvalidStatusException {
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
         ApplicationStatus status = application.getStatus();
+        Map<String, Answer> answers = mapAnswers(application.getAnswers());
 
         if (status == null || !permissible.contains(status))
             throw new InvalidStatusException("The status of an application being submitted must belong to the set: " + permissible);
 
         SubmittedApplication submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
-                ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), application.getAnswers(),
+                ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), answers,
                 new ArrayList<>(), new ArrayList<>(), null);
 
         if (status == ApplicationStatus.REFERRED) {
@@ -220,9 +236,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             submittedApplication.assignCommitteeMembersToPrevious();
         }
 
-        submittedApplication.setLastUpdated(LocalDateTime.now());
-
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
+
+        submittedApplication.setLastUpdated(LocalDateTime.now());
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
@@ -382,6 +398,17 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
+     * Map comments to a way where they're able to be saved without detached instance exceptions
+     * @param comments the comments to map
+     */
+    private Map<String, Comment> mapComments(Map<String, Comment> comments) {
+        Map<String, Comment> mapped = new HashMap<>(comments);
+        mapped.forEach((k, v) -> v.setId(null));
+
+        return mapped;
+    }
+
+    /**
      * Refer the application to the user that created the application. This should result in the submitted version of the
      * application being removed from the system and replaced with the referred application
      *
@@ -405,9 +432,18 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         SubmittedApplication submitted = (SubmittedApplication) application;
 
+        Map<String, Comment> comments = mapComments(submitted.getComments());
+        Comment finalComment = submitted.getFinalComment();
+
+        if (finalComment != null) {
+            finalComment.setId(null);
+        }
+
+        Map<String, Answer> answers = mapAnswers(submitted.getAnswers());
+
         ReferredApplication referredApplication =
                 new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
-                        application.getAnswers(), new ArrayList<>(submitted.getComments().values()), submitted.getAssignedCommitteeMembers(), submitted.getFinalComment(),
+                        answers, new ArrayList<>(comments.values()), submitted.getAssignedCommitteeMembers(), finalComment,
                         editableFields, referrer);
 
         applicationRepository.delete(application);

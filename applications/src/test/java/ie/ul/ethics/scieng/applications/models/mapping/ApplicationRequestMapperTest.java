@@ -184,11 +184,10 @@ public class ApplicationRequestMapperTest {
         Map<String, Answer> oldValues = draftApplication.getAnswers();
         Map<String, Answer> newValues = new HashMap<>(oldValues);
         newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
+        draftApplication.setAnswers(newValues);
 
         UpdateDraftApplicationRequest request =
                 new UpdateDraftApplicationRequest(APPLICATION_ID, newValues);
-
-        assertNotEquals(oldValues, newValues);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(draftApplication);
@@ -254,11 +253,10 @@ public class ApplicationRequestMapperTest {
         Map<String, Answer> oldValues = referred.getAnswers();
         Map<String, Answer> newValues = new HashMap<>(oldValues);
         newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
+        referred.setAnswers(newValues);
 
         UpdateDraftApplicationRequest request =
                 new UpdateDraftApplicationRequest(APPLICATION_ID, newValues);
-
-        assertNotEquals(oldValues, newValues);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(referred);
@@ -266,7 +264,7 @@ public class ApplicationRequestMapperTest {
         ReferredApplication returned = requestMapper.updateRequestToReferred(request);
 
         assertEquals(referred, returned);
-        assertEquals(draftApplication.getAnswers(), newValues);
+        assertEquals(returned.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_ID);
         verifyNoInteractions(fileService);
     }

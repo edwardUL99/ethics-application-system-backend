@@ -34,5 +34,5 @@ public class CreateDraftApplicationRequest {
      * The initial mapping of values
      */
     @NotNull
-    private Map<String, Answer> values;
+    private Map<String, Answer> answers;
 }

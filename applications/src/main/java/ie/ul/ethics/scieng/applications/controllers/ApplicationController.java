@@ -223,6 +223,7 @@ public class ApplicationController {
             Map<String, Object> response = new HashMap<>();
             applicationService.createApplication(application, true);
             response.put(MESSAGE, APPLICATION_UPDATED);
+            response.put("answers", application.getAnswers());
             response.put("lastUpdated", application.getLastUpdated());
 
             return ResponseEntity.ok(response);

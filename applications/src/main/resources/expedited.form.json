@@ -24,10 +24,10 @@
         },
         {
           "type": "checkbox-question",
-          "title": "",
+          "title": "Supervisor Review Agreement",
           "name": "supervisor_review_confirmation",
           "options": [
-            {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "agree"}
+            {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "Agreed"}
           ]
         },
         {
@@ -266,6 +266,7 @@
                 "1": {
                   "question": {
                     "type": "radio-question",
+                    "name": "participants_recording",
                     "title": "Will the participants be recorded?",
                     "options": [
                       "Yes",
@@ -330,6 +331,7 @@
                   "question": {
                     "type": "radio-question",
                     "title": "Will a prototype be developed?",
+                    "name": "prototype_development",
                     "options": [
                       "Yes",
                       "No"
@@ -385,6 +387,7 @@
                   "question": {
                     "type": "radio-question",
                     "title": "Have arrangements been made to accommodate individuals who do not wish to participate in the research?",
+                    "name": "not_participate_arrangements",
                     "description": "NB This mainly relates to research taking place in a classroom setting, please tick N/A if your research is not taking place in a classroom",
                     "options": [
                       "Yes",

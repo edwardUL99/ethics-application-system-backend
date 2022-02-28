@@ -74,7 +74,7 @@ public class QuestionTableConverter extends BaseConverter {
                 QuestionComponent questionComponent = (QuestionComponent) applicationComponent;
 
                 questionComponent.setName(questionComponent.getName() + "_" + (i+1));
-                questionComponent.setComponentId(questionComponent.getName());
+                questionComponent.setComponentId(questionComponent.getName()); // TODO this may not be correct
                 questionComponents.add(questionComponent);
             }
 

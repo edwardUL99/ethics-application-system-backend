@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.models;
 
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import lombok.AllArgsConstructor;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * This class represents a response to create a draft application
@@ -43,6 +45,10 @@ public class CreateDraftApplicationResponse {
      * The timestamp of when the application was created
      */
     private LocalDateTime createdAt;
+    /**
+     * The answers saved to the database
+     */
+    private Map<String, Answer> answers;
 
     /**
      * Create the response from the provided draft application
@@ -54,5 +60,6 @@ public class CreateDraftApplicationResponse {
         this.username = draftApplication.getUser().getUsername();
         this.templateId = draftApplication.getApplicationTemplate().getDatabaseId();
         this.createdAt = draftApplication.getLastUpdated();
+        this.answers = draftApplication.getAnswers();
     }
 }

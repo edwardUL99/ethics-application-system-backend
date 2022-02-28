@@ -543,6 +543,8 @@ public class ApplicationControllerTest {
         UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
         Map<String, Object> response = new HashMap<>();
         response.put(MESSAGE, APPLICATION_UPDATED);
+        response.put("lastUpdated", draftApplication.getLastUpdated());
+        response.put("answers", draftApplication.getAnswers());
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
