@@ -60,7 +60,7 @@ public class FilesConfiguration {
     public AntivirusScanner antivirusScanner() {
         FilesConfigurationProperties.Antivirus antivirus = properties.getAntivirus();
 
-        if (System.getProperty("antivirus.disable") != null)
+        if (System.getProperty("antivirus.disable") != null || System.getenv("ETHICS_ANTIVIRUS_DISABLE") != null)
             antivirus.setEnabled(false);
 
         AntivirusScanner scanner = new ClamAvAntivirusScanner(antivirus.isEnabled(), antivirus.getHost(), antivirus.getPort(), antivirus.getPlatform());

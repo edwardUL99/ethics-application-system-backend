@@ -83,7 +83,7 @@ public class AuthenticationController {
      * @return the response of this registration request
      */
     private boolean alwaysConfirm(String confirmationKey) {
-        if (System.getProperty("account.always.confirm") != null) {
+        if (System.getProperty("account.always.confirm") != null || System.getenv("ETHICS_ALWAYS_CONFIRM") != null) {
             log.warn("System Property account.always.confirm specified, any account created will be confirmed automatically");
             return true;
         } else {

@@ -15,8 +15,8 @@ public final class EmailSenderFactory {
      */
     public static EmailSender getEmailSender(EmailConfigurationProperties configurationProperties) {
         EmailSender sender;
-        if (System.getProperty("email.disable") != null) {
-            log.info("System property email.disable is set, so sendEmail will be a no-op");
+        if (System.getProperty("email.disable") != null || System.getenv("ETHICS_EMAIL_DISABLE") != null) {
+            log.info("System property email.disable or environment variable ETHICS_EMAIL_DISABLE is set, so sendEmail will be a no-op");
             sender = new NoopEmailSender();
         } else {
             sender = new DefaultEmailSender(configurationProperties);
