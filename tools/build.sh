@@ -9,19 +9,9 @@ function checkStatus() {
 
 args=$1
 
-start=`date +%s`
-mvn clean install -pl '!app' $args
+mvn clean install $args
 
 checkStatus $?
 
-cd app
 
-mvn clean package spring-boot:repackage
-
-checkStatus $?
-end=`date +%s`
-runtime=$((end - start))
-
-cd ..
-
-echo -e "Full Build Complete\nTime Elapsed: $runtime seconds\nExecutable JAR can be found in $PWD/app/target/"
+echo -e "Full Build Complete\nExecutable JAR can be found in $PWD/app/target/"
