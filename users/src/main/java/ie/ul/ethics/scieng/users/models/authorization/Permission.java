@@ -1,6 +1,7 @@
 package ie.ul.ethics.scieng.users.models.authorization;
 
 import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.util.*;
 
 /**
@@ -8,6 +9,7 @@ import java.util.*;
  * resources where the user must possess that permission to access it.
  */
 @Entity
+@Table(name="UserPermissions")
 public class Permission extends Authorization {
     /**
      * Creates a default Permission object

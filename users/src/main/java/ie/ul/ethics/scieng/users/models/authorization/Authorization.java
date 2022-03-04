@@ -12,6 +12,7 @@ import javax.persistence.*;
  * allocated to more than one user.
  */
 @Entity
+@Table(name="UserAuthorizations")
 public abstract class Authorization {
     /**
      * The ID of the authorization
