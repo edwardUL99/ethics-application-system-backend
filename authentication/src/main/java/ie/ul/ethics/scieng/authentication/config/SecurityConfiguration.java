@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
 
@@ -87,7 +88,10 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                         createApiPath(Endpoint.AUTHENTICATION, "account", "confirm"),
                         createApiPath(Endpoint.AUTHENTICATION, true, "account", "confirm", "resend")
                 ).permitAll()
-                .anyRequest().authenticated().and()
+                .anyRequest().authenticated()
+                .and()
+                .cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())
+                .and()
                 .exceptionHandling().authenticationEntryPoint(entrypoint)
                 .and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);

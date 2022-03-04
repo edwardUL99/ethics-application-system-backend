@@ -31,7 +31,6 @@ import static ie.ul.ethics.scieng.common.Constants.*;
  * This class represents the endpoint for authentication
  */
 @RestController
-@CrossOrigin
 @RequestMapping("/api/auth")
 @Log4j2
 public class AuthenticationController {
@@ -83,8 +82,9 @@ public class AuthenticationController {
      * @return the response of this registration request
      */
     private boolean alwaysConfirm(String confirmationKey) {
-        if (System.getProperty("account.always.confirm") != null || System.getenv("ETHICS_ALWAYS_CONFIRM") != null) {
-            log.warn("System Property account.always.confirm specified, any account created will be confirmed automatically");
+        String confirm = PropertyFinder.findProperty("account.always.confirm", "ETHICS_ALWAYS_CONFIRM");
+        if (confirm != null) {
+            log.warn("System Property account.always.confirm or env variable ETHICS_ALWAYS_CONFIRM specified, any account created will be confirmed automatically");
             return true;
         } else {
             boolean alwaysConfirm = authenticationConfiguration.isAlwaysConfirm();

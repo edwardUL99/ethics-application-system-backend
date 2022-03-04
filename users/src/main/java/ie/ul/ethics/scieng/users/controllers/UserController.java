@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
  * This controller is used for providing endpoints for users
  */
 @RestController
-@CrossOrigin
 @RequestMapping("/api/users")
 public class UserController {
     /**

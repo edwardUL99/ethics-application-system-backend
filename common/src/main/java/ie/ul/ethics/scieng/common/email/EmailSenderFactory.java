@@ -1,6 +1,7 @@
 package ie.ul.ethics.scieng.common.email;
 
 import ie.ul.ethics.scieng.common.email.config.EmailConfigurationProperties;
+import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import lombok.extern.log4j.Log4j2;
 
 /**
@@ -15,7 +16,8 @@ public final class EmailSenderFactory {
      */
     public static EmailSender getEmailSender(EmailConfigurationProperties configurationProperties) {
         EmailSender sender;
-        if (System.getProperty("email.disable") != null || System.getenv("ETHICS_EMAIL_DISABLE") != null) {
+        String disable = PropertyFinder.findProperty("email.disable", "ETHICS_EMAIL_DISABLE");
+        if (disable != null) {
             log.info("System property email.disable or environment variable ETHICS_EMAIL_DISABLE is set, so sendEmail will be a no-op");
             sender = new NoopEmailSender();
         } else {

@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.files.config;
 
+import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import ie.ul.ethics.scieng.files.antivirus.AntivirusException;
 import ie.ul.ethics.scieng.files.antivirus.AntivirusScanner;
 import ie.ul.ethics.scieng.files.antivirus.ClamAvAntivirusScanner;
@@ -60,8 +61,10 @@ public class FilesConfiguration {
     public AntivirusScanner antivirusScanner() {
         FilesConfigurationProperties.Antivirus antivirus = properties.getAntivirus();
 
-        if (System.getProperty("antivirus.disable") != null || System.getenv("ETHICS_ANTIVIRUS_DISABLE") != null)
-            antivirus.setEnabled(false);
+        if (antivirus.isEnabled()) {
+            String disable = PropertyFinder.findProperty("antivirus.disable", "ETHICS_ANTIVIRUS_DISABLE");
+            antivirus.setEnabled(disable == null);
+        }
 
         AntivirusScanner scanner = new ClamAvAntivirusScanner(antivirus.isEnabled(), antivirus.getHost(), antivirus.getPort(), antivirus.getPlatform());
 
