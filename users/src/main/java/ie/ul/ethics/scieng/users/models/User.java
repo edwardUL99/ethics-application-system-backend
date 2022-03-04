@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToOne;
+import javax.persistence.Table;
 import java.util.Objects;
 
 /**
@@ -15,6 +16,7 @@ import java.util.Objects;
  * A user consists of their account used for authentication and other details
  */
 @Entity
+@Table(name="UserProfiles")
 public class User {
     /**
      * The username should be the same as the username on their account
