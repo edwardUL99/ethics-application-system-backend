@@ -33,6 +33,7 @@ public class DefaultEmailSender implements EmailSender {
      */
     public DefaultEmailSender(EmailConfigurationProperties configurationProperties) {
         this.configurationProperties = configurationProperties;
+        EmailConfigurationProperties.mergeFromEnvironment(this.configurationProperties);
 
         Properties properties = System.getProperties();
         properties.put("mail.smtp.host", configurationProperties.getHost());

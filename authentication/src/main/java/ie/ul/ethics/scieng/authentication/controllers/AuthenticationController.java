@@ -83,13 +83,18 @@ public class AuthenticationController {
      * @return the response of this registration request
      */
     private boolean alwaysConfirm(String confirmationKey) {
-        boolean alwaysConfirm = authenticationConfiguration.isAlwaysConfirm();
-        boolean keyMatch = authenticationConfiguration.getConfirmationKey().equals(confirmationKey);
+        if (System.getProperty("account.always.confirm") != null) {
+            log.warn("System Property account.always.confirm specified, any account created will be confirmed automatically");
+            return true;
+        } else {
+            boolean alwaysConfirm = authenticationConfiguration.isAlwaysConfirm();
+            boolean keyMatch = authenticationConfiguration.getConfirmationKey().equals(confirmationKey);
 
-        if (!alwaysConfirm && keyMatch)
-            log.warn("Registration request contained a valid confirmation key, so account will be confirmed automatically");
+            if (!alwaysConfirm && keyMatch)
+                log.warn("Registration request contained a valid confirmation key, so account will be confirmed automatically");
 
-        return alwaysConfirm || keyMatch;
+            return alwaysConfirm || keyMatch;
+        }
     }
 
     /**
