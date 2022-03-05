@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.authentication.exceptions.IllegalUpdateException;
 import ie.ul.ethics.scieng.authentication.exceptions.UsernameExistsException;
 import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.authentication.models.ConfirmationToken;
+import ie.ul.ethics.scieng.authentication.models.ResetPasswordToken;
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
@@ -69,7 +70,7 @@ public interface AccountService extends UserDetailsService {
     ConfirmationToken generateConfirmationToken(Account account);
 
     /**
-     * Attempt to confirm the provided account. If a ConfirmationToken exists for the account and it equals the provided
+     * Attempt to confirm the provided account. If a ConfirmationToken exists for the account, and it equals the provided
      * token, the account will be confirmed and the token deleted. Otherwise, false will be returned. Account.confirmed
      * will be set to true
      * @param account the account to confirm
@@ -77,4 +78,27 @@ public interface AccountService extends UserDetailsService {
      * @return true if confirmed, false if not
      */
     boolean confirmAccount(Account account, String token);
+
+    /**
+     * Request a password reset for the provided account
+     * @param account the account to request the password reset for
+     * @return the token used for resetting the password
+     */
+    ResetPasswordToken requestPasswordReset(Account account);
+
+    /**
+     * Verify the given password reset token against the given account. If the token does not exist, does not match or
+     * expired, this should return false
+     * @param account the account to verify the token against
+     * @param token the token to verify
+     * @return true if verified, false if not
+     */
+    boolean verifyPasswordResetToken(Account account, String token);
+
+    /**
+     * Reset the password of the account and remove any tokens that exist for the user
+     * @param account the account to reset the password of
+     * @param password the password to set for the account
+     */
+    void resetPassword(Account account, String password);
 }

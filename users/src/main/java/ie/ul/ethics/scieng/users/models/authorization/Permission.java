@@ -9,7 +9,6 @@ import java.util.*;
  * resources where the user must possess that permission to access it.
  */
 @Entity
-@Table(name="UserPermissions")
 public class Permission extends Authorization {
     /**
      * Creates a default Permission object

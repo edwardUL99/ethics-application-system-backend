@@ -16,7 +16,7 @@ public class Account {
      * The account's username
      */
     @Id
-    @Column(length=128)
+    @Column(length=256)
     protected String username;
     /**
      * The account's email address

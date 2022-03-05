@@ -5,8 +5,10 @@ import ie.ul.ethics.scieng.authentication.exceptions.IllegalUpdateException;
 import ie.ul.ethics.scieng.authentication.exceptions.UsernameExistsException;
 import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.authentication.models.ConfirmationToken;
+import ie.ul.ethics.scieng.authentication.models.ResetPasswordToken;
 import ie.ul.ethics.scieng.authentication.repositories.AccountRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenRepository;
+import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -19,8 +21,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * The implementation of the AccountService interface
@@ -44,16 +48,24 @@ public class AccountServiceImpl implements AccountService {
     private final ConfirmationTokenRepository tokenRepository;
 
     /**
+     * The repository used for storing/retrieving the reset password tokens
+     */
+    private final ResetPasswordTokenRepository resetTokenRepository;
+
+    /**
      * Instantiate an AccountServiceImpl with the provided dependencies
      * @param accountRepository the account repository to access accounts with
      * @param passwordEncoder the encoder for encoding passwords
      * @param tokenRepository the repository used for creating and retrieving tokens
+     * @param resetTokenRepository the repository used for storing/retrieving the reset password tokens
      */
     @Autowired
-    public AccountServiceImpl(AccountRepository accountRepository, @Lazy PasswordEncoder passwordEncoder, ConfirmationTokenRepository tokenRepository) {
+    public AccountServiceImpl(AccountRepository accountRepository, @Lazy PasswordEncoder passwordEncoder,
+                              ConfirmationTokenRepository tokenRepository, ResetPasswordTokenRepository resetTokenRepository) {
         this.accountRepository = accountRepository;
         this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
+        this.resetTokenRepository = resetTokenRepository;
     }
 
     /**
@@ -220,5 +232,51 @@ public class AccountServiceImpl implements AccountService {
         }
 
         return false;
+    }
+
+    /**
+     * Request a password reset for the provided account
+     *
+     * @param account the account to request the password reset for
+     * @return the token used for resetting the password
+     */
+    @Override
+    public ResetPasswordToken requestPasswordReset(Account account) {
+        ResetPasswordToken token = new ResetPasswordToken(account.getUsername(), UUID.randomUUID().toString(), LocalDateTime.now().plusHours(2));
+        resetTokenRepository.save(token);
+
+        return token;
+    }
+
+    /**
+     * Verify the given password reset token against the given account. If the token does not exist, does not match or
+     * expired, this should return false
+     *
+     * @param account the account to verify the token against
+     * @param token   the token to verify
+     * @return true if verified, false if not
+     */
+    @Override
+    public boolean verifyPasswordResetToken(Account account, String token) {
+        ResetPasswordToken savedToken = resetTokenRepository.findByUsername(account.getUsername()).orElse(null);
+
+        return savedToken != null && !savedToken.isExpired() && savedToken.getToken().equals(token);
+    }
+
+    /**
+     * Reset the password of the account and remove any tokens that exist for the user
+     *
+     * @param account  the account to reset the password of
+     * @param password the password to set for the account
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "account", allEntries = true),
+            @CacheEvict(value = "userdetail", allEntries = true)
+    })
+    public void resetPassword(Account account, String password) {
+        account.setPassword(passwordEncoder.encode(password));
+        resetTokenRepository.deleteById(account.getUsername());
+        accountRepository.save(account);
     }
 }
