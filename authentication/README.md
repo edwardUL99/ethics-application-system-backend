@@ -18,6 +18,8 @@ All endpoints in this module begin with the path `/api/auth`. The endpoints are 
 | /account/confirmed | GET | This endpoint allows a user to check if their account is confirmed |
 | /account/confirm | POST | This endpoint allows a user to confirm their account |
 | /admin/account | PUT    | This endpoint allows an admin to update the account of any user in the system. This should be locked by the users module with an Admin permission |
+| /forgot-password | POST | This endpoint allows for the sending of a password reset token to the account's e-mail address |
+| /reset-password | POST | This endpoint allows an account's password to be reset using a given token |
 
 Note that all endpoints in the system (except for register, login, /account/confirmed and /account/confirm/) require the following header:
 ```

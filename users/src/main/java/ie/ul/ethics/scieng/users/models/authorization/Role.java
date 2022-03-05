@@ -7,7 +7,6 @@ import java.util.*;
  * A role represents a set of permissions with a given name
  */
 @Entity
-@Table(name="UserRoles")
 public class Role extends Authorization {
     /**
      * The collection of permissions belonging to this role

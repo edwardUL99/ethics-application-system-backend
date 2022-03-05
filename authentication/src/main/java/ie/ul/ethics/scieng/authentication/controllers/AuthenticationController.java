@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
@@ -99,14 +100,13 @@ public class AuthenticationController {
 
     /**
      * Send the confirmation email to the email specified in the account
-     * @param account the account to sent the email to
+     * @param account the account to send the email to
      * @param confirmationToken the token for confirmation
      */
     private void sendConfirmationEmail(Account account, ConfirmationToken confirmationToken) {
         ExecutorService executorService = Executors.newSingleThreadExecutor();
 
         executorService.submit(() -> {
-            // TODO update the email with correct links and styling etc
             String content = "<h2>Confirm Account</h2>"
                     + "<p>Hello %s,<br>We have received a registration request for an account. You will need to confirm" +
                     " the email address before we can proceed with registration</p>"
@@ -177,6 +177,96 @@ public class AuthenticationController {
         } catch (EmailExistsException ex) {
             log.error(ex);
             return respondError(EMAIL_EXISTS);
+        }
+    }
+
+    /**
+     * Send the password reset email to the email specified in the account
+     * @param account the account to send the email to
+     * @param resetPasswordToken the token used for resetting the password
+     */
+    private void sendPasswordResetEmail(Account account, ResetPasswordToken resetPasswordToken) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        executorService.submit(() -> {
+            String content = "<h2>Reset Password</h2>"
+                    + "<p>Hello %s,<br>We have received a request to reset the password of your account"
+                    + "<br>"
+                    + "<p>Your username is: <b>%s</b></p>"
+                    + "<p>Follow this link to reset your password: <a href=\"%s\">Reset Password</a></p>"
+                    + "<br>"
+                    + "<p>If for some reason, the link does not work, paste the following link into your browser: %s</p>"
+                    + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
+                    + "<br>"
+                    + "<p>This request will expire at <b>%s</b>, after which you will need to request another password reset</p>"
+                    + "<p>If you did not request for your password to be changed, you can safely ignore this e-mail</p>"
+                    + "<br>"
+                    + "<p>Thank You,<p>"
+                    + "<p>The Team</p>";
+
+
+            String urlBase = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url"); // find either by system/config property or environment variable
+            urlBase = (urlBase == null) ? "http://localhost:4200" : urlBase;
+            urlBase = urlBase + "/reset-password";
+
+            String username = account.getUsername();
+            String email = account.getEmail();
+            String resetLink = String.format("%s?username=%s&token=%s", urlBase, username, resetPasswordToken.getToken());
+            content = String.format(content, username, username,
+                    resetLink, resetLink, resetPasswordToken.getExpiry().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+
+            try {
+                emailSender.sendEmail(email, "Reset Password", content);
+            } catch (EmailException ex) {
+                ex.printStackTrace();
+            }
+        });
+    }
+
+    /**
+     * This endpoint requests that a reset password token and email is generated for the specified account
+     * @param username the username of the account to reset the password for
+     * @param email true if the username is an email
+     * @return the response body
+     */
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> requestPasswordReset(@RequestParam String username, @RequestParam(required = false) boolean email) {
+        Account account = accountService.getAccount(username, email);
+
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            ResetPasswordToken resetPasswordToken = accountService.requestPasswordReset(account);
+            sendPasswordResetEmail(account, resetPasswordToken);
+
+            return ResponseEntity.status(HttpStatus.CREATED).build();
+        }
+    }
+
+    /**
+     * This endpoint resets the password using the given token
+     * @param request the request to reset the password
+     * @return the response body
+     */
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> forgetPassword(@RequestBody ResetPasswordRequest request) {
+        String username = request.getUsername();
+        Account account = accountService.getAccount(username);
+
+        if (account == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            String token = request.getToken();
+
+            if (!accountService.verifyPasswordResetToken(account, token)) {
+                return respondError(INVALID_RESET_TOKEN);
+            } else {
+                accountService.resetPassword(account, request.getPassword());
+                Map<String, Object> response = new HashMap<>();
+                response.put(MESSAGE, ACCOUNT_UPDATED);
+
+                return ResponseEntity.ok(response);
+            }
         }
     }
 

@@ -34,6 +34,7 @@ import org.springframework.web.context.WebApplicationContext;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * This class tests the authentication controller
@@ -713,4 +714,134 @@ public class AuthenticationControllerTest {
         verify(accountService).getAccount(EMAIL, true);
     }
 
+    /**
+     * Tests that a password reset should be requested
+     */
+    @Test
+    public void shouldRequestPasswordReset() throws Exception {
+        Account account = createTestAccount();
+        ResetPasswordToken resetPasswordToken = new ResetPasswordToken(USERNAME, UUID.randomUUID().toString(), LocalDateTime.now().plusHours(2));
+
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(account);
+        given(accountService.requestPasswordReset(account))
+                .willReturn(resetPasswordToken);
+
+        mockMvc.perform(post("/api/auth/forgot-password")
+                .param("username", USERNAME))
+                .andExpect(status().isCreated());
+
+        verify(accountService).getAccount(USERNAME, false);
+        verify(accountService).requestPasswordReset(account);
+    }
+
+    /**
+     * Tests that a 404 should be thrown on a requested password reset if the account doesn't exist
+     */
+    @Test
+    public void shouldThrowNotFoundRequestPasswordReset() throws Exception {
+        Account account = createTestAccount();
+
+        given(accountService.getAccount(USERNAME, false))
+                .willReturn(null);
+
+        mockMvc.perform(post("/api/auth/forgot-password")
+                        .param("username", USERNAME))
+                .andExpect(status().isNotFound());
+
+        verifyNoInteractions(emailSender);
+        verify(accountService).getAccount(USERNAME, false);
+        verify(accountService, times(0)).requestPasswordReset(account);
+    }
+
+    /**
+     * Tests that a password should be reset successfully
+     */
+    @Test
+    public void shouldResetPassword() throws Exception {
+        Account account = createTestAccount();
+        String token = UUID.randomUUID().toString();
+
+        given(accountService.getAccount(USERNAME))
+                .willReturn(account);
+        given(accountService.verifyPasswordResetToken(account, token))
+                .willReturn(true);
+
+        ResetPasswordRequest request = new ResetPasswordRequest(USERNAME, token, "new_password");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(MESSAGE, ACCOUNT_UPDATED);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post("/api/auth/reset-password/")
+                .contentType(JSON.MEDIA_TYPE)
+                .content(json))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(accountService).getAccount(USERNAME);
+        verify(accountService).verifyPasswordResetToken(account, token);
+        verify(accountService).resetPassword(account, "new_password");
+    }
+
+    /**
+     * Tests that a 404 should be thrown if account not found on reset password
+     */
+    @Test
+    public void shouldThrowNotFoundResetPassword() throws Exception {
+        Account account = createTestAccount();
+        String token = UUID.randomUUID().toString();
+
+        given(accountService.getAccount(USERNAME))
+                .willReturn(null);
+
+        ResetPasswordRequest request = new ResetPasswordRequest(USERNAME, token, "new_password");
+
+        String json = JSON.convertJSON(request);
+
+        mockMvc.perform(post("/api/auth/reset-password/")
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isNotFound());
+
+        verify(accountService).getAccount(USERNAME);
+        verify(accountService, times(0)).verifyPasswordResetToken(account, token);
+        verify(accountService, times(0)).resetPassword(account, "new_password");
+    }
+
+    /**
+     * Tests that if the token is invalid on password reset, an error will be thrown
+     */
+    @Test
+    public void shouldThrowInvalidTokenResetPassword() throws Exception {
+        Account account = createTestAccount();
+        String token = UUID.randomUUID().toString();
+
+        given(accountService.getAccount(USERNAME))
+                .willReturn(account);
+        given(accountService.verifyPasswordResetToken(account, token))
+                .willReturn(false);
+
+        ResetPasswordRequest request = new ResetPasswordRequest(USERNAME, token, "new_password");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put(ERROR, INVALID_RESET_TOKEN);
+
+        String json = JSON.convertJSON(request);
+        String result = JSON.convertJSON(response);
+
+        mockMvc.perform(post("/api/auth/reset-password/")
+                        .contentType(JSON.MEDIA_TYPE)
+                        .content(json))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(JSON.MEDIA_TYPE))
+                .andExpect(content().json(result));
+
+        verify(accountService).getAccount(USERNAME);
+        verify(accountService).verifyPasswordResetToken(account, token);
+        verify(accountService, times(0)).resetPassword(account, "new_password");
+    }
 }

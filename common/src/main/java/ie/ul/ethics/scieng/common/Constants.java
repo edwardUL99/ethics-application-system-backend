@@ -113,6 +113,11 @@ public final class Constants {
     public static final String INVALID_APPLICATION_STATUS = "invalid_application_status";
 
     /**
+     * The error message for when the reset token is invalid when resetting a password
+     */
+    public static final String INVALID_RESET_TOKEN = "invalid_reset_token";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */
