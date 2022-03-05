@@ -5,8 +5,10 @@ import ie.ul.ethics.scieng.authentication.exceptions.IllegalUpdateException;
 import ie.ul.ethics.scieng.authentication.exceptions.UsernameExistsException;
 import ie.ul.ethics.scieng.authentication.models.Account;
 import ie.ul.ethics.scieng.authentication.models.ConfirmationToken;
+import ie.ul.ethics.scieng.authentication.models.ResetPasswordToken;
 import ie.ul.ethics.scieng.authentication.repositories.AccountRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenRepository;
+import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
 import ie.ul.ethics.scieng.test.utils.Caching;
 import ie.ul.ethics.scieng.authentication.test.config.TestConfiguration;
 import ie.ul.ethics.scieng.test.utils.TestApplication;
@@ -21,8 +23,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
@@ -47,6 +51,11 @@ public class AccountServiceTest {
      */
     @MockBean
     private ConfirmationTokenRepository tokenRepository;
+    /**
+     * The reset token repository mock for testing
+     */
+    @MockBean
+    private ResetPasswordTokenRepository resetTokenRespository;
     /**
      * The mocked password encoder
      */
@@ -424,5 +433,85 @@ public class AccountServiceTest {
         assertFalse(confirmed);
         assertFalse(account.isConfirmed());
         verifyNoInteractions(accountRepository);
+    }
+
+    /**
+     * Tests that a password reset should be requested
+     */
+    @Test
+    public void shouldRequestPasswordReset() {
+        Account account = createTestAccount();
+        ResetPasswordToken token = new ResetPasswordToken(USERNAME, UUID.randomUUID().toString(), LocalDateTime.now().plusHours(2));
+
+        ResetPasswordToken returned = accountService.requestPasswordReset(account);
+
+        assertNotNull(returned);
+        assertEquals(token.getUsername(), returned.getUsername());
+        assertNotNull(token.getToken());
+        assertNotNull(token.getExpiry());
+        verify(resetTokenRespository).save(any(ResetPasswordToken.class));
+    }
+
+    /**
+     * Tests that a reset password token should be verified successfully
+     */
+    @Test
+    public void shouldVerifyResetPasswordToken() {
+        Account account = createTestAccount();
+        String uuid = UUID.randomUUID().toString();
+        ResetPasswordToken token = new ResetPasswordToken(USERNAME, uuid, LocalDateTime.now().plusHours(2));
+
+        given(resetTokenRespository.findByUsername(USERNAME))
+                .willReturn(Optional.of(token));
+
+        boolean verified = accountService.verifyPasswordResetToken(account, uuid);
+
+        assertTrue(verified);
+
+        // test that if no token exists, verification fails
+        given(resetTokenRespository.findByUsername(USERNAME))
+                .willReturn(Optional.empty());
+
+        verified = accountService.verifyPasswordResetToken(account, uuid);
+        assertFalse(verified);
+
+        // test that an expired token should fail
+        ResetPasswordToken expired = new ResetPasswordToken(USERNAME, uuid, LocalDateTime.now().minusHours(2));
+
+        given(resetTokenRespository.findByUsername(USERNAME))
+                .willReturn(Optional.of(expired));
+
+        verified = accountService.verifyPasswordResetToken(account, uuid);
+        assertFalse(verified);
+
+        // test that if the token differs from provided token, don't verify
+        token.setToken(uuid + "-1");
+
+        given(resetTokenRespository.findByUsername(USERNAME))
+                .willReturn(Optional.of(token));
+
+        verified = accountService.verifyPasswordResetToken(account, uuid);
+        assertFalse(verified);
+
+        verify(resetTokenRespository, times(4)).findByUsername(USERNAME);
+    }
+
+    /**
+     * Tests that a password should be reset successfully
+     */
+    @Test
+    public void shouldResetPassword() {
+        Account account = createTestAccount();
+        String newPassword = "new_password";
+        String encrypted = "encrypted";
+
+        given(passwordEncoder.encode(newPassword))
+                .willReturn(encrypted);
+
+        accountService.resetPassword(account, newPassword);
+
+        assertEquals(encrypted, account.getPassword());
+        verify(resetTokenRespository).deleteById(USERNAME);
+        verify(accountRepository).save(account);
     }
 }
