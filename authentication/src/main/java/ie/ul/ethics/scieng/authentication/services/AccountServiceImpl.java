@@ -9,18 +9,23 @@ import ie.ul.ethics.scieng.authentication.models.ResetPasswordToken;
 import ie.ul.ethics.scieng.authentication.repositories.AccountRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -53,6 +58,12 @@ public class AccountServiceImpl implements AccountService {
     private final ResetPasswordTokenRepository resetTokenRepository;
 
     /**
+     * The number of days after which unconfirmed accounts are removed
+     */
+    @Value("${auth.unconfirmed-removal:31}")
+    private int unconfirmedRemoval;
+
+    /**
      * Instantiate an AccountServiceImpl with the provided dependencies
      * @param accountRepository the account repository to access accounts with
      * @param passwordEncoder the encoder for encoding passwords
@@ -66,6 +77,12 @@ public class AccountServiceImpl implements AccountService {
         this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
         this.resetTokenRepository = resetTokenRepository;
+    }
+
+    @PostConstruct
+    private void runScheduled() {
+        this.purgeExpiredResetTokens();
+        this.purgeUnconfirmedAccounts();
     }
 
     /**
@@ -260,7 +277,15 @@ public class AccountServiceImpl implements AccountService {
     public boolean verifyPasswordResetToken(Account account, String token) {
         ResetPasswordToken savedToken = resetTokenRepository.findByUsername(account.getUsername()).orElse(null);
 
-        return savedToken != null && !savedToken.isExpired() && savedToken.getToken().equals(token);
+        if (savedToken != null) {
+            if (!savedToken.isExpired()) {
+                return savedToken.getToken().equals(token);
+            } else {
+                resetTokenRepository.delete(savedToken);
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -278,5 +303,40 @@ public class AccountServiceImpl implements AccountService {
         account.setPassword(passwordEncoder.encode(password));
         resetTokenRepository.deleteById(account.getUsername());
         accountRepository.save(account);
+    }
+
+    /**
+     * A method that purges expired reset tokens. Not exposed by the AccountService API (interface). Just provided by
+     * this implementation
+     */
+    @Transactional
+    @Scheduled(cron = "${auth.scheduling.cron:0 0 5 * * ?}")
+    public void purgeExpiredResetTokens() {
+        this.resetTokenRepository.findAll()
+            .forEach(token -> {
+                if (token.isExpired())
+                    this.resetTokenRepository.delete(token);
+            });
+    }
+
+    /**
+     * Purge the unconfirmed accounts
+     */
+    @Transactional
+    @Scheduled(cron = "${auth.scheduling.cron:0 0 5 * * ?}")
+    public void purgeUnconfirmedAccounts() {
+        LocalDateTime threshold = LocalDateTime.now().minusDays(unconfirmedRemoval);
+
+        this.tokenRepository.findAll()
+            .forEach(token -> {
+                if (token.getTimeCreated().isBefore(threshold)) {
+                    Account account = this.accountRepository.findByEmail(token.getEmail()).orElse(null);
+
+                    if (account != null && !account.isConfirmed())
+                        this.accountRepository.delete(account);
+
+                    this.tokenRepository.delete(token);
+                }
+            });
     }
 }
