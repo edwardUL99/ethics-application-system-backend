@@ -123,6 +123,7 @@ public class AuthenticationController {
                     + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
                     + "<br>"
                     + "<p>If you did not request an account, you can safely ignore this e-mail</p>"
+                    + "<p><b>Warning:</b> Unconfirmed accounts will be removed after %d days</p>"
                     + "<br>"
                     + "<p>Thank You,<p>"
                     + "<p>The Team</p>";
@@ -137,7 +138,7 @@ public class AuthenticationController {
             String token = confirmationToken.getToken();
             content = String.format(content, username, username,
                     String.format("%s?email=%s&token=%s", urlBase, email, token),
-                    urlBase, email, token);
+                    urlBase, email, token, authenticationConfiguration.getUnconfirmedRemoval());
 
             try {
                 emailSender.sendEmail(email, "Confirm Account Registration", content);
