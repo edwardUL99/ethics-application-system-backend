@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.authentication.models;
 
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -19,6 +20,10 @@ public class ConfirmationToken {
      * The generated confirmation token
      */
     private String token;
+    /**
+     * The timestamp of when the confirmation token was created
+     */
+    private LocalDateTime timeCreated;
 
     /**
      * Create a default ConfirmationToken
@@ -43,6 +48,7 @@ public class ConfirmationToken {
     public ConfirmationToken(String email, String token) {
         this.email = email;
         this.token = token;
+        this.timeCreated = LocalDateTime.now();
     }
 
     /**
@@ -78,6 +84,22 @@ public class ConfirmationToken {
     }
 
     /**
+     * Get the time the confirmation token was created
+     * @return time confirmation token was created
+     */
+    public LocalDateTime getTimeCreated() {
+        return timeCreated;
+    }
+
+    /**
+     * Set the creation time of the confirmation token
+     * @param timeCreated the time the confirmation token was created
+     */
+    public void setTimeCreated(LocalDateTime timeCreated) {
+        this.timeCreated = timeCreated;
+    }
+
+    /**
      * Check if this object is equal to the provided object
      * @param o the object to check equality
      * @return true if equal, false if not
@@ -87,7 +109,7 @@ public class ConfirmationToken {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ConfirmationToken that = (ConfirmationToken) o;
-        return Objects.equals(email, that.email) && Objects.equals(token, that.token);
+        return Objects.equals(email, that.email) && Objects.equals(token, that.token) && Objects.equals(timeCreated, that.timeCreated);
     }
 
     /**
@@ -96,6 +118,6 @@ public class ConfirmationToken {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(email, token);
+        return Objects.hash(email, token, timeCreated);
     }
 }

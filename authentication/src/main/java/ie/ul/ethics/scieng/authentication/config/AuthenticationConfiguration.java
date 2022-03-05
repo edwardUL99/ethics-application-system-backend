@@ -21,6 +21,10 @@ public class AuthenticationConfiguration {
      * This variable allows a user to send a key/password with their registration request to automatically confirm them if confirmation is enabled
      */
     private String confirmationKey;
+    /**
+     * The number of days to allow pass before unconfirmed accounts are removed
+     */
+    private int unconfirmedRemoval;
 
     /**
      * Create a default authentication configuration object
@@ -78,6 +82,22 @@ public class AuthenticationConfiguration {
     }
 
     /**
+     * Get the number of days after which unconfirmed accounts are removed
+     * @return number of days after which unconfirmed accounts are removed
+     */
+    public int getUnconfirmedRemoval() {
+        return unconfirmedRemoval;
+    }
+
+    /**
+     * Set the days threshold for when unconfirmed accounts should be removed
+     * @param unconfirmedRemoval new days threshold
+     */
+    public void setUnconfirmedRemoval(int unconfirmedRemoval) {
+        this.unconfirmedRemoval = unconfirmedRemoval;
+    }
+
+    /**
      * This class provides the JWT config
      */
     public static class Jwt {
@@ -104,6 +124,9 @@ public class AuthenticationConfiguration {
          * @throws IllegalStateException if a secret key is not setup
          */
         public String getSecret() {
+            String secret = System.getenv("ETHICS_JWT_SECRET");
+            secret = (secret == null) ? this.secret:secret;
+
             if (secret == null)
                 throw new IllegalStateException("To use the authentication module, you have to set the secret key " +
                         "auth.jwt.secret in the authentication.ethics.properties file");

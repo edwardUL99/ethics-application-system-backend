@@ -1,7 +1,6 @@
 package ie.ul.ethics.scieng.users.models.authorization;
 
 import javax.persistence.Entity;
-import javax.persistence.Table;
 import java.util.*;
 
 /**
