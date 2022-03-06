@@ -8,7 +8,8 @@ The project requires the following tools installed on your local machine:
 * Java 11 for runtime, JDK 11 for development
 * Apache Maven 3.6.3
 * Python 3. **optional** - only required if you wish to use the `tools/apitest.py` tool for testing the backend API
-* The files module requires **ClamAV**. See [Files README.md](files/README.md) for instructions on setting it up
+* The files module requires **ClamAV**. See [Files README.md](files/README.md) for instructions on setting it up. It can also 
+be disabled should the deployment not support it (not recommended).
 
 ## Modules
 The backend is defined as a set of Maven modules, each providing their own functionality and endpoints. See the
@@ -41,6 +42,33 @@ After a build is completed, from the project root, start the backend by running 
 tools/run.sh
 ```
 This script executes the executable JAR produced by the build script
+
+## Configuration
+Each module provides its own `<module>/src/main/resources/<module>.ethics.properties` file and other configuration files which allow
+configuration of that respective module.
+
+See each module's README file for information on configuration for that module.
+
+### Environment
+There is a list of environment variables that can also be configured which can be useful for configuring it in deployment
+without having to change the properties files. The environment variables take precedence over the application properties.
+
+The list of supported environment variables are as follows:
+* **ETHICS_FRONTEND_URL**: The URL base of where the front-end is running. Any pages, e.g. forgot-password is appended onto
+this url
+* **ETHICS_ANTIVIRUS_DISABLE**: The presence of this variable disables antivirus scanning
+* **ETHICS_EMAIL_DISABLE**: The presence of this variable disables sending of emails from the back-end
+* **ETHICS_EMAIL_FROM**: The e-mail to send emails from
+* **ETHICS_EMAIL_HOST**: The host of the e-mail server to send e-mails with
+* **ETHICS_EMAIL_PORT**: The port of the e-mail server
+* **ETHICS_EMAIL_PASSWORD**: The password of the account e-mails are being sent from
+* **ETHICS_EMAIL_DEBUG**: The presence of this variable enables email sending debugging
+* **ETHICS_ALWAYS_CONFIRM**: The presence of this variable results in the automatic confirmation of all new accounts without requiring
+confirmation intervention
+* **ETHICS_JWT_SECRET**: This variable holds a secret key that is used to encrypt/decrypt JWT tokens
+* **ETHICS_UNCONFIRMED_REMOVAL**: This variable specifies the number of days to pass after which unconfirmed accounts will be
+removed
+* **ETHICS_RESET_TOKEN_EXPIRY**: Specified the number of hours after which reset password tokens should be considered expired
 
 ## Testing
 
@@ -106,8 +134,3 @@ sudo npm install newman
 newman run tools/postman/EthicsBackend.postman_collection.json
 ```
 
-## Configuration
-Each module provides its own `<module>/src/main/resources/<module>.ethics.properties` file and other configuration files which allow
-configuration of that respective module. 
-
-See each module's README file for information on configuration for that module.

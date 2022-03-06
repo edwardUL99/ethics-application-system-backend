@@ -16,7 +16,7 @@ public final class EmailSenderFactory {
      */
     public static EmailSender getEmailSender(EmailConfigurationProperties configurationProperties) {
         EmailSender sender;
-        String disable = PropertyFinder.findProperty("email.disable", "ETHICS_EMAIL_DISABLE");
+        String disable = PropertyFinder.findProperty("ETHICS_EMAIL_DISABLE", "email.disable");
         if (disable != null) {
             log.info("System property email.disable or environment variable ETHICS_EMAIL_DISABLE is set, so sendEmail will be a no-op");
             sender = new NoopEmailSender();
