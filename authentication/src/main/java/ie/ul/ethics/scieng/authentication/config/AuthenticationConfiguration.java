@@ -86,6 +86,12 @@ public class AuthenticationConfiguration {
      * @return number of days after which unconfirmed accounts are removed
      */
     public int getUnconfirmedRemoval() {
+        String unconfirmedEnv = System.getenv("ETHICS_UNCONFIRMED_REMOVAL");
+
+        if (unconfirmedEnv != null) {
+            this.unconfirmedRemoval = Integer.parseInt(unconfirmedEnv);
+        }
+
         return unconfirmedRemoval;
     }
 

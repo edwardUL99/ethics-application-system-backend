@@ -10,6 +10,7 @@ import ie.ul.ethics.scieng.authentication.repositories.AccountRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
 
+import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
@@ -259,7 +260,10 @@ public class AccountServiceImpl implements AccountService {
      */
     @Override
     public ResetPasswordToken requestPasswordReset(Account account) {
-        ResetPasswordToken token = new ResetPasswordToken(account.getUsername(), UUID.randomUUID().toString(), LocalDateTime.now().plusHours(2));
+        String hoursExpiryString = PropertyFinder.findProperty("ETHICS_RESET_TOKEN_EXPIRY", "auth.reset-token-expiry");
+        int hoursExpiry = (hoursExpiryString == null) ? 2:Integer.parseInt(hoursExpiryString);
+
+        ResetPasswordToken token = new ResetPasswordToken(account.getUsername(), UUID.randomUUID().toString(), LocalDateTime.now().plusHours(hoursExpiry));
         resetTokenRepository.save(token);
 
         return token;

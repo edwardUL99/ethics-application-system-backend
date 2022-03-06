@@ -83,7 +83,8 @@ public class AuthenticationController {
      * @return the response of this registration request
      */
     private boolean alwaysConfirm(String confirmationKey) {
-        String confirm = PropertyFinder.findProperty("account.always.confirm", "ETHICS_ALWAYS_CONFIRM");
+        String confirm = PropertyFinder.findProperty("ETHICS_ALWAYS_CONFIRM", "account.always.confirm");
+
         if (confirm != null) {
             log.warn("System Property account.always.confirm or env variable ETHICS_ALWAYS_CONFIRM specified, any account created will be confirmed automatically");
             return true;

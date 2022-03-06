@@ -62,7 +62,7 @@ public class FilesConfiguration {
         FilesConfigurationProperties.Antivirus antivirus = properties.getAntivirus();
 
         if (antivirus.isEnabled()) {
-            String disable = PropertyFinder.findProperty("antivirus.disable", "ETHICS_ANTIVIRUS_DISABLE");
+            String disable = PropertyFinder.findProperty("ETHICS_ANTIVIRUS_DISABLE", "antivirus.disable");
             antivirus.setEnabled(disable == null);
         }
 

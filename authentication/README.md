@@ -38,6 +38,7 @@ file:
 * `auth.confirmation-key`: If this key is passed in with a registration request, the account is automatically confirmed. This key is used to facilitate testing if confirmation is enabled
 * `auth.scheduling.cron`: A CRON expression for running scheduled auth operations
 * `auth.unconfirmed-removal`: Specifies the number of days after which unconfirmed accounts should be removed
+* `auth.reset-token-expiry`: Specifies the number of hours after which password reset tokens should expire
 
 Requires email confirmation messages to be sent if confirmation is enabled. See [common module's properties](../common/src/main/resources/common.ethics.properties)
 for properties to enter the details of the email server account to send emails from

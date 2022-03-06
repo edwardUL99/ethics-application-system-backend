@@ -30,3 +30,5 @@ In the properties file for the module, there are `files.antivirus.*` properties.
 * host: The hostname the ClamAV daemon is running on (default localhost)
 * port: The port the ClamAV daemon is running on (default 3310)
 * platform: The platform the ClamAV daemon is running on (default UNIX, can choose from WINDOWS or JVM_PLATFORM)
+
+Or it can be disabled by passing -Dantivirus.disable in as a System property
