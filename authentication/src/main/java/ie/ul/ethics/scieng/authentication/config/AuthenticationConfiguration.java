@@ -124,7 +124,7 @@ public class AuthenticationConfiguration {
          * @throws IllegalStateException if a secret key is not setup
          */
         public String getSecret() {
-            String secret = System.getenv("ETHICS_PASSWORD_SECRET");
+            String secret = System.getenv("ETHICS_JWT_SECRET");
             secret = (secret == null) ? this.secret:secret;
 
             if (secret == null)
