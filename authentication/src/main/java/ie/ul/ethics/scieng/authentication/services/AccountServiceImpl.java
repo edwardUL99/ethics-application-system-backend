@@ -9,6 +9,7 @@ import ie.ul.ethics.scieng.authentication.models.ResetPasswordToken;
 import ie.ul.ethics.scieng.authentication.repositories.AccountRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
@@ -24,6 +25,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Optional;
@@ -75,6 +77,12 @@ public class AccountServiceImpl implements AccountService {
         this.passwordEncoder = passwordEncoder;
         this.tokenRepository = tokenRepository;
         this.resetTokenRepository = resetTokenRepository;
+    }
+
+    @PostConstruct
+    private void runScheduled() {
+        this.purgeExpiredResetTokens();
+        this.purgeUnconfirmedAccounts();
     }
 
     /**
