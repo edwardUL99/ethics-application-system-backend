@@ -21,22 +21,37 @@ public class QuestionTableComponent extends SimpleComponent {
      * This map provides the mapping of the column names to the question components
      */
     @OneToOne(cascade = CascadeType.ALL)
-    private CellsMapping columns;
+    private CellsMapping cells;
+    /**
+     * The number of rows in the component
+     */
+    private int numRows;
 
     /**
      * Create a default QuestionTableComponent
      */
     public QuestionTableComponent() {
-        this(new HashMap<>());
+        this(new HashMap<>(), 0);
     }
 
     /**
      * Create a QuestionTableComponent
-     * @param columns the columns for the component
+     * @param cells the cells for the component
+     * @param numRows the number of rows in the component
      */
-    public QuestionTableComponent(Map<String, Cells> columns) {
+    public QuestionTableComponent(Map<String, Cells> cells, int numRows) {
+        this(new CellsMapping(cells), numRows);
+    }
+
+    /**
+     * Create a table component with an already constructed cells mapping
+     * @param cells the cells already constructed
+     * @param numRows the number of rows
+     */
+    public QuestionTableComponent(CellsMapping cells, int numRows) {
         super(ComponentType.QUESTION_TABLE, null);
-        this.columns = new CellsMapping(columns);
+        this.cells = cells;
+        this.numRows = numRows;
     }
 
     /**

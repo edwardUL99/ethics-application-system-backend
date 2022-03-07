@@ -59,11 +59,11 @@ public class ReplacementBranch extends Branch {
         /**
          * The container ID to replace
          */
-        private String replaceId;
+        private String replace;
         /**
          * The ID of the container to add into the replacement. The ID can be [application-id]-[containerId]
          */
-        private String targetId;
+        private String target;
 
         /**
          * {@inheritDoc}
@@ -73,7 +73,7 @@ public class ReplacementBranch extends Branch {
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
             Replacement that = (Replacement) o;
-            return Objects.equals(id, that.id) && Objects.equals(replaceId, that.replaceId) && Objects.equals(targetId, that.targetId);
+            return Objects.equals(id, that.id) && Objects.equals(replace, that.replace) && Objects.equals(target, that.target);
         }
 
         /**
@@ -81,7 +81,7 @@ public class ReplacementBranch extends Branch {
          */
         @Override
         public int hashCode() {
-            return Objects.hash(id, replaceId, targetId);
+            return Objects.hash(id, replace, target);
         }
     }
 
