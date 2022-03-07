@@ -202,6 +202,7 @@
               "title": "Please indicate the terms that apply to this research project",
               "multiple": true,
               "defaultBranch": null,
+              "required": true,
               "checkboxes": [
                 {
                   "title": "Healthy Adults"

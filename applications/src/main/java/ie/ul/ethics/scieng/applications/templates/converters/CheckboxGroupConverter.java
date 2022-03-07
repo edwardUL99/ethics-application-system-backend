@@ -85,6 +85,7 @@ public class CheckboxGroupConverter extends BaseConverter {
             checkboxes.add(box);
         }
 
-        return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false));
+        return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false),
+                (boolean)map.getOrDefault("required", false));
     }
 }

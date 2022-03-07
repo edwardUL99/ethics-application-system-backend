@@ -33,12 +33,16 @@ public class CheckboxGroupComponent extends SimpleComponent {
      * Determines if multiple options can be chosen in the group, the default is false
      */
     private boolean multiple;
+    /**
+     * A variable to determine if the component is required
+     */
+    private boolean required;
 
     /**
      * Create a default CheckboxGroupComponent
      */
     public CheckboxGroupComponent() {
-        this(null, null, new ArrayList<>(), false);
+        this(null, null, new ArrayList<>(), false, false);
     }
 
     /**
@@ -47,12 +51,14 @@ public class CheckboxGroupComponent extends SimpleComponent {
      * @param defaultBranch the default branch to execute
      * @param checkboxes the list of checkboxes in the group
      * @param multiple true if multiple can be chosen, false if not
+     * @param required determines if the component is required or not
      */
-    public CheckboxGroupComponent(String title, Branch defaultBranch, List<Checkbox> checkboxes, boolean multiple) {
+    public CheckboxGroupComponent(String title, Branch defaultBranch, List<Checkbox> checkboxes, boolean multiple, boolean required) {
         super(ComponentType.CHECKBOX_GROUP, title);
         this.defaultBranch  = defaultBranch;
         this.checkboxes = checkboxes;
         this.multiple = multiple;
+        this.required = required;
     }
 
     /**
