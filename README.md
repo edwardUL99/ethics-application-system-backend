@@ -69,6 +69,7 @@ confirmation intervention
 * **ETHICS_UNCONFIRMED_REMOVAL**: This variable specifies the number of days to pass after which unconfirmed accounts will be
 removed
 * **ETHICS_RESET_TOKEN_EXPIRY**: Specified the number of hours after which reset password tokens should be considered expired
+* **ETHICS_CACHE_TTL**: The number of milliseconds after which cache should be cleared (time to live)
 
 ## Testing
 

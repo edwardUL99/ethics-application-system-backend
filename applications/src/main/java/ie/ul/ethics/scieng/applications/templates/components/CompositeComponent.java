@@ -30,4 +30,9 @@ public abstract class CompositeComponent extends ApplicationComponent {
      * @return the list of sub-components
      */
     public abstract List<ApplicationComponent> getComponents();
+
+    /**
+     * Sort the list of child components
+     */
+    public abstract void sortComponents();
 }

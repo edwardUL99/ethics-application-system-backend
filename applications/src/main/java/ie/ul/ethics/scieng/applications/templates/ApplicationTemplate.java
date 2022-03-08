@@ -1,6 +1,7 @@
 package ie.ul.ethics.scieng.applications.templates;
 
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
+import ie.ul.ethics.scieng.applications.templates.components.CompositeComponent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,6 +10,7 @@ import org.hibernate.Hibernate;
 
 import javax.persistence.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -49,6 +51,20 @@ public class ApplicationTemplate {
      */
     @ManyToMany(cascade = CascadeType.ALL)
     private List<ApplicationComponent> components = new ArrayList<>();
+
+    /**
+     * Sorts all the components
+     */
+    public void sort() {
+        List<CompositeComponent> toSort = new ArrayList<>();
+
+        for (ApplicationComponent child : components) {
+            SortingUtils.findSortRecursive(child, toSort);
+            SortingUtils.sort(toSort);
+        }
+
+        Collections.sort(components);
+    }
 
     /**
      * {@inheritDoc}
