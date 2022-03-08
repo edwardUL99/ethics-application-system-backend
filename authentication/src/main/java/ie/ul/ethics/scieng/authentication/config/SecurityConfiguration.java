@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.authentication.config;
 
 import ie.ul.ethics.scieng.authentication.jwt.JwtAuthenticationEntrypoint;
 import ie.ul.ethics.scieng.authentication.jwt.JwtRequestFilter;
+import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.Collections;
+import java.util.List;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
 
@@ -80,6 +84,15 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
      */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
+        String frontendURL = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url");
+        frontendURL = (frontendURL == null) ? "http://localhost:4200":frontendURL;
+
+        CorsConfiguration corsConfiguration = new CorsConfiguration();
+        corsConfiguration.setAllowedOrigins(Collections.singletonList(frontendURL));
+        corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
+        List<String> allowedMethods= List.of("GET", "POST", "PUT", "HEAD", "PATCH", "DELETE");
+        corsConfiguration.setAllowedMethods(allowedMethods);
+
         http.csrf().disable()
                 .authorizeRequests().antMatchers(
                         createApiPath(Endpoint.AUTHENTICATION, "register"),
@@ -92,7 +105,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 ).permitAll()
                 .anyRequest().authenticated()
                 .and()
-                .cors().configurationSource(request -> new CorsConfiguration().applyPermitDefaultValues())
+                .cors().configurationSource(request -> corsConfiguration)
                 .and()
                 .exceptionHandling().authenticationEntryPoint(entrypoint)
                 .and()

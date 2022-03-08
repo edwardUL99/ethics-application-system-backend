@@ -47,8 +47,7 @@ public class CheckboxGroupConverter extends BaseConverter {
             List<ReplacementBranch.Replacement> replacements = new ArrayList<>();
 
             for (Map<String, Object> replacement : (List<Map<String, Object>>)branch.get("replacements")) {
-                String key = replacement.keySet().stream().findFirst().orElse(null);
-                replacements.add(new ReplacementBranch.Replacement(null, key, (String)replacement.get(key)));
+                replacements.add(new ReplacementBranch.Replacement(null, (String)replacement.get("replace"), (String)replacement.get("target")));
             }
 
             return new ReplacementBranch(replacements);
@@ -85,6 +84,7 @@ public class CheckboxGroupConverter extends BaseConverter {
             checkboxes.add(box);
         }
 
-        return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false));
+        return new CheckboxGroupComponent((String)map.get("title"), defaultBranch, checkboxes, (boolean)map.getOrDefault("multiple", false),
+                (boolean)map.getOrDefault("required", false));
     }
 }

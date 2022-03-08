@@ -158,8 +158,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (update && application.getId() == null)
             throw new ApplicationException("You cannot update an Application that has no ID");
 
-        if (!update)
-            templateRepository.save(application.getApplicationTemplate());
+        templateRepository.save(application.getApplicationTemplate());
 
         application.setLastUpdated(LocalDateTime.now());
         applicationRepository.save(application);
