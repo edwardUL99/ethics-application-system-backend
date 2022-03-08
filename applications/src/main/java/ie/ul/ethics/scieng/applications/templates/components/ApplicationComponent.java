@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
+import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -17,7 +18,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class ApplicationComponent {
+public abstract class ApplicationComponent implements Comparable<ApplicationComponent> {
     /**
      * The ID of the component in the database
      */
@@ -62,5 +63,19 @@ public abstract class ApplicationComponent {
         this.title = title;
         this.composite = composite;
         this.componentId = UUID.randomUUID().toString();
+    }
+
+    /**
+     * Compares based on databaseId
+     */
+    @Override
+    public int compareTo(@NotNull ApplicationComponent o) {
+        if (databaseId == null && o.databaseId == null) {
+            return 0;
+        } else if (databaseId != null && o.databaseId != null) {
+            return databaseId.compareTo(o.databaseId);
+        } else {
+            return 0;
+        }
     }
 }
