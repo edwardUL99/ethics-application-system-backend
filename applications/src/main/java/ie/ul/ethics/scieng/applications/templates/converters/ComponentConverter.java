@@ -24,4 +24,19 @@ public interface ComponentConverter {
      * @throws ApplicationParseException if the map isn't valid or an error occurs
      */
     ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException;
+
+    /**
+     * Parse the database ID
+     * @param number the database ID object to convert
+     * @return the converted database ID
+     */
+    static Long parseDatabaseId(Object number) {
+        if (number instanceof Long) {
+            return (Long) number;
+        } else if (number instanceof Integer) {
+            return ((Integer)number).longValue();
+        } else {
+            return null;
+        }
+    }
 }

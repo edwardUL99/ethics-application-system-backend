@@ -187,7 +187,7 @@ public class ApplicationRequestMapperTest {
         draftApplication.setAnswers(newValues);
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues);
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, template);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(draftApplication);
@@ -219,7 +219,7 @@ public class ApplicationRequestMapperTest {
         draftApplication.attachFile(old);
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, Map.of("component6", newFile));
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, Map.of("component6", newFile), template);
 
         assertNotEquals(oldValues, newValues);
 
@@ -256,7 +256,7 @@ public class ApplicationRequestMapperTest {
         referred.setAnswers(newValues);
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues);
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, template);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(referred);
@@ -293,7 +293,7 @@ public class ApplicationRequestMapperTest {
         changeable.setStatus(ApplicationStatus.SUBMITTED);
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_ID, new HashMap<>());
+                new UpdateDraftApplicationRequest(APPLICATION_ID, new HashMap<>(), templates[0]);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(changeable);
@@ -309,7 +309,7 @@ public class ApplicationRequestMapperTest {
     @Test
     public void shouldReturnNullIfDraftIdNotExists() {
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_ID, new HashMap<>());
+                new UpdateDraftApplicationRequest(APPLICATION_ID, new HashMap<>(), templates[0]);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(null);

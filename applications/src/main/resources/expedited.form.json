@@ -121,7 +121,8 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full.full-body"
+                    "replace": "expedited-body",
+                    "target": "full.full-body"
                   }
                 ],
                 "_comment": [
@@ -180,7 +181,8 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full-body"
+                    "replace": "expedited-body",
+                    "target": "full.full-body"
                   }
                 ]
               },
@@ -213,7 +215,8 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full-body"
+                    "replace": "expedited-body",
+                    "target": "full.full-body"
                   }
                 ]
               },

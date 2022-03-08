@@ -540,7 +540,7 @@ public class ApplicationControllerTest {
     public void shouldUpdateDraftApplication() throws Exception {
         DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
 
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
         Map<String, Object> response = new HashMap<>();
         response.put(MESSAGE, APPLICATION_UPDATED);
         response.put("lastUpdated", draftApplication.getLastUpdated());
@@ -575,7 +575,7 @@ public class ApplicationControllerTest {
     public void shouldThrowInsufficientPermissionsOnUpdate() throws Exception {
         DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
 
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INSUFFICIENT_PERMISSIONS);
 
@@ -604,7 +604,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowErrorIfApplicationNotDraft() throws Exception {
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INVALID_APPLICATION_STATUS);
 
@@ -629,7 +629,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowNotFoundOnUpdate() throws Exception {
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
 
         String json = JSON.convertJSON(request);
 
@@ -657,7 +657,7 @@ public class ApplicationControllerTest {
         ReferredApplication referred = new ReferredApplication(null, APPLICATION_ID, draftApplication.getUser(), draftApplication.getApplicationTemplate(),
                 draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
 
-        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>());
+        UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
         Map<String, Object> response = new HashMap<>();
         response.put(MESSAGE, APPLICATION_UPDATED);
 

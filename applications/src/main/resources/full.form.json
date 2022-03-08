@@ -137,19 +137,21 @@
               "components": [
                 {
                   "type": "question-table",
-                  "columns": {
-                    "Name": {
-                      "type": "text-question",
-                      "name": "other_investigator_name"
-                    },
-                    "Qualifications & Affiliation": {
-                      "type": "text-question",
-                      "name": "other_investigator_qualifications"
-                    },
-                    "Signature": {
-                      "type": "signature",
-                      "name": "other_investigator_signature",
-                      "label": null
+                  "cells": {
+                    "columns": {
+                      "Name": {
+                        "type": "text-question",
+                        "name": "other_investigator_name"
+                      },
+                      "Qualifications & Affiliation": {
+                        "type": "text-question",
+                        "name": "other_investigator_qualifications"
+                      },
+                      "Signature": {
+                        "type": "signature",
+                        "name": "other_investigator_signature",
+                        "label": null
+                      }
                     }
                   },
                   "numRows": 2,
@@ -169,24 +171,26 @@
           "components": [
             {
               "type": "question-table",
-              "columns": {
-                "Name": {
-                  "type": "text-question",
-                  "name": "hod_name"
-                },
-                "Department": {
-                  "type": "text-question",
-                  "name": "hod_department"
-                },
-                "Date": {
-                  "type": "text-question",
-                  "name": "hod_date",
-                  "questionType": "date"
-                },
-                "Signature": {
-                  "type": "signature",
-                  "name": "hod_signature",
-                  "label": null
+              "cells": {
+                "columns": {
+                  "Name": {
+                    "type": "text-question",
+                    "name": "hod_name"
+                  },
+                  "Department": {
+                    "type": "text-question",
+                    "name": "hod_department"
+                  },
+                  "Date": {
+                    "type": "text-question",
+                    "name": "hod_date",
+                    "questionType": "date"
+                  },
+                  "Signature": {
+                    "type": "signature",
+                    "name": "hod_signature",
+                    "label": null
+                  }
                 }
               },
               "numRows": 1

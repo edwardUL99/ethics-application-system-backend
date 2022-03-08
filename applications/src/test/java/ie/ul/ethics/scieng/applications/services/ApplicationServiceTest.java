@@ -429,7 +429,6 @@ public class ApplicationServiceTest {
 
         assertEquals(draftApplication, created);
         assertTrue(created.getLastUpdated() != null && created.getLastUpdated().isAfter(now));
-        verifyNoInteractions(templateRepository);
         verify(applicationRepository).save(draftApplication);
     }
     /**

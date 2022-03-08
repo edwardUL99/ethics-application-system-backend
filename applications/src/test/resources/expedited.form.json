@@ -24,10 +24,10 @@
         },
         {
           "type": "checkbox-question",
-          "title": "",
+          "title": "Supervisor Review Agreement",
           "name": "supervisor_review_confirmation",
           "options": [
-            {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "agree"}
+            {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "Agreed"}
           ]
         },
         {
@@ -121,7 +121,8 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full.full-body"
+                    "replace": "expedited-body",
+                    "target": "full.full-body"
                   }
                 ],
                 "_comment": [
@@ -180,7 +181,8 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full-body"
+                    "replace": "expedited-body",
+                    "target": "full.full-body"
                   }
                 ]
               },
@@ -213,7 +215,8 @@
                 "type": "replacement",
                 "replacements": [
                   {
-                    "expedited-body": "full-body"
+                    "replace": "expedited-body",
+                    "target": "full.full-body"
                   }
                 ]
               },

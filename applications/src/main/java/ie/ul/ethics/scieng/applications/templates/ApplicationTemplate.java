@@ -58,7 +58,7 @@ public class ApplicationTemplate {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         ApplicationTemplate that = (ApplicationTemplate) o;
-        return databaseId != null && Objects.equals(databaseId, that.databaseId);
+        return Objects.equals(databaseId, that.databaseId);
     }
 
     /**
