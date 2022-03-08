@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.templates.components;
 
+import ie.ul.ethics.scieng.applications.templates.SortingUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -56,6 +57,14 @@ public class SectionComponent extends CompositeComponent {
         this.description = description;
         this.components = components;
         this.autoSave = autoSave;
+    }
+
+    /**
+     * Sort the list of child components
+     */
+    @Override
+    public void sortComponents() {
+        SortingUtils.sortComponents(components);
     }
 
     /**

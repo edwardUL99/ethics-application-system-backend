@@ -175,7 +175,12 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     @Cacheable(value = "template")
     public ApplicationTemplate getApplicationTemplate(Long id) {
-        return templateRepository.findById(id).orElse(null);
+        ApplicationTemplate template = templateRepository.findById(id).orElse(null);
+
+        if (template != null)
+            template.sort();
+
+        return template;
     }
 
     /**

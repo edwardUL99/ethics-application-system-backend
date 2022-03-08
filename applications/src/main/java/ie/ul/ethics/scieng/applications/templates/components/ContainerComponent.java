@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.templates.components;
 
+import ie.ul.ethics.scieng.applications.templates.SortingUtils;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.Hibernate;
@@ -54,6 +55,14 @@ public class ContainerComponent extends CompositeComponent {
     @Override
     public void setTitle(String title) {
         throw new IllegalStateException("You cannot set a title on a ContainerComponent");
+    }
+
+    /**
+     * Sort the list of child components
+     */
+    @Override
+    public void sortComponents() {
+        SortingUtils.sortComponents(components);
     }
 
     /**
