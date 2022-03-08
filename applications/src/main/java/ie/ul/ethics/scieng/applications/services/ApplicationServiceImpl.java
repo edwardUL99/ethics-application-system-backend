@@ -456,4 +456,20 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return referredApplication;
     }
+
+    /**
+     * Deletes the provided application
+     *
+     * @param application the application to delete
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public void deleteApplication(Application application) {
+        this.applicationRepository.delete(application);
+        this.templateRepository.delete(application.getApplicationTemplate());
+    }
 }

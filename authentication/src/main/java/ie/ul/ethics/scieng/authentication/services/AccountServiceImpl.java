@@ -11,6 +11,7 @@ import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenReposito
 import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
 
 import ie.ul.ethics.scieng.common.properties.PropertyFinder;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheConfig;
@@ -37,6 +38,7 @@ import java.util.UUID;
  */
 @Service
 @CacheConfig(cacheNames = "accounts")
+@Log4j2
 public class AccountServiceImpl implements AccountService {
     /**
      * The account repository used for interacting with the accounts database
@@ -324,7 +326,8 @@ public class AccountServiceImpl implements AccountService {
     }
 
     /**
-     * Purge the unconfirmed accounts
+     * Purge the unconfirmed accounts. Another method not exposed by the public AccountService API as it is an implementation
+     * detail that client code does not need to know about
      */
     @Transactional
     @Scheduled(cron = "${auth.scheduling.cron:0 0 5 * * ?}")
@@ -336,8 +339,10 @@ public class AccountServiceImpl implements AccountService {
                 if (token.getTimeCreated().isBefore(threshold)) {
                     Account account = this.accountRepository.findByEmail(token.getEmail()).orElse(null);
 
-                    if (account != null && !account.isConfirmed())
+                    if (account != null && !account.isConfirmed()) {
+                        log.info("Purging account with username {} as it is not confirmed and has exceeded the threshold to remove unconfirmed accounts", account.getUsername());
                         this.accountRepository.delete(account);
+                    }
 
                     this.tokenRepository.delete(token);
                 }

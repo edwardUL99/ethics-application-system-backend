@@ -38,7 +38,7 @@ public class SubmittedApplication extends Application {
      */
     @OneToMany
     @Getter(AccessLevel.NONE)
-    protected List<AssignedCommitteeMember> assignedCommitteeMembers = new ArrayList<>();
+    protected List<AssignedCommitteeMember> assignedCommitteeMembers;
     /**
      * This comment is the final comment given to the application (i.e. when approved or rejected). Is not set through a
      * constructor but can be set through {@link #setFinalComment(Comment)}
