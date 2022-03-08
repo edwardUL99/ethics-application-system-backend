@@ -244,9 +244,9 @@ public class ApplicationController {
         try {
             Application application =
                     (servletRequest.getRequestURI().contains("/draft")) ? requestMapper.updateDraftRequestToDraft(request):requestMapper.updateRequestToReferred(request);
-            application.setApplicationTemplate(request.getTemplate());
 
             if (application != null) {
+                application.setApplicationTemplate(request.getTemplate());
                 ResponseEntity<?> verification = verifyOwnUser(application.getUser().getUsername());
 
                 if (verification != null)

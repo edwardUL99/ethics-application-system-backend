@@ -39,6 +39,7 @@ public class UpdateDraftApplicationRequest {
     /**
      * The template being updated
      */
+    @NotNull
     private ApplicationTemplate template;
 
     /**
