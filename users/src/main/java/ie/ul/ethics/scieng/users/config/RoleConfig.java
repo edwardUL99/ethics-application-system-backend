@@ -47,7 +47,7 @@ public class RoleConfig implements CommandLineRunner {
      * @param permission the permission to save
      */
     private void savePermissionIfNotExists(Permission permission) {
-        Permission foundPermission = permissionRepository.findByName(permission.getName()).orElse(null);
+        Permission foundPermission = permissionRepository.findByTag(permission.getTag()).orElse(null);
 
         if (foundPermission == null || !foundPermission.equals(permission)) {
             if (foundPermission != null)
@@ -64,7 +64,7 @@ public class RoleConfig implements CommandLineRunner {
      * @param role the role to save
      */
     private void saveRoleIfNotExists(Role role) {
-        Role foundRole = roleRepository.findByName(role.getName()).orElse(null);
+        Role foundRole = roleRepository.findByTag(role.getTag()).orElse(null);
 
         if (foundRole == null || !foundRole.equals(role)) {
             if (foundRole != null)

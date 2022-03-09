@@ -36,7 +36,7 @@ public class Permission extends Authorization {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Permission permission = (Permission) o;
-        return Objects.equals(id, permission.id) && Objects.equals(name, permission.name);
+        return Objects.equals(name, permission.name) && Objects.equals(description, permission.description);
     }
 
     /**
@@ -45,6 +45,6 @@ public class Permission extends Authorization {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, name);
+        return Objects.hash(name, description);
     }
 }
