@@ -159,4 +159,10 @@ public interface ApplicationService {
      * @throws ApplicationException if the application is not in a reviewed state or the referrer does not have the REFER_APPLICATIONS permission
      */
     Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException;
+
+    /**
+     * Deletes the provided application
+     * @param application the application to delete
+     */
+    void deleteApplication(Application application);
 }

@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
@@ -472,6 +473,50 @@ public class ApplicationController {
         } catch (ApplicationException ex) {
             ex.printStackTrace();
             return respondError(ex.getMessage());
+        }
+    }
+
+    /**
+     * This endpoint deletes the user's own application if in draft state
+     * @param id the ID of the application
+     * @return the response body
+     */
+    @DeleteMapping("/delete")
+    public ResponseEntity<?> deleteApplication(@RequestParam String id) {
+        Application application = applicationService.getApplication(id);
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            ResponseEntity<?> verification = verifyOwnUser(application.getUser().getUsername());
+
+            if (verification != null)
+                return verification;
+
+            if (application.getStatus() != ApplicationStatus.DRAFT)
+                return respondError(INVALID_APPLICATION_STATUS);
+
+            applicationService.deleteApplication(application);
+
+            return ResponseEntity.ok().build();
+        }
+    }
+
+    /**
+     * This endpoint allows an admin delete any application in any status
+     * @param id the ID of the application
+     * @return the response body
+     */
+    @DeleteMapping("/admin/delete")
+    public ResponseEntity<?> deleteApplicationAdmin(@RequestParam String id) {
+        Application application = applicationService.getApplication(id);
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            applicationService.deleteApplication(application);
+
+            return ResponseEntity.ok().build();
         }
     }
 }
