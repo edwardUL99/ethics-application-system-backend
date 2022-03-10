@@ -243,6 +243,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
 
         submittedApplication.setLastUpdated(LocalDateTime.now());
+        submittedApplication.setSubmittedTime(LocalDateTime.now());
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;

@@ -52,6 +52,10 @@ public class SubmittedApplication extends Application {
     @Getter(AccessLevel.NONE)
     protected List<User> previousCommitteeMembers = new ArrayList<>();
     /**
+     * The timestamp of when the application was submitted
+     */
+    protected LocalDateTime submittedTime;
+    /**
      * The timestamp of when the application was approved
      */
     protected LocalDateTime approvalTime;
@@ -120,16 +124,18 @@ public class SubmittedApplication extends Application {
      * @param comments            the list of comments on this application
      * @param assignedCommitteeMembers the list of assigned committee members
      * @param finalComment        the final comment given to the application if approved/rejected
+     * @param submittedTime       the time the application was submitted at
      * @param approvalTime        the timestamp of when the application was approved
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
-                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime approvalTime) {
+                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime submittedTime, LocalDateTime approvalTime) {
         super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
         this.comments = new HashMap<>();
         comments.forEach(this::addComment);
         this.assignedCommitteeMembers = assignedCommitteeMembers;
         this.finalComment = finalComment;
+        this.submittedTime = submittedTime;
         this.approvalTime = approvalTime;
     }
 
@@ -283,7 +289,7 @@ public class SubmittedApplication extends Application {
     @Override
     public SubmittedApplication copy() {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, approvalTime);
+                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, approvalTime, submittedTime);
         submitted.previousCommitteeMembers = new ArrayList<>(submitted.previousCommitteeMembers);
         submitted.setLastUpdated(lastUpdated);
 
@@ -303,7 +309,7 @@ public class SubmittedApplication extends Application {
                 && Objects.equals(attachedFiles, that.attachedFiles)
                 && Objects.equals(comments, that.comments) && Objects.equals(assignedCommitteeMembers, that.assignedCommitteeMembers)
                 && Objects.equals(finalComment, that.finalComment) && Objects.equals(previousCommitteeMembers, that.previousCommitteeMembers)
-                && Objects.equals(approvalTime, that.approvalTime);
+                && Objects.equals(submittedTime, that.submittedTime) && Objects.equals(approvalTime, that.approvalTime);
     }
 
     /**
@@ -312,7 +318,7 @@ public class SubmittedApplication extends Application {
     @Override
     public int hashCode() {
         return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, attachedFiles, comments,
-                assignedCommitteeMembers, finalComment, previousCommitteeMembers, approvalTime);
+                assignedCommitteeMembers, finalComment, previousCommitteeMembers, submittedTime, approvalTime);
     }
 
     /**
