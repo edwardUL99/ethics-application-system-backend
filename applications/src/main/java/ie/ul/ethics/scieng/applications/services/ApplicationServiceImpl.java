@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -471,5 +472,16 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void deleteApplication(Application application) {
         this.applicationRepository.delete(application);
         this.templateRepository.delete(application.getApplicationTemplate());
+    }
+
+    /**
+     * Search for applications matching the given specification
+     *
+     * @param specification the specification to search with
+     * @return the list of found applications
+     */
+    @Override
+    public List<Application> search(Specification<Application> specification) {
+        return this.applicationRepository.findAll(specification);
     }
 }

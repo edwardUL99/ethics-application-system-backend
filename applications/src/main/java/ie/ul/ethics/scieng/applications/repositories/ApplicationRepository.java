@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.repositories;
 
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.common.search.SearchableRepository;
 import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
@@ -14,7 +15,7 @@ import java.util.Optional;
  * This repository is used for saving application drafts
  */
 @Repository
-public interface ApplicationRepository extends CrudRepository<Application, Long> {
+public interface ApplicationRepository extends CrudRepository<Application, Long>, SearchableRepository<Application> {
     /**
      * Find the application by its ApplicationId attribute
      * @param applicationId the ethics ID to find the application by

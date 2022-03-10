@@ -14,6 +14,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -214,5 +215,16 @@ public class UserServiceImpl implements UserService {
         user.setRole(role);
 
         userRepository.save(user);
+    }
+
+    /**
+     * Search for users with the given specification
+     *
+     * @param specification the specification to search with
+     * @return the list of found users
+     */
+    @Override
+    public List<User> search(Specification<User> specification) {
+        return this.userRepository.findAll(specification);
     }
 }
