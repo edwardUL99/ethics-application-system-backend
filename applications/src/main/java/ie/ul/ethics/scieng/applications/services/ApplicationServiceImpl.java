@@ -123,7 +123,18 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!assigned.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
             throw new ApplicationException("The user must have the REVIEW_APPLICATIONS permission");
 
-        return applicationRepository.findUserAssignedApplications(assigned);
+        List<Application> applications = new ArrayList<>();
+        applicationRepository.findAll().forEach(applications::add);
+        String assignedUsername = assigned.getUsername();
+
+        return applications.stream()
+                .filter(a -> a instanceof SubmittedApplication)
+                .map(a -> (SubmittedApplication)a)
+                .filter(a -> a.getAssignedCommitteeMembers()
+                        .stream()
+                        .map(m -> m.getUser().getUsername())
+                        .anyMatch(u -> u.equals(assignedUsername)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -330,7 +341,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationStatus status = application.getStatus();
 
         if (!finishReview && status != ApplicationStatus.SUBMITTED)
-            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.SUBMITTED + " if it is in the "
+            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
                 + ApplicationStatus.SUBMITTED + " status");
         else if (finishReview && status != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);

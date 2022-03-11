@@ -2,13 +2,12 @@ package ie.ul.ethics.scieng.applications.search;
 
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.common.search.KeyMappings;
 import ie.ul.ethics.scieng.common.search.SearchCriteria;
 import ie.ul.ethics.scieng.common.search.SearchSpecification;
+import ie.ul.ethics.scieng.common.search.ValueConverters;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * This base class represents a specification for searching applications
@@ -39,39 +38,34 @@ public class ApplicationSpecification<T extends Application> extends SearchSpeci
     }
 
     /**
-     * This is a method that can be overridden to return a map that maps a criteria key to a field name. This can be useful
-     * if the query key is separate to the name of the actual property on the entity, for example id can map to applicationId,
-     * while dbId maps to id
+     * Register any key mappings to the provided KeyMappings object. Default implementation is to add no mappings.
      *
-     * @return null if not overridden or the mapping
+     * @param keyMappings the mappings to put the keys into
      */
     @Override
-    public Map<String, String> keyMappings() {
-        Map<String, String> mappings = new HashMap<>();
+    public void registerKeyMappings(KeyMappings keyMappings) {
+        super.registerKeyMappings(keyMappings);
 
-        mappings.put("id", "applicationId");
-        mappings.put("dbId", "id");
-
-        return mappings;
+        keyMappings.put("id", "applicationId");
+        keyMappings.put("dbId", "id");
     }
 
     /**
-     * A map of key names to a function that takes the value and returns a mapped value. Default is to return null
+     * Register any value converters to the provided ValueConverters object. These converters will be used in the creation of
+     * the search predicate. Default implementation is to add no converters but can be overridden
      *
-     * @return the map of value converters
+     * @param valueConverters the converters to register to
      */
     @Override
-    public Map<String, Function<Object, Object>> valueConverters() {
-        Map<String, Function<Object, Object>> converters = new HashMap<>();
+    public void registerValueConverters(ValueConverters valueConverters) {
+        super.registerValueConverters(valueConverters);
 
-        converters.put("status", value -> {
+        valueConverters.addConverter("status", value -> {
             if (value instanceof String) {
                 return ApplicationStatus.valueOf((String)value);
             } else {
                 return value;
             }
         });
-
-        return converters;
     }
 }

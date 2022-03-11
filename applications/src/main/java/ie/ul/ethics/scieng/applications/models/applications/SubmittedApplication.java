@@ -7,9 +7,7 @@ import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
@@ -36,7 +34,7 @@ public class SubmittedApplication extends Application {
     /**
      * The list of assigned committee members
      */
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @Getter(AccessLevel.NONE)
     protected List<AssignedCommitteeMember> assignedCommitteeMembers;
     /**
@@ -180,7 +178,7 @@ public class SubmittedApplication extends Application {
             throw new InvalidStatusException("You cannot assign the assigned committee members to the previous members list if the " +
                     "status is not " + ApplicationStatus.RESUBMITTED);
 
-        assignedCommitteeMembers.forEach(member -> assignCommitteeMember(member.user, previousCommitteeMembers));
+        assignedCommitteeMembers.forEach(member -> assignCommitteeMember(member.getUser(), previousCommitteeMembers));
         assignedCommitteeMembers.clear();
     }
 
@@ -315,49 +313,4 @@ public class SubmittedApplication extends Application {
                 assignedCommitteeMembers, finalComment, previousCommitteeMembers, approvalTime);
     }
 
-    /**
-     * This class represents a committee member that is assigned to the application. It holds the user that is assigned
-     * and the status of whether they are assigned or not
-     */
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    @Setter
-    @Entity
-    public static class AssignedCommitteeMember {
-        /**
-         * The database ID of this object
-         */
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
-        /**
-         * The committee member that is assigned
-         */
-        @OneToOne
-        private User user;
-        /**
-         * Determine if the committee member has finished their review
-         */
-        private boolean finishReview;
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-            AssignedCommitteeMember that = (AssignedCommitteeMember) o;
-            return Objects.equals(id, that.id) && Objects.equals(user, that.user) && Objects.equals(finishReview, that.finishReview);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            return Objects.hash(id, user, finishReview);
-        }
-    }
 }

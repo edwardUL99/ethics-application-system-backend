@@ -21,6 +21,7 @@ import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
+import ie.ul.ethics.scieng.common.search.SearchCriteria;
 import ie.ul.ethics.scieng.common.search.SearchException;
 import ie.ul.ethics.scieng.common.search.SearchParser;
 import ie.ul.ethics.scieng.users.models.User;
@@ -39,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
@@ -529,6 +532,37 @@ public class ApplicationController {
     }
 
     /**
+     * Get the applications with committee members assigned with the username in the query
+     * @param query the query to parse (only the first part with assigned will be parsed)
+     * @return the list of found applications
+     */
+    private List<Application> getApplicationsWithUserAssigned(String query) {
+        query += ",";
+
+        Pattern pattern = Pattern.compile("(assigned)(:=)(.+?),");
+        Matcher matcher = pattern.matcher(query);
+
+        if (matcher.find()) {
+            SearchCriteria criteria = new SearchCriteria(matcher.group(1), matcher.group(2), matcher.group(3), false);
+
+            if (!criteria.getOperation().equals(":=")) {
+                return null;
+            } else {
+                String username = (String)criteria.getValue();
+                User user = this.userService.loadUser(username);
+
+                if (user != null) {
+                    return applicationService.getAssignedApplications(user);
+                } else {
+                    return Collections.emptyList();
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    /**
      * Search through applications until you hit the first instance that the field belongs to.
      * This "hack" is required as each class of the Application inheritance hierarchy needs to be searched through for the field.
      * First it searches with the generic ApplicationSpecification for any fields shared between all, then in the order of
@@ -539,26 +573,29 @@ public class ApplicationController {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private List<Application> findApplications(String query, boolean or) {
-        List<Class<? extends ApplicationSpecification>> specClasses =
-                List.of(ApplicationSpecification.class, DraftApplicationSpecification.class, SubmittedApplicationSpecification.class, ReferredApplicationSpecification.class);
+        if (query.contains("assigned")) {
+            return this.getApplicationsWithUserAssigned(query);
+        } else {
+            List<Class<? extends ApplicationSpecification>> specClasses =
+                    List.of(ApplicationSpecification.class, DraftApplicationSpecification.class, SubmittedApplicationSpecification.class, ReferredApplicationSpecification.class);
 
-        for (Class<? extends ApplicationSpecification> spec : specClasses) {
-            try {
-                Specification<Application> specification =
-                        new SearchParser<>(spec).parse(query, ApplicationSpecification.OPERATION_PATTERN, or);
+            for (Class<? extends ApplicationSpecification> spec : specClasses) {
+                try {
+                    Specification<Application> specification =
+                            new SearchParser<>(spec).parse(query, ApplicationSpecification.OPERATION_PATTERN, or);
 
-                List<Application> searched = this.applicationService.search(specification);
+                    List<Application> searched = this.applicationService.search(specification);
 
-                if (searched.size() > 0) {
-                    return searched;
+                    if (searched.size() > 0)
+                        return searched;
+                } catch (SearchException ignored) {
+                } catch (Exception ex) {
+                    throw new SearchException(null, ex);
                 }
-            } catch (SearchException ignored) {
-            } catch (Exception ex) {
-                throw new SearchException(null, ex);
             }
-        }
 
-        return Collections.emptyList();
+            return Collections.emptyList();
+        }
     }
 
     /**

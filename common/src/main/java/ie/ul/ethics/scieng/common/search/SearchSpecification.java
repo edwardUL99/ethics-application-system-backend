@@ -1,6 +1,6 @@
 package ie.ul.ethics.scieng.common.search;
 
-import ie.ul.ethics.scieng.common.search.operators.SearchOperators;
+import ie.ul.ethics.scieng.common.search.operators.OperatorOverloads;
 import org.springframework.data.jpa.domain.Specification;
 
 import javax.persistence.criteria.CriteriaBuilder;
@@ -9,12 +9,15 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
- * This class is a base class that any Specification class can extend and uses a search criteria
+ * This class is a base class that any Specification class can extend and uses a search criteria.
+ *
+ * A SearchSpecification is a class that defines how a SearchCriteria should be converted to a JPA Predicate. It allows
+ * the definition of mapping user-friendly search fields to the db property names, functions to transform/convert search values
+ * into forms suitable for searching, and overloaded search operators to specifically handle that criteria
+ *
  * @param <T> the type of the object that is being searched
  */
 public abstract class SearchSpecification<T> implements Specification<T> {
@@ -23,13 +26,17 @@ public abstract class SearchSpecification<T> implements Specification<T> {
      */
     protected final SearchCriteria criteria;
     /**
-     * A lazily initialised map of key mappings
+     * The key mappings to map query keys
      */
-    protected Map<String, String> mappings;
+    private final KeyMappings keyMappings = new KeyMappings();
     /**
-     * A lazily initialised map of converters
+     * The mapping of value converters
      */
-    protected Map<String, Function<Object, Object>> converters;
+    private final ValueConverters converters = new ValueConverters();
+    /**
+     * The mapping of operator overloads
+     */
+    private final OperatorOverloads overloads = new OperatorOverloads();
 
     /**
      * Create an instance with the provided search criteria
@@ -37,30 +44,6 @@ public abstract class SearchSpecification<T> implements Specification<T> {
      */
     public SearchSpecification(SearchCriteria criteria) {
         this.criteria = criteria;
-    }
-
-    /**
-     * Lazily initialise the key mappings from the overridable keyMapppings method
-     * @return the initialised key mappings
-     */
-    private Map<String, String> getKeyMappings() {
-        if (this.mappings == null) {
-            this.mappings = keyMappings();
-        }
-
-        return this.mappings;
-    }
-
-    /**
-     * Lazily initialise the converters from the overridable valueConverters method
-     * @return the map of converters
-     */
-    private Map<String, Function<Object, Object>> getConverters() {
-        if (this.converters == null) {
-            this.converters = this.valueConverters();
-        }
-
-        return this.converters;
     }
 
     /**
@@ -72,11 +55,14 @@ public abstract class SearchSpecification<T> implements Specification<T> {
     private Expression<?> parseValue(Root<?> root, String key) {
         if (key.contains(".")) {
             String[] split = key.split("\\.");
+            String splitKey = keyMappings.getMappedKey(split[0]);
 
-            Path<?> rootValue = root.get(split[0]);
+            Path<?> rootValue = root.get(splitKey);
 
-            for (int i = 1; i < split.length; i++)
-                rootValue = rootValue.get(split[i]);
+            for (int i = 1; i < split.length; i++) {
+                splitKey = keyMappings.getMappedKey(split[i]);
+                rootValue = rootValue.get(splitKey);
+            }
 
             return rootValue;
         } else {
@@ -91,22 +77,17 @@ public abstract class SearchSpecification<T> implements Specification<T> {
         String operation = criteria.getOperation();
         String criteriaKey = criteria.getKey();
 
-        Map<String, String> mappings = getKeyMappings();
+        registerKeyMappings(keyMappings);
+        criteriaKey = keyMappings.getMappedKey(criteriaKey);
 
-        if (mappings != null)
-            criteriaKey = mappings.getOrDefault(criteriaKey, criteriaKey);
-
-        Map<String, Function<Object, Object>> converters = this.getConverters();
-
-        if (converters != null) {
-            Function<Object, Object> converter = converters.getOrDefault(criteriaKey, value -> value);
-            criteria.setValue(converter.apply(criteria.getValue()));
-        }
+        registerValueConverters(converters);
+        criteria.setValue(converters.getConverter(criteriaKey).apply(criteria.getValue()));
+        registerOperatorOverloads(overloads);
 
         if (supportedOperations().contains(operation)) {
             try {
                 Expression<?> rootValue = this.parseValue(root, criteriaKey);
-                return SearchOperators.getOperator(operation).operate(rootValue, criteriaBuilder, criteria);
+                return overloads.getOperator(criteriaKey, operation).operate(rootValue, criteriaBuilder, criteria);
             } catch (Exception ex) {
                 throw new SearchException("An error occurred during search", ex);
             }
@@ -122,22 +103,24 @@ public abstract class SearchSpecification<T> implements Specification<T> {
     public abstract Set<String> supportedOperations();
 
     /**
-     * This is a method that can be overridden to return a map that maps a criteria key to a field name. This can be useful
-     * if the query key is separate to the name of the actual property on the entity, for example id can map to applicationId,
-     * while dbId maps to id
-     * @return null if not overridden or the mapping
+     * Register any key mappings to the provided KeyMappings object. Default implementation is to add no mappings.
+     * @param keyMappings the mappings to put the keys into
      */
-    public Map<String, String> keyMappings() {
-        return null;
-    }
+    public void registerKeyMappings(KeyMappings keyMappings) {}
 
     /**
-     * A map of key names to a function that takes the value and returns a mapped value. Default is to return null
-     * @return the map of value converters
+     * Register any value converters to the provided ValueConverters object. These converters will be used in the creation of
+     * the search predicate. Default implementation is to add no converters but can be overridden
+     * @param valueConverters the converters to register to
      */
-    public Map<String, Function<Object, Object>> valueConverters() {
-        return null;
-    }
+    public void registerValueConverters(ValueConverters valueConverters) {}
+
+    /**
+     * Register any overloaded search operators for fields of the object. These operators overload the default registered operators for that
+     * criteria key
+     * @param overloads the overloaded operators to register to
+     */
+    public void registerOperatorOverloads(OperatorOverloads overloads) {}
 
     /**
      * This method casts the root to a value that can be searched. By default, it does nothing and just returns

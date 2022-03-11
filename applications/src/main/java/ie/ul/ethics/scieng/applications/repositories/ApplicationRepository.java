@@ -4,7 +4,6 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.common.search.SearchableRepository;
 import ie.ul.ethics.scieng.users.models.User;
-import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
@@ -36,12 +35,4 @@ public interface ApplicationRepository extends CrudRepository<Application, Long>
      * @return the list of found applications
      */
     List<Application> findByStatus(ApplicationStatus status);
-
-    /**
-     * Find all the applications where the user is assigned to the application
-     * @param assigned the assigned user
-     * @return the list of found applications
-     */
-    @Query("SELECT submitted FROM SubmittedApplication submitted WHERE ?1 IN(submitted.assignedCommitteeMembers)")
-    List<Application> findUserAssignedApplications(User assigned);
 }

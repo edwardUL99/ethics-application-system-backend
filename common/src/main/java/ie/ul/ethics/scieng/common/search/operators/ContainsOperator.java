@@ -34,7 +34,7 @@ public class ContainsOperator extends BaseSearchOperator {
         if (type == String.class) {
             return SearchOperators.getOperator(":").operate(rootValue, criteriaBuilder, criteria);
         } else if (type == List.class) {
-            return criteriaBuilder.in(rootValue);
+            return criteriaBuilder.<Object>in(rootValue).value(criteria.getValue());
         } else {
             return null;
         }
