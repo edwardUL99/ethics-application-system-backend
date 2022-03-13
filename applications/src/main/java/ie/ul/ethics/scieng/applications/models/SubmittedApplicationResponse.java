@@ -3,6 +3,7 @@ package ie.ul.ethics.scieng.applications.models;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
@@ -31,7 +32,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
     /**
      * The comments left on the submitted application
      */
-    private Map<String, Comment> comments;
+    private Map<String, ApplicationComments> comments;
     /**
      * The list of usernames of the assigned committee members
      */

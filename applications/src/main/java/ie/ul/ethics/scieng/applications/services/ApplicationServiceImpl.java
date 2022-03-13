@@ -4,6 +4,7 @@ import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
@@ -405,9 +406,12 @@ public class ApplicationServiceImpl implements ApplicationService {
      * Map comments to a way where they're able to be saved without detached instance exceptions
      * @param comments the comments to map
      */
-    private Map<String, Comment> mapComments(Map<String, Comment> comments) {
-        Map<String, Comment> mapped = new HashMap<>(comments);
-        mapped.forEach((k, v) -> v.setId(null));
+    private Map<String, ApplicationComments> mapComments(Map<String, ApplicationComments> comments) {
+        Map<String, ApplicationComments> mapped = new HashMap<>(comments);
+        mapped.forEach((k, v) -> {
+            v.setId(null);
+            v.getComments().forEach(c -> c.setId(null));
+        });
 
         return mapped;
     }
@@ -436,7 +440,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         SubmittedApplication submitted = (SubmittedApplication) application;
 
-        Map<String, Comment> comments = mapComments(submitted.getComments());
+        Map<String, ApplicationComments> comments = mapComments(submitted.getComments());
         Comment finalComment = submitted.getFinalComment();
 
         if (finalComment != null) {

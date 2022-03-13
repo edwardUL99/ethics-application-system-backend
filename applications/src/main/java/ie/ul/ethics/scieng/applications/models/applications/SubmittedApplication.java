@@ -32,7 +32,7 @@ public class SubmittedApplication extends Application {
             joinColumns = {@JoinColumn(name = "id", referencedColumnName = "id")},
             inverseJoinColumns = {@JoinColumn(name = "comment_id", referencedColumnName = "id")})
     @MapKey(name = "componentId")
-    protected Map<String, Comment> comments;
+    protected Map<String, ApplicationComments> comments;
     /**
      * The list of assigned committee members
      */
@@ -78,7 +78,7 @@ public class SubmittedApplication extends Application {
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
-                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment) {
+                                List<ApplicationComments> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment) {
         this(id, applicationId, user, status, applicationTemplate, answers, new ArrayList<>(), comments, assignedCommitteeMembers,
                 finalComment);
     }
@@ -99,12 +99,8 @@ public class SubmittedApplication extends Application {
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
-                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment) {
-        super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
-        this.comments = new HashMap<>();
-        comments.forEach(this::addComment);
-        this.assignedCommitteeMembers = assignedCommitteeMembers;
-        this.finalComment = finalComment;
+                                List<ApplicationComments> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment) {
+        this(id, applicationId, user, status, applicationTemplate, answers, attachedFiles, comments, assignedCommitteeMembers, finalComment, null);
     }
 
     /**
@@ -124,10 +120,10 @@ public class SubmittedApplication extends Application {
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
-                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime approvalTime) {
+                                List<ApplicationComments> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime approvalTime) {
         super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
         this.comments = new HashMap<>();
-        comments.forEach(this::addComment);
+        comments.forEach(c -> c.getComments().forEach(this::addComment));
         this.assignedCommitteeMembers = assignedCommitteeMembers;
         this.finalComment = finalComment;
         this.approvalTime = approvalTime;
@@ -204,7 +200,14 @@ public class SubmittedApplication extends Application {
      * @param comment the comment to add
      */
     public void addComment(Comment comment) {
-        this.comments.put(comment.getComponentId(), comment);
+        String componentId = comment.getComponentId();
+        ApplicationComments comments = this.comments.get(componentId);
+
+        if (comments != null) {
+            comments.getComments().add(comment);
+        } else {
+            this.comments.put(componentId, new ApplicationComments(null, componentId, new ArrayList<>(List.of(comment))));
+        }
     }
 
     /**
