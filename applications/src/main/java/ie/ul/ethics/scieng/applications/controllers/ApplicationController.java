@@ -21,9 +21,11 @@ import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
+import ie.ul.ethics.scieng.common.search.SearchController;
 import ie.ul.ethics.scieng.common.search.SearchCriteria;
 import ie.ul.ethics.scieng.common.search.SearchException;
 import ie.ul.ethics.scieng.common.search.SearchParser;
+import ie.ul.ethics.scieng.common.search.SearchResponse;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,7 +53,7 @@ import static ie.ul.ethics.scieng.common.Constants.*;
  */
 @RestController
 @RequestMapping("/api/applications")
-public class ApplicationController {
+public class ApplicationController implements SearchController<ApplicationResponse> {
     /**
      * The service for the applications processing
      */
@@ -573,9 +575,9 @@ public class ApplicationController {
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private List<Application> findApplications(String query, boolean or) {
-        if (query.contains("assigned")) {
-            return this.getApplicationsWithUserAssigned(query);
-        } else {
+//        if (query.contains("assigned")) {
+//            return this.getApplicationsWithUserAssigned(query);
+//        } else {
             List<Class<? extends ApplicationSpecification>> specClasses =
                     List.of(ApplicationSpecification.class, DraftApplicationSpecification.class, SubmittedApplicationSpecification.class, ReferredApplicationSpecification.class);
 
@@ -595,7 +597,7 @@ public class ApplicationController {
             }
 
             return Collections.emptyList();
-        }
+        //}
     }
 
     /**
@@ -605,7 +607,7 @@ public class ApplicationController {
      * @return the list of found applications
      */
     @GetMapping("/search")
-    public ResponseEntity<?> search(@RequestParam String query, @RequestParam(required = false) boolean or) {
+    public ResponseEntity<SearchResponse<ApplicationResponse>> search(@RequestParam String query, @RequestParam(required = false) boolean or) {
         try {
             User user = userService.loadUser(authenticationInformation.getUsername());
 
@@ -621,10 +623,10 @@ public class ApplicationController {
                     })
                     .collect(Collectors.toList());
 
-            return ResponseEntity.ok(responses);
+            return ResponseEntity.ok(new SearchResponse<>(responses, null));
         } catch (SearchException ex) {
             ex.printStackTrace();
-            return respondError(SEARCH_FAILED);
+            return ResponseEntity.badRequest().body(new SearchResponse<>(List.of(), SEARCH_FAILED));
         }
     }
 }
