@@ -347,27 +347,6 @@ public class UserServiceTest {
     }
 
     /**
-     * This method tests that an IllegalStateException is thrown if accounts do not match
-     */
-    @Test
-    public void shouldThrowIllegalStateIfAccountsNotMatch() {
-        User user = createTestUser();
-        Account account = createTestAccount();
-        account.setEmail("different@email.com");
-
-        Account saved = user.getAccount();
-        user.setAccount(saved);
-
-        given(accountService.getAccount(USERNAME))
-                .willReturn(account);
-
-        assertThrows(IllegalStateException.class, () -> userService.updateUser(user));
-
-        verify(accountService).getAccount(USERNAME);
-        verify(userRepository, times(0)).save(user);
-    }
-
-    /**
      * This method tests the upgrade of a role from standard member to committee member
      */
     @Test

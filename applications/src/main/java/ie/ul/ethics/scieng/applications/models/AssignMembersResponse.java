@@ -60,6 +60,10 @@ public class AssignMembersResponse {
          */
         private Long id;
         /**
+         * The ID of the application the member is assigned to
+         */
+        private String applicationId;
+        /**
          * The member assigned
          */
         private UserResponseShortened member;

@@ -1,8 +1,10 @@
 package ie.ul.ethics.scieng.users.controllers;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
+import ie.ul.ethics.scieng.common.search.SearchController;
 import ie.ul.ethics.scieng.common.search.SearchException;
 import ie.ul.ethics.scieng.common.search.SearchParser;
+import ie.ul.ethics.scieng.common.search.SearchResponse;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController implements SearchController<UserResponseShortened> {
     /**
      * The user service for interacting with user business logic
      */
@@ -202,12 +204,12 @@ public class UserController {
      * @return the response body
      */
     @GetMapping("/search")
-    public ResponseEntity<?> search(@RequestParam String query, @RequestParam(required = false) boolean or) {
+    public ResponseEntity<SearchResponse<UserResponseShortened>> search(@RequestParam String query, @RequestParam(required = false) boolean or) {
         Specification<User> specification = new SearchParser<>(UserSpecification.class)
                 .parse(query, UserSpecification.OPERATION_PATTERN, or);
 
         if (specification == null) {
-            return respondError(SEARCH_FAILED);
+            return ResponseEntity.badRequest().body(new SearchResponse<>(List.of(), SEARCH_FAILED));
         } else {
             try {
                 List<UserResponseShortened> shortened = this.userService.search(specification)
@@ -215,10 +217,10 @@ public class UserController {
                         .map(UserResponseShortened::new)
                         .collect(Collectors.toList());
 
-                return ResponseEntity.ok(shortened);
+                return ResponseEntity.ok(new SearchResponse<>(shortened, null));
             } catch (SearchException ex) {
                 ex.printStackTrace();
-                return respondError(SEARCH_FAILED);
+                return ResponseEntity.badRequest().body(new SearchResponse<>(List.of(), SEARCH_FAILED));
             }
         }
     }

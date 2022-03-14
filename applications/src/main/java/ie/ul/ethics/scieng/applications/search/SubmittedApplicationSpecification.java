@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.search;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.common.search.KeyMappings;
 import ie.ul.ethics.scieng.common.search.SearchCriteria;
+import ie.ul.ethics.scieng.common.search.operators.OperatorOverloads;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.Root;
@@ -41,5 +42,17 @@ public class SubmittedApplicationSpecification extends ApplicationSpecification<
     public void registerKeyMappings(KeyMappings keyMappings) {
         super.registerKeyMappings(keyMappings);
         keyMappings.put("assigned", "assignedCommitteeMembers");
+    }
+
+    /**
+     * Register any overloaded search operators for fields of the object. These operators overload the default registered operators for that
+     * criteria key
+     *
+     * @param overloads the overloaded operators to register to
+     */
+    @Override
+    public void registerOperatorOverloads(OperatorOverloads overloads) {
+        super.registerOperatorOverloads(overloads);
+        overloads.addOperatorOverload("assignedCommitteeMembers", new AssignedContainsOperator());
     }
 }
