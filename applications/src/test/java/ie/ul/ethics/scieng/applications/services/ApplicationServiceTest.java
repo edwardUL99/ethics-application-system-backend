@@ -518,14 +518,15 @@ public class ApplicationServiceTest {
     @Test
     public void shouldSubmitApplication() {
         DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
-        Application submitted = createSubmittedApplication(draftApplication);
+        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
 
-        Application returned = applicationService.submitApplication(draftApplication);
+        SubmittedApplication returned = (SubmittedApplication) applicationService.submitApplication(draftApplication);
+        submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
-        assertTrue(returned instanceof SubmittedApplication);
         assertEquals(ApplicationStatus.SUBMITTED, returned.getStatus());
         assertNotNull(returned.getLastUpdated());
+        assertNotNull(returned.getSubmittedTime());
         assertEquals(draftApplication.getApplicationId(), returned.getApplicationId());
         verify(applicationRepository).delete(draftApplication);
         verify(applicationRepository).save(submitted);
@@ -544,16 +545,18 @@ public class ApplicationServiceTest {
         Application referred = new ReferredApplication(null, APPLICATION_ID, draftApplication.getUser(), draftApplication.getApplicationTemplate(),
                 draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
 
-        Application submitted = createSubmittedApplication(draftApplication);
-        ((SubmittedApplication)submitted).assignCommitteeMember(referrer);
+        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+        submitted.assignCommitteeMember(referrer);
         submitted.setStatus(ApplicationStatus.RESUBMITTED);
-        ((SubmittedApplication) submitted).assignCommitteeMembersToPrevious();
+        submitted.assignCommitteeMembersToPrevious();
 
-        Application returned = applicationService.submitApplication(referred);
+        SubmittedApplication returned = (SubmittedApplication) applicationService.submitApplication(referred);
+        submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
-        assertTrue(((SubmittedApplication)returned).getPreviousCommitteeMembers().contains(referrer));
+        assertTrue(returned.getPreviousCommitteeMembers().contains(referrer));
         assertEquals(ApplicationStatus.RESUBMITTED, returned.getStatus());
+        assertNotNull(returned.getSubmittedTime());
         verify(applicationRepository).delete(referred);
         verify(applicationRepository).save(submitted);
     }
