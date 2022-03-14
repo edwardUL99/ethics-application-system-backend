@@ -25,6 +25,7 @@ the request is just made with '/api/users' and no extra elements in the path
 | /user/role   | PUT    | This allows a user with Update Permissions permission to change the role of a user                                                                                                                 |
 | /roles       | GET    | This returns a listing of all the defined roles in the system                                                                                                                                      |
 | /permissions | GET    | This returns a listing of all the defined permissions in the system                                                                                                                                |
+| /search      | GET    | Uses a query language to serach for users                                       |
 
 ## Configuration
 There are 2 configuration files provided by this module:

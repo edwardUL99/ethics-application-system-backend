@@ -4,6 +4,7 @@ import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
@@ -360,13 +361,13 @@ public class ApplicationServiceTest {
 
         List<Application> list = List.of(submitted);
 
-        given(applicationRepository.findUserAssignedApplications(assigned))
+        given(applicationRepository.findAll())
                 .willReturn(list);
 
         List<Application> returned = applicationService.getAssignedApplications(assigned);
 
         assertEquals(list, returned);
-        verify(applicationRepository).findUserAssignedApplications(assigned);
+        verify(applicationRepository).findAll();
     }
 
     /**
@@ -735,7 +736,7 @@ public class ApplicationServiceTest {
         user.setRole(Roles.COMMITTEE_MEMBER);
 
         submittedApplication.assignCommitteeMember(user);
-        SubmittedApplication.AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
+        AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
 
         assertFalse(assigned.isFinishReview());
 

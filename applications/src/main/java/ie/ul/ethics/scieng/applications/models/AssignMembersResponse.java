@@ -72,7 +72,7 @@ public class AssignMembersResponse {
          * Create the response object from the provided entity
          * @param member the entity to convert to the response
          */
-        public AssignedCommitteeMember(SubmittedApplication.AssignedCommitteeMember member) {
+        public AssignedCommitteeMember(ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember member) {
             this.id = member.getId();
             this.member = new UserResponseShortened(member.getUser());
             this.finishReview = member.isFinishReview();
