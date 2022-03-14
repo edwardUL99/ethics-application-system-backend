@@ -7,9 +7,7 @@ import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.Hibernate;
 
@@ -36,7 +34,7 @@ public class SubmittedApplication extends Application {
     /**
      * The list of assigned committee members
      */
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     @Getter(AccessLevel.NONE)
     protected List<AssignedCommitteeMember> assignedCommitteeMembers;
     /**
@@ -51,6 +49,10 @@ public class SubmittedApplication extends Application {
     @OneToMany
     @Getter(AccessLevel.NONE)
     protected List<User> previousCommitteeMembers = new ArrayList<>();
+    /**
+     * The timestamp of when the application was submitted
+     */
+    protected LocalDateTime submittedTime;
     /**
      * The timestamp of when the application was approved
      */
@@ -120,16 +122,18 @@ public class SubmittedApplication extends Application {
      * @param comments            the list of comments on this application
      * @param assignedCommitteeMembers the list of assigned committee members
      * @param finalComment        the final comment given to the application if approved/rejected
+     * @param submittedTime       the time the application was submitted at
      * @param approvalTime        the timestamp of when the application was approved
      */
     public SubmittedApplication(Long id, String applicationId, User user, ApplicationStatus status,
                                 ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles,
-                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime approvalTime) {
+                                List<Comment> comments, List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, LocalDateTime submittedTime, LocalDateTime approvalTime) {
         super(id, applicationId, user, status, applicationTemplate, answers, attachedFiles);
         this.comments = new HashMap<>();
         comments.forEach(this::addComment);
         this.assignedCommitteeMembers = assignedCommitteeMembers;
         this.finalComment = finalComment;
+        this.submittedTime = submittedTime;
         this.approvalTime = approvalTime;
     }
 
@@ -180,7 +184,7 @@ public class SubmittedApplication extends Application {
             throw new InvalidStatusException("You cannot assign the assigned committee members to the previous members list if the " +
                     "status is not " + ApplicationStatus.RESUBMITTED);
 
-        assignedCommitteeMembers.forEach(member -> assignCommitteeMember(member.user, previousCommitteeMembers));
+        assignedCommitteeMembers.forEach(member -> assignCommitteeMember(member.getUser(), previousCommitteeMembers));
         assignedCommitteeMembers.clear();
     }
 
@@ -283,7 +287,7 @@ public class SubmittedApplication extends Application {
     @Override
     public SubmittedApplication copy() {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, approvalTime);
+                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, approvalTime, submittedTime);
         submitted.previousCommitteeMembers = new ArrayList<>(submitted.previousCommitteeMembers);
         submitted.setLastUpdated(lastUpdated);
 
@@ -303,7 +307,7 @@ public class SubmittedApplication extends Application {
                 && Objects.equals(attachedFiles, that.attachedFiles)
                 && Objects.equals(comments, that.comments) && Objects.equals(assignedCommitteeMembers, that.assignedCommitteeMembers)
                 && Objects.equals(finalComment, that.finalComment) && Objects.equals(previousCommitteeMembers, that.previousCommitteeMembers)
-                && Objects.equals(approvalTime, that.approvalTime);
+                && Objects.equals(submittedTime, that.submittedTime) && Objects.equals(approvalTime, that.approvalTime);
     }
 
     /**
@@ -312,52 +316,7 @@ public class SubmittedApplication extends Application {
     @Override
     public int hashCode() {
         return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, attachedFiles, comments,
-                assignedCommitteeMembers, finalComment, previousCommitteeMembers, approvalTime);
+                assignedCommitteeMembers, finalComment, previousCommitteeMembers, submittedTime, approvalTime);
     }
 
-    /**
-     * This class represents a committee member that is assigned to the application. It holds the user that is assigned
-     * and the status of whether they are assigned or not
-     */
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Getter
-    @Setter
-    @Entity
-    public static class AssignedCommitteeMember {
-        /**
-         * The database ID of this object
-         */
-        @Id
-        @GeneratedValue(strategy = GenerationType.IDENTITY)
-        private Long id;
-        /**
-         * The committee member that is assigned
-         */
-        @OneToOne
-        private User user;
-        /**
-         * Determine if the committee member has finished their review
-         */
-        private boolean finishReview;
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
-            AssignedCommitteeMember that = (AssignedCommitteeMember) o;
-            return Objects.equals(id, that.id) && Objects.equals(user, that.user) && Objects.equals(finishReview, that.finishReview);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            return Objects.hash(id, user, finishReview);
-        }
-    }
 }

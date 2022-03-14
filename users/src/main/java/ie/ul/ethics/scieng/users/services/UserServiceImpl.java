@@ -14,6 +14,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -184,12 +185,13 @@ public class UserServiceImpl implements UserService {
      */
     private void downgradeRoles(Role role) {
         String name = role.getName();
-        String committeeRole = Roles.COMMITTEE_MEMBER.getName();
+        Role downgrade = Roles.getRole(role.getDowngradeTo());
+        String downgradeName = downgrade.getName();
         List<User> users = userRepository.findByRole_Name(name);
 
         for (User u : users) {
-            log.info("Can only have one user with role {}, so downgrading user {} to role {}", name, u.getUsername(), committeeRole);
-            u.setRole(Roles.COMMITTEE_MEMBER);
+            log.info("Can only have one user with role {}, so downgrading user {} to role {}", name, u.getUsername(), downgradeName);
+            u.setRole(downgrade);
             userRepository.save(u);
         }
     }
@@ -207,12 +209,22 @@ public class UserServiceImpl implements UserService {
             @CacheEvict(value = "allusers", allEntries = true)
     })
     public void updateRole(User user, Role role) {
-        if (role.isSingleUser()) {
+        if (role.isSingleUser())
             downgradeRoles(role);
-        }
 
         user.setRole(role);
 
         userRepository.save(user);
+    }
+
+    /**
+     * Search for users with the given specification
+     *
+     * @param specification the specification to search with
+     * @return the list of found users
+     */
+    @Override
+    public List<User> search(Specification<User> specification) {
+        return this.userRepository.findAll(specification);
     }
 }

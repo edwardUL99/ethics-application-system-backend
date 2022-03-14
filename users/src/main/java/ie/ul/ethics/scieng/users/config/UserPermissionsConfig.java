@@ -51,6 +51,9 @@ public class UserPermissionsConfig {
      * @return the chair person email
      */
     public String getChair() {
+        String chairEnv = System.getenv("ETHICS_CHAIR_EMAIL");
+        chair = (chairEnv != null) ? chairEnv:chair;
+
         if (chair == null)
             throw new IllegalStateException("You need to define the permissions.chair property with the email of the chair person");
 

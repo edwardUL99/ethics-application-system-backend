@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.users.repositories;
 
+import ie.ul.ethics.scieng.common.search.SearchableRepository;
 import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
@@ -11,7 +12,7 @@ import java.util.Optional;
  * This interface represents the repository for interacting with user repositories
  */
 @Repository
-public interface UserRepository extends CrudRepository<User, String> {
+public interface UserRepository extends CrudRepository<User, String>, SearchableRepository<User> {
     /**
      * Finds the user using the provided username.
      * Equivalent to findById
@@ -21,7 +22,7 @@ public interface UserRepository extends CrudRepository<User, String> {
     Optional<User> findByUsername(String username);
 
     /**
-     * Find a list of users with the provided name
+     * Find a list of users with the provided role
      * @param name the name of the role
      * @return the list of users
      */

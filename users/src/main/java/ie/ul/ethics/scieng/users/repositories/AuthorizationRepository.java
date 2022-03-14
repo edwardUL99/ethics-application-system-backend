@@ -17,4 +17,11 @@ public interface AuthorizationRepository<T extends Authorization> extends CrudRe
      * @return the found object if found, or else an empty optional
      */
     Optional<T> findByName(String name);
+
+    /**
+     * Find by the tag name
+     * @param tag the tag (field name)
+     * @return the optional containing the authorization
+     */
+    Optional<T> findByTag(String tag);
 }

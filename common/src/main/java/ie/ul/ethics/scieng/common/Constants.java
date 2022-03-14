@@ -118,6 +118,11 @@ public final class Constants {
     public static final String INVALID_RESET_TOKEN = "invalid_reset_token";
 
     /**
+     * An error message that occurs when a search fails
+     */
+    public static final String SEARCH_FAILED = "search_failed";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

@@ -7,12 +7,9 @@ import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.models.User;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
-
-/*
-TODO implement and test. May need other functions for application processing but they can be done/looked at later
- */
 
 /**
  * This interface represents a service for interacting with applications
@@ -165,4 +162,11 @@ public interface ApplicationService {
      * @param application the application to delete
      */
     void deleteApplication(Application application);
+
+    /**
+     * Search for applications matching the given specification
+     * @param specification the specification to search with
+     * @return the list of found applications
+     */
+    List<Application> search(Specification<Application> specification);
 }

@@ -13,12 +13,20 @@ import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
+import ie.ul.ethics.scieng.applications.search.ApplicationSpecification;
+import ie.ul.ethics.scieng.applications.search.DraftApplicationSpecification;
+import ie.ul.ethics.scieng.applications.search.ReferredApplicationSpecification;
+import ie.ul.ethics.scieng.applications.search.SubmittedApplicationSpecification;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
+import ie.ul.ethics.scieng.common.search.SearchCriteria;
+import ie.ul.ethics.scieng.common.search.SearchException;
+import ie.ul.ethics.scieng.common.search.SearchParser;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,11 +34,14 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
@@ -517,6 +528,103 @@ public class ApplicationController {
             applicationService.deleteApplication(application);
 
             return ResponseEntity.ok().build();
+        }
+    }
+
+    /**
+     * Get the applications with committee members assigned with the username in the query
+     * @param query the query to parse (only the first part with assigned will be parsed)
+     * @return the list of found applications
+     */
+    private List<Application> getApplicationsWithUserAssigned(String query) {
+        query += ",";
+
+        Pattern pattern = Pattern.compile("(assigned)(:=)(.+?),");
+        Matcher matcher = pattern.matcher(query);
+
+        if (matcher.find()) {
+            SearchCriteria criteria = new SearchCriteria(matcher.group(1), matcher.group(2), matcher.group(3), false);
+
+            if (!criteria.getOperation().equals(":=")) {
+                return null;
+            } else {
+                String username = (String)criteria.getValue();
+                User user = this.userService.loadUser(username);
+
+                if (user != null) {
+                    return applicationService.getAssignedApplications(user);
+                } else {
+                    return Collections.emptyList();
+                }
+            }
+        }
+
+        return Collections.emptyList();
+    }
+
+    /**
+     * Search through applications until you hit the first instance that the field belongs to.
+     * This "hack" is required as each class of the Application inheritance hierarchy needs to be searched through for the field.
+     * First it searches with the generic ApplicationSpecification for any fields shared between all, then in the order of
+     * DraftApplicationSpecification (maybe redundant since no extra fields), SubmittedApplicationSpecification and finally ReferredApplicationSpecification
+     * @param query the query to create the specification from
+     * @param or true to or multiple queries, false to and them
+     * @return the list of found applications
+     */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private List<Application> findApplications(String query, boolean or) {
+        if (query.contains("assigned")) {
+            return this.getApplicationsWithUserAssigned(query);
+        } else {
+            List<Class<? extends ApplicationSpecification>> specClasses =
+                    List.of(ApplicationSpecification.class, DraftApplicationSpecification.class, SubmittedApplicationSpecification.class, ReferredApplicationSpecification.class);
+
+            for (Class<? extends ApplicationSpecification> spec : specClasses) {
+                try {
+                    Specification<Application> specification =
+                            new SearchParser<>(spec).parse(query, ApplicationSpecification.OPERATION_PATTERN, or);
+
+                    List<Application> searched = this.applicationService.search(specification);
+
+                    if (searched.size() > 0)
+                        return searched;
+                } catch (SearchException ignored) {
+                } catch (Exception ex) {
+                    throw new SearchException(null, ex);
+                }
+            }
+
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * Searches for applications with the given search query
+     * @param query the search query
+     * @param or true to or multiple queries or false to and
+     * @return the list of found applications
+     */
+    @GetMapping("/search")
+    public ResponseEntity<?> search(@RequestParam String query, @RequestParam(required = false) boolean or) {
+        try {
+            User user = userService.loadUser(authenticationInformation.getUsername());
+
+            List<Application> found = this.findApplications(query, or);
+
+            List<ApplicationResponse> responses = found
+                    .stream()
+                    .filter(a -> a.canBeViewedBy(user))
+                    .map(a -> {
+                        a.clean(user);
+
+                        return ApplicationResponseFactory.buildResponse(a);
+                    })
+                    .collect(Collectors.toList());
+
+            return ResponseEntity.ok(responses);
+        } catch (SearchException ex) {
+            ex.printStackTrace();
+            return respondError(SEARCH_FAILED);
         }
     }
 }

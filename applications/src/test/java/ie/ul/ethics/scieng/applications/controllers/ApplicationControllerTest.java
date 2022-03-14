@@ -6,6 +6,7 @@ import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
@@ -1224,7 +1225,7 @@ public class ApplicationControllerTest {
         user.setRole(Roles.COMMITTEE_MEMBER);
         submittedApplication.assignCommitteeMember(user);
 
-        SubmittedApplication.AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
+        AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
         assigned.setFinishReview(true);
 
         given(applicationService.getApplication(APPLICATION_ID))

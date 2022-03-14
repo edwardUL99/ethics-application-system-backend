@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -122,7 +123,18 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!assigned.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
             throw new ApplicationException("The user must have the REVIEW_APPLICATIONS permission");
 
-        return applicationRepository.findUserAssignedApplications(assigned);
+        List<Application> applications = new ArrayList<>();
+        applicationRepository.findAll().forEach(applications::add);
+        String assignedUsername = assigned.getUsername();
+
+        return applications.stream()
+                .filter(a -> a instanceof SubmittedApplication)
+                .map(a -> (SubmittedApplication)a)
+                .filter(a -> a.getAssignedCommitteeMembers()
+                        .stream()
+                        .map(m -> m.getUser().getUsername())
+                        .anyMatch(u -> u.equals(assignedUsername)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -243,6 +255,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
 
         submittedApplication.setLastUpdated(LocalDateTime.now());
+        submittedApplication.setSubmittedTime(LocalDateTime.now());
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
@@ -329,7 +342,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationStatus status = application.getStatus();
 
         if (!finishReview && status != ApplicationStatus.SUBMITTED)
-            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.SUBMITTED + " if it is in the "
+            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
                 + ApplicationStatus.SUBMITTED + " status");
         else if (finishReview && status != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);
@@ -471,5 +484,16 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void deleteApplication(Application application) {
         this.applicationRepository.delete(application);
         this.templateRepository.delete(application.getApplicationTemplate());
+    }
+
+    /**
+     * Search for applications matching the given specification
+     *
+     * @param specification the specification to search with
+     * @return the list of found applications
+     */
+    @Override
+    public List<Application> search(Specification<Application> specification) {
+        return this.applicationRepository.findAll(specification);
     }
 }
