@@ -43,16 +43,4 @@ public class SubmittedApplicationSpecification extends ApplicationSpecification<
         super.registerKeyMappings(keyMappings);
         keyMappings.put("assigned", "assignedCommitteeMembers");
     }
-
-    /**
-     * Register any overloaded search operators for fields of the object. These operators overload the default registered operators for that
-     * criteria key
-     *
-     * @param overloads the overloaded operators to register to
-     */
-    @Override
-    public void registerOperatorOverloads(OperatorOverloads overloads) {
-        super.registerOperatorOverloads(overloads);
-        overloads.addOperatorOverload("assignedCommitteeMembers", new AssignedContainsOperator());
-    }
 }

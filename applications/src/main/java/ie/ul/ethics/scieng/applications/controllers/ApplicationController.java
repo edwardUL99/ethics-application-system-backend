@@ -575,9 +575,9 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     private List<Application> findApplications(String query, boolean or) {
-//        if (query.contains("assigned")) {
-//            return this.getApplicationsWithUserAssigned(query);
-//        } else {
+        if (query.contains("assigned")) {
+            return this.getApplicationsWithUserAssigned(query);
+        } else {
             List<Class<? extends ApplicationSpecification>> specClasses =
                     List.of(ApplicationSpecification.class, DraftApplicationSpecification.class, SubmittedApplicationSpecification.class, ReferredApplicationSpecification.class);
 
@@ -597,7 +597,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
             }
 
             return Collections.emptyList();
-        //}
+        }
     }
 
     /**
