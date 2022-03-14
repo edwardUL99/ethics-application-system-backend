@@ -144,7 +144,7 @@ public class SubmittedApplication extends Application {
      */
     public void assignCommitteeMember(User user) {
         verifyMemberReview(user);
-        this.assignedCommitteeMembers.add(new AssignedCommitteeMember(null, user, false));
+        this.assignedCommitteeMembers.add(new AssignedCommitteeMember(null, this.applicationId, user, false));
     }
 
     /**
@@ -318,5 +318,4 @@ public class SubmittedApplication extends Application {
         return Objects.hash(id, applicationId, user, status, applicationTemplate, answers, attachedFiles, comments,
                 assignedCommitteeMembers, finalComment, previousCommitteeMembers, submittedTime, approvalTime);
     }
-
 }

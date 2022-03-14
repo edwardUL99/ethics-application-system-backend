@@ -31,6 +31,10 @@ public class AssignedCommitteeMember {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     /**
+     * The ID of the application the member is assigned to
+     */
+    private String applicationId;
+    /**
      * The committee member that is assigned
      */
     @OneToOne

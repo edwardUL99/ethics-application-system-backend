@@ -172,8 +172,9 @@ public class UserServiceImpl implements UserService {
 
         if (savedAccount == null)
             throw new AccountNotExistsException(username);
-        else if (!account.equals(savedAccount))
-            throw new IllegalStateException("The user's account cannot be changed by updateUser");
+        else if (!account.equals(savedAccount)) {
+            user.setAccount(savedAccount);
+        }
 
         userRepository.save(user);
     }
