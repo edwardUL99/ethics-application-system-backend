@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +41,10 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      * The final comment left on the application if it is approved/rejected
      */
     private Comment finalComment;
+    /**
+     * The timestamp of when the application was submitted
+     */
+    private LocalDateTime submittedTime;
 
     /**
      * Create a response from the application
@@ -55,6 +60,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
                 .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getUser().getUsername(), u.isFinishReview()))
                 .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
+        this.submittedTime = application.getSubmittedTime();
     }
 
     /**

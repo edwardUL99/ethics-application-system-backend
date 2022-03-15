@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.services;
 
+import ie.ul.ethics.scieng.applications.email.ApplicationsEmailService;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
@@ -15,6 +16,7 @@ import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTempla
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -48,19 +50,25 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The loader for loading application templates
      */
     private final ApplicationTemplateLoader templateLoader;
+    /**
+     * The email service to use for sending notification e-mails
+     */
+    private final ApplicationsEmailService emailService;
 
     /**
      * Create an ApplicationServiceImpl
      * @param templateRepository the template repository for saving application templates
      * @param applicationRepository the repository for saving and loading applications
      * @param templateLoader the loader for application template loading
+     * @param emailService the service for sending applications notifications
      */
     @Autowired
     public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository,
-                                  ApplicationTemplateLoader templateLoader) {
+                                  ApplicationTemplateLoader templateLoader, @Qualifier("applicationsEmail") ApplicationsEmailService emailService) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
         this.templateLoader = templateLoader;
+        this.emailService = emailService;
     }
 
     /**
@@ -411,6 +419,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         submittedApplication.setApprovalTime((approve) ? LocalDateTime.now():null);
         createApplication(application, true);
 
+        // TODO send notification of approval status by email
+
         return application;
     }
 
@@ -442,8 +452,6 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true)
     })
     public Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException {
-        // TODO here, you will trigger the email notification that the application has been referred to the user
-
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
 
@@ -452,9 +460,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         Map<String, Comment> comments = mapComments(submitted.getComments());
         Comment finalComment = submitted.getFinalComment();
 
-        if (finalComment != null) {
+        if (finalComment != null)
             finalComment.setId(null);
-        }
 
         Map<String, Answer> answers = mapAnswers(submitted.getAnswers());
 
@@ -463,9 +470,13 @@ public class ApplicationServiceImpl implements ApplicationService {
                         answers, new ArrayList<>(comments.values()), submitted.getAssignedCommitteeMembers(), finalComment,
                         editableFields, referrer);
 
+        referredApplication.setLastUpdated(LocalDateTime.now());
+        referredApplication.setSubmittedTime(submitted.getSubmittedTime());
+
         applicationRepository.delete(application);
         applicationRepository.save(referredApplication);
-        referredApplication.setLastUpdated(LocalDateTime.now());
+
+        emailService.sendApplicationReferredEmail(application, referrer);
 
         return referredApplication;
     }
