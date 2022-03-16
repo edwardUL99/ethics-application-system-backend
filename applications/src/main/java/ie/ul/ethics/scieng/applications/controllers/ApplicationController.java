@@ -201,7 +201,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
      * @return the response body
      */
     private ResponseEntity<?> createDraftApplicationInternal(CreateDraftApplicationRequest request) {
-        DraftApplication draftApplication = requestMapper.createDraftRequestToDraft(request);
+        Application draftApplication = requestMapper.createDraftRequestToDraft(request);
         draftApplication.setApplicationId(this.applicationIDPolicy.generate());
 
         if (draftApplication.getUser() == null) {
@@ -399,7 +399,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PutMapping("/review")
     public ResponseEntity<?> reviewApplication(@RequestBody @Valid ReviewSubmittedApplicationRequest request) {
         try {
-            SubmittedApplication mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
+            Application mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
 
             if (mapped == null) {
                 return ResponseEntity.notFound().build();

@@ -142,6 +142,7 @@ public class SubmittedApplication extends Application {
      * @param user the committee member to assign
      * @throws ApplicationException if the user does not have REVIEW_APPLICATIONS permissions
      */
+    @Override
     public void assignCommitteeMember(User user) {
         verifyMemberReview(user);
         this.assignedCommitteeMembers.add(new AssignedCommitteeMember(null, this.applicationId, user, false));
@@ -151,6 +152,7 @@ public class SubmittedApplication extends Application {
      * Get an unmodifiable view of this application's committee members
      * @return the unmodifiable list of assigned committee members
      */
+    @Override
     public List<AssignedCommitteeMember> getAssignedCommitteeMembers() {
         return Collections.unmodifiableList(assignedCommitteeMembers);
     }
@@ -179,6 +181,7 @@ public class SubmittedApplication extends Application {
      * Assigns all this application's assigned committee members to the previous committee members
      * @throws InvalidStatusException if the application is not in a resubmitted status
      */
+    @Override
     public void assignCommitteeMembersToPrevious() {
         if (status != ApplicationStatus.RESUBMITTED)
             throw new InvalidStatusException("You cannot assign the assigned committee members to the previous members list if the " +
@@ -192,6 +195,7 @@ public class SubmittedApplication extends Application {
      * Get an unmodifiable view of this application's previous committee members
      * @return the unmodifiable list of previous committee members before it was referred.
      */
+    @Override
     public List<User> getPreviousCommitteeMembers() {
         return Collections.unmodifiableList(previousCommitteeMembers);
     }
@@ -199,6 +203,7 @@ public class SubmittedApplication extends Application {
     /**
      * Clear the list of previous committee members
      */
+    @Override
     public void clearPreviousCommitteeMembers() {
         previousCommitteeMembers.clear();
     }
@@ -207,6 +212,7 @@ public class SubmittedApplication extends Application {
      * Adds the provided comment to the application
      * @param comment the comment to add
      */
+    @Override
     public void addComment(Comment comment) {
         this.comments.put(comment.getComponentId(), comment);
     }

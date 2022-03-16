@@ -137,7 +137,6 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return applications.stream()
                 .filter(a -> a instanceof SubmittedApplication)
-                .map(a -> (SubmittedApplication)a)
                 .filter(a -> a.getAssignedCommitteeMembers()
                         .stream()
                         .map(m -> m.getUser().getUsername())
@@ -248,14 +247,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (status == null || !permissible.contains(status))
             throw new InvalidStatusException("The status of an application being submitted must belong to the set: " + permissible);
 
-        SubmittedApplication submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
+        Application submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
                 ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), answers,
                 new ArrayList<>(), new ArrayList<>(), null);
 
         if (status == ApplicationStatus.REFERRED) {
-            ReferredApplication referred = (ReferredApplication) application;
-            submittedApplication.assignCommitteeMember(referred.getReferredBy());
-            referred.getAssignedCommitteeMembers().forEach(u -> referred.assignCommitteeMember(u.getUser()));
+            submittedApplication.assignCommitteeMember(application.getReferredBy());
+            application.getAssignedCommitteeMembers().forEach(u -> application.assignCommitteeMember(u.getUser()));
             submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
             submittedApplication.assignCommitteeMembersToPrevious();
         }
@@ -287,19 +285,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
             throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-
         for (User user : committeeMembers) {
             try {
-                submitted.assignCommitteeMember(user);
+                application.assignCommitteeMember(user);
             } catch (ApplicationException ex) {
                 throw new ApplicationException(CANT_REVIEW, ex);
             }
         }
 
-        this.createApplication(submitted, true);
+        this.createApplication(application, true);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -321,16 +317,15 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getStatus() != ApplicationStatus.RESUBMITTED)
             throw new InvalidStatusException("The application status must be " + ApplicationStatus.RESUBMITTED + " to use this method");
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
         application.setStatus(ApplicationStatus.REVIEW);
-        committeeMembers.forEach(submitted::assignCommitteeMember);
-        submitted.clearPreviousCommitteeMembers();
+        committeeMembers.forEach(application::assignCommitteeMember);
+        application.clearPreviousCommitteeMembers();
 
-        submitted.setLastUpdated(LocalDateTime.now());
+        application.setLastUpdated(LocalDateTime.now());
 
-        applicationRepository.save(submitted);
+        applicationRepository.save(application);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -380,16 +375,15 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new InvalidStatusException("You can only mark a committee member as having finished their review on an application in " +
                     "the status " + ApplicationStatus.SUBMITTED);
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-        submitted.getAssignedCommitteeMembers()
+        application.getAssignedCommitteeMembers()
                 .stream()
                 .filter(u -> u.getUser().getUsername().equals(member))
                 .filter(u -> u.getUser().getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
                 .findFirst().ifPresent(assigned -> assigned.setFinishReview(true));
 
-        this.createApplication(submitted, true);
+        this.createApplication(application, true);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -414,9 +408,8 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ApplicationStatus target = (approve) ? ApplicationStatus.APPROVED:ApplicationStatus.REJECTED;
         application.setStatus(target);
-        SubmittedApplication submittedApplication = (SubmittedApplication) application;
-        submittedApplication.setFinalComment(finalComment);
-        submittedApplication.setApprovalTime((approve) ? LocalDateTime.now():null);
+        application.setFinalComment(finalComment);
+        application.setApprovalTime((approve) ? LocalDateTime.now():null);
         createApplication(application, true);
 
         // TODO send notification of approval status by email
@@ -455,23 +448,21 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-
-        Map<String, Comment> comments = mapComments(submitted.getComments());
-        Comment finalComment = submitted.getFinalComment();
+        Map<String, Comment> comments = mapComments(application.getComments());
+        Comment finalComment = application.getFinalComment();
 
         if (finalComment != null)
             finalComment.setId(null);
 
-        Map<String, Answer> answers = mapAnswers(submitted.getAnswers());
+        Map<String, Answer> answers = mapAnswers(application.getAnswers());
 
-        ReferredApplication referredApplication =
+        Application referredApplication =
                 new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
-                        answers, new ArrayList<>(comments.values()), submitted.getAssignedCommitteeMembers(), finalComment,
+                        answers, new ArrayList<>(comments.values()), application.getAssignedCommitteeMembers(), finalComment,
                         editableFields, referrer);
 
         referredApplication.setLastUpdated(LocalDateTime.now());
-        referredApplication.setSubmittedTime(submitted.getSubmittedTime());
+        referredApplication.setSubmittedTime(application.getSubmittedTime());
 
         applicationRepository.delete(application);
         applicationRepository.save(referredApplication);

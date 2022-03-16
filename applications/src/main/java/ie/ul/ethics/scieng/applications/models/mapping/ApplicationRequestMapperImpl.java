@@ -12,8 +12,6 @@ import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
-import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.files.exceptions.FileException;
 import ie.ul.ethics.scieng.files.services.FileService;
@@ -68,7 +66,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @return the mapped draft application
      */
     @Override
-    public DraftApplication createDraftRequestToDraft(CreateDraftApplicationRequest request) {
+    public Application createDraftRequestToDraft(CreateDraftApplicationRequest request) {
         return new DraftApplication(null, null, userService.loadUser(request.getUsername()), request.getApplicationTemplate(),
                 request.getAnswers());
     }
@@ -121,11 +119,11 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @return the mapped draft application
      */
     @Override
-    public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
+    public Application updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
         String id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
-        return (DraftApplication) this.mapDraftOrReferred(request, loaded, ApplicationStatus.DRAFT);
+        return this.mapDraftOrReferred(request, loaded, ApplicationStatus.DRAFT);
     }
 
     /**
@@ -135,11 +133,11 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @throws MappingException if the request ID does not match a DraftApplication
      */
     @Override
-    public ReferredApplication updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException {
+    public Application updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException {
         String id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
-        return (ReferredApplication) this.mapDraftOrReferred(request, loaded, ApplicationStatus.REFERRED);
+        return this.mapDraftOrReferred(request, loaded, ApplicationStatus.REFERRED);
     }
 
     /**
@@ -234,7 +232,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @throws InvalidStatusException if the application is not in a review state
      */
     @Override
-    public SubmittedApplication reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException, InvalidStatusException {
+    public Application reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException, InvalidStatusException {
         Application loaded = applicationService.getApplication(request.getId());
 
         if (loaded == null) {
@@ -242,10 +240,9 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
         } else if (loaded.getStatus() != ApplicationStatus.REVIEW) {
             throw new InvalidStatusException("The application must be in a " + ApplicationStatus.REVIEW + " status");
         } else {
-            SubmittedApplication submitted = (SubmittedApplication) loaded;
-            mapComments(request.getComments()).forEach(submitted::addComment);
+            mapComments(request.getComments()).forEach(loaded::addComment);
 
-            return submitted;
+            return loaded;
         }
     }
 }

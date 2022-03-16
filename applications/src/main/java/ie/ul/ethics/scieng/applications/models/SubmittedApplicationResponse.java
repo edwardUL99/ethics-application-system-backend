@@ -5,7 +5,6 @@ import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRe
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,7 +26,7 @@ import java.util.stream.Collectors;
 @ApplicationResponseRegistration(status = {
         ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
         ApplicationStatus.APPROVED, ApplicationStatus.REJECTED
-}, applicationClass = SubmittedApplication.class)
+})
 public class SubmittedApplicationResponse extends ApplicationResponse {
     /**
      * The comments left on the submitted application
@@ -55,7 +54,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      *
      * @param application the application to create the response from
      */
-    public SubmittedApplicationResponse(SubmittedApplication application) {
+    public SubmittedApplicationResponse(Application application) {
         super(application);
 
         this.comments = application.getComments();
