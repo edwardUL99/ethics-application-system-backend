@@ -45,6 +45,10 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      * The timestamp of when the application was submitted
      */
     private LocalDateTime submittedTime;
+    /**
+     * The timestamp of when the application was approved/rejected
+     */
+    private LocalDateTime approvalTime;
 
     /**
      * Create a response from the application
@@ -61,6 +65,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
                 .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
         this.submittedTime = application.getSubmittedTime();
+        this.approvalTime = application.getApprovalTime();
     }
 
     /**
