@@ -20,26 +20,19 @@ public final class ApplicationResponseFactory {
      */
     private static final Map<ApplicationStatus, Class<? extends ApplicationResponse>> responseClasses =
             new HashMap<>();
-    /**
-     * The map of the application classes that are associated with the status
-     */
-    private static final Map<ApplicationStatus, Class<? extends Application>> applicationClasses =
-            new HashMap<>();
 
     /**
      * Register the status with the associated class of the response object
      * @param status the status to register
      * @param cls the class to associate with the status
-     * @param application the class representing the application that is associated with the status
      * @throws IllegalArgumentException if the class does not have a constructor that takes an Application as its only parameter
      */
-    private static void register(ApplicationStatus status, Class<? extends ApplicationResponse> cls, Class<? extends Application> application) throws IllegalArgumentException {
+    private static void register(ApplicationStatus status, Class<? extends ApplicationResponse> cls) throws IllegalArgumentException {
         try {
-            cls.getDeclaredConstructor(application);
+            cls.getDeclaredConstructor(Application.class);
             responseClasses.put(status, cls);
-            applicationClasses.put(status, application);
         } catch (NoSuchMethodException ex) {
-            throw new IllegalArgumentException("No constructor that takes a single " + application.getSimpleName() + " parameter found in class " + cls);
+            throw new IllegalArgumentException("No constructor that takes a single Application parameter found in class " + cls);
         }
     }
 
@@ -56,11 +49,10 @@ public final class ApplicationResponseFactory {
 
             ApplicationResponseRegistration registration = cls.getAnnotation(ApplicationResponseRegistration.class);
             ApplicationStatus[] statuses = registration.status();
-            Class<? extends Application> applicationClass = registration.applicationClass();
             Class<? extends ApplicationResponse> responseClass = (Class<? extends ApplicationResponse>) cls;
 
             for (ApplicationStatus status : statuses)
-                register(status, responseClass, applicationClass);
+                register(status, responseClass);
         }
     }
 
@@ -77,14 +69,7 @@ public final class ApplicationResponseFactory {
             return null;
         } else {
             try {
-                Class<? extends Application> applicationClass = applicationClasses.get(status);
-                Class<? extends Application> parameterClass = application.getClass();
-
-                if (applicationClass == parameterClass)
-                    return cls.getDeclaredConstructor(applicationClass).newInstance(parameterClass.cast(application));
-                else
-                    throw new IllegalArgumentException("The application provided to build response for the status " + status +
-                            " must be of class type " + applicationClass);
+                return cls.getDeclaredConstructor(Application.class).newInstance(application);
             } catch (Exception ex) {
                 throw new IllegalArgumentException("Failed to construct an instance of class " + cls, ex);
             }

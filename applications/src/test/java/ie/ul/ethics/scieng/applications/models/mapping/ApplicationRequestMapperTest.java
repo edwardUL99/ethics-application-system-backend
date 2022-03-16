@@ -157,7 +157,7 @@ public class ApplicationRequestMapperTest {
      */
     @Test
     public void shouldMapCreateDraftRequest() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        Application draftApplication = createDraftApplication();
         draftApplication.setId(null);
         draftApplication.setApplicationId(null);
         CreateDraftApplicationRequest request =
@@ -166,7 +166,7 @@ public class ApplicationRequestMapperTest {
         given(userService.loadUser(USERNAME))
                 .willReturn(draftApplication.getUser());
 
-        DraftApplication returned = requestMapper.createDraftRequestToDraft(request);
+        Application returned = requestMapper.createDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
         verify(userService).loadUser(USERNAME);
@@ -177,7 +177,7 @@ public class ApplicationRequestMapperTest {
      */
     @Test
     public void shouldMapUpdateDraftRequest() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        Application draftApplication = createDraftApplication();
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
@@ -192,7 +192,7 @@ public class ApplicationRequestMapperTest {
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(draftApplication);
 
-        DraftApplication returned = requestMapper.updateDraftRequestToDraft(request);
+        Application returned = requestMapper.updateDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
@@ -205,7 +205,7 @@ public class ApplicationRequestMapperTest {
      */
     @Test
     public void shouldMapUpdateDraftRequestAndDeleteOldFiles() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication();
+        Application draftApplication = createDraftApplication();
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
@@ -227,7 +227,7 @@ public class ApplicationRequestMapperTest {
                 .willReturn(draftApplication);
         doNothing().when(fileService).deleteFile("filename", "directory", USERNAME);
 
-        DraftApplication returned = requestMapper.updateDraftRequestToDraft(request);
+        Application returned = requestMapper.updateDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
@@ -261,7 +261,7 @@ public class ApplicationRequestMapperTest {
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(referred);
 
-        ReferredApplication returned = requestMapper.updateRequestToReferred(request);
+        Application returned = requestMapper.updateRequestToReferred(request);
 
         assertEquals(referred, returned);
         assertEquals(returned.getAnswers(), newValues);
@@ -455,7 +455,7 @@ public class ApplicationRequestMapperTest {
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(review);
 
-        SubmittedApplication returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
+        Application returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
 
         assertEquals(mapped, returned);
         assertTrue(returned.getComments().get(comment.getComponentId()).getComments().contains(comment));
@@ -475,7 +475,7 @@ public class ApplicationRequestMapperTest {
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(null);
 
-        SubmittedApplication returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
+        Application returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
 
         assertNull(returned);
         verify(applicationService).getApplication(APPLICATION_ID);
@@ -518,7 +518,7 @@ public class ApplicationRequestMapperTest {
     public void shouldThrowIfUserIsNullMapReviewSubmittedRequest() {
         Application review = getSubmittedReferredApplication(true);
         review.setStatus(ApplicationStatus.REVIEW);
-        SubmittedApplication mapped = (SubmittedApplication) getSubmittedReferredApplication(true);
+        Application mapped = getSubmittedReferredApplication(true);
         mapped.setStatus(ApplicationStatus.REVIEW);
 
         Comment comment = new Comment(null, null, "comment", "component", new ArrayList<>());

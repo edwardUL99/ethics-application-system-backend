@@ -1,15 +1,21 @@
 package ie.ul.ethics.scieng.users.controllers;
 
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
+import ie.ul.ethics.scieng.common.search.SearchController;
+import ie.ul.ethics.scieng.common.search.SearchException;
+import ie.ul.ethics.scieng.common.search.SearchParser;
+import ie.ul.ethics.scieng.common.search.SearchResponse;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.models.*;
 import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import ie.ul.ethics.scieng.users.models.authorization.Role;
+import ie.ul.ethics.scieng.users.search.UserSpecification;
 import ie.ul.ethics.scieng.users.services.UserService;
 import static ie.ul.ethics.scieng.common.Constants.*;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,6 +24,7 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -26,7 +33,7 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class UserController implements SearchController<UserResponseShortened> {
     /**
      * The user service for interacting with user business logic
      */
@@ -188,5 +195,33 @@ public class UserController {
     @GetMapping("/permissions")
     public ResponseEntity<?> getPermissions() {
         return ResponseEntity.ok(new GetAuthorizationResponse<>(Permissions.getPermissions()));
+    }
+
+    /**
+     * This endpoint allows searching for users
+     * @param query the search string
+     * @param or true to or multiple specifications, otherwise default is and
+     * @return the response body
+     */
+    @GetMapping("/search")
+    public ResponseEntity<SearchResponse<UserResponseShortened>> search(@RequestParam String query, @RequestParam(required = false) boolean or) {
+        Specification<User> specification = new SearchParser<>(UserSpecification.class)
+                .parse(query, UserSpecification.OPERATION_PATTERN, or);
+
+        if (specification == null) {
+            return ResponseEntity.badRequest().body(new SearchResponse<>(List.of(), SEARCH_FAILED));
+        } else {
+            try {
+                List<UserResponseShortened> shortened = this.userService.search(specification)
+                        .stream()
+                        .map(UserResponseShortened::new)
+                        .collect(Collectors.toList());
+
+                return ResponseEntity.ok(new SearchResponse<>(shortened, null));
+            } catch (SearchException ex) {
+                ex.printStackTrace();
+                return ResponseEntity.badRequest().body(new SearchResponse<>(List.of(), SEARCH_FAILED));
+            }
+        }
     }
 }

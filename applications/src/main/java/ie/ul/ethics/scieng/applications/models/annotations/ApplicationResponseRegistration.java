@@ -1,6 +1,5 @@
 package ie.ul.ethics.scieng.applications.models.annotations;
 
-import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 
 import java.lang.annotation.ElementType;
@@ -19,9 +18,4 @@ public @interface ApplicationResponseRegistration {
      * @return the array of statuses the response is being registered for
      */
     ApplicationStatus[] status();
-
-    /**
-     * The class of the application that is associated with the response
-     */
-    Class<? extends Application> applicationClass();
 }

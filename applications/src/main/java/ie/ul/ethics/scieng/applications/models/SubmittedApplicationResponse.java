@@ -6,13 +6,13 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @ApplicationResponseRegistration(status = {
         ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
         ApplicationStatus.APPROVED, ApplicationStatus.REJECTED
-}, applicationClass = SubmittedApplication.class)
+})
 public class SubmittedApplicationResponse extends ApplicationResponse {
     /**
      * The comments left on the submitted application
@@ -41,13 +41,21 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      * The final comment left on the application if it is approved/rejected
      */
     private Comment finalComment;
+    /**
+     * The timestamp of when the application was submitted
+     */
+    private LocalDateTime submittedTime;
+    /**
+     * The timestamp of when the application was approved/rejected
+     */
+    private LocalDateTime approvalTime;
 
     /**
      * Create a response from the application
      *
      * @param application the application to create the response from
      */
-    public SubmittedApplicationResponse(SubmittedApplication application) {
+    public SubmittedApplicationResponse(Application application) {
         super(application);
 
         this.comments = application.getComments();
@@ -56,6 +64,8 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
                 .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getUser().getUsername(), u.isFinishReview()))
                 .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
+        this.submittedTime = application.getSubmittedTime();
+        this.approvalTime = application.getApprovalTime();
     }
 
     /**

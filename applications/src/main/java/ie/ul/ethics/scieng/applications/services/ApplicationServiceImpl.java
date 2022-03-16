@@ -1,5 +1,6 @@
 package ie.ul.ethics.scieng.applications.services;
 
+import ie.ul.ethics.scieng.applications.email.ApplicationsEmailService;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
@@ -16,10 +17,12 @@ import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTempla
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -48,19 +51,25 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The loader for loading application templates
      */
     private final ApplicationTemplateLoader templateLoader;
+    /**
+     * The email service to use for sending notification e-mails
+     */
+    private final ApplicationsEmailService emailService;
 
     /**
      * Create an ApplicationServiceImpl
      * @param templateRepository the template repository for saving application templates
      * @param applicationRepository the repository for saving and loading applications
      * @param templateLoader the loader for application template loading
+     * @param emailService the service for sending applications notifications
      */
     @Autowired
     public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository,
-                                  ApplicationTemplateLoader templateLoader) {
+                                  ApplicationTemplateLoader templateLoader, @Qualifier("applicationsEmail") ApplicationsEmailService emailService) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
         this.templateLoader = templateLoader;
+        this.emailService = emailService;
     }
 
     /**
@@ -123,7 +132,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!assigned.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
             throw new ApplicationException("The user must have the REVIEW_APPLICATIONS permission");
 
-        return applicationRepository.findUserAssignedApplications(assigned);
+        List<Application> applications = new ArrayList<>();
+        applicationRepository.findAll().forEach(applications::add);
+        String assignedUsername = assigned.getUsername();
+
+        return applications.stream()
+                .filter(a -> a instanceof SubmittedApplication)
+                .filter(a -> a.getAssignedCommitteeMembers()
+                        .stream()
+                        .map(m -> m.getUser().getUsername())
+                        .anyMatch(u -> u.equals(assignedUsername)))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -229,14 +248,13 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (status == null || !permissible.contains(status))
             throw new InvalidStatusException("The status of an application being submitted must belong to the set: " + permissible);
 
-        SubmittedApplication submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
+        Application submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
                 ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), answers,
                 new ArrayList<>(), new ArrayList<>(), null);
 
         if (status == ApplicationStatus.REFERRED) {
-            ReferredApplication referred = (ReferredApplication) application;
-            submittedApplication.assignCommitteeMember(referred.getReferredBy());
-            referred.getAssignedCommitteeMembers().forEach(u -> referred.assignCommitteeMember(u.getUser()));
+            submittedApplication.assignCommitteeMember(application.getReferredBy());
+            application.getAssignedCommitteeMembers().forEach(u -> application.assignCommitteeMember(u.getUser()));
             submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
             submittedApplication.assignCommitteeMembersToPrevious();
         }
@@ -244,6 +262,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
 
         submittedApplication.setLastUpdated(LocalDateTime.now());
+        submittedApplication.setSubmittedTime(LocalDateTime.now());
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
@@ -267,19 +286,17 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
             throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-
         for (User user : committeeMembers) {
             try {
-                submitted.assignCommitteeMember(user);
+                application.assignCommitteeMember(user);
             } catch (ApplicationException ex) {
                 throw new ApplicationException(CANT_REVIEW, ex);
             }
         }
 
-        this.createApplication(submitted, true);
+        this.createApplication(application, true);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -301,16 +318,15 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getStatus() != ApplicationStatus.RESUBMITTED)
             throw new InvalidStatusException("The application status must be " + ApplicationStatus.RESUBMITTED + " to use this method");
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
         application.setStatus(ApplicationStatus.REVIEW);
-        committeeMembers.forEach(submitted::assignCommitteeMember);
-        submitted.clearPreviousCommitteeMembers();
+        committeeMembers.forEach(application::assignCommitteeMember);
+        application.clearPreviousCommitteeMembers();
 
-        submitted.setLastUpdated(LocalDateTime.now());
+        application.setLastUpdated(LocalDateTime.now());
 
-        applicationRepository.save(submitted);
+        applicationRepository.save(application);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -330,7 +346,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationStatus status = application.getStatus();
 
         if (!finishReview && status != ApplicationStatus.SUBMITTED)
-            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.SUBMITTED + " if it is in the "
+            throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
                 + ApplicationStatus.SUBMITTED + " status");
         else if (finishReview && status != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);
@@ -360,16 +376,15 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new InvalidStatusException("You can only mark a committee member as having finished their review on an application in " +
                     "the status " + ApplicationStatus.SUBMITTED);
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-        submitted.getAssignedCommitteeMembers()
+        application.getAssignedCommitteeMembers()
                 .stream()
                 .filter(u -> u.getUser().getUsername().equals(member))
                 .filter(u -> u.getUser().getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
                 .findFirst().ifPresent(assigned -> assigned.setFinishReview(true));
 
-        this.createApplication(submitted, true);
+        this.createApplication(application, true);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -394,10 +409,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ApplicationStatus target = (approve) ? ApplicationStatus.APPROVED:ApplicationStatus.REJECTED;
         application.setStatus(target);
-        SubmittedApplication submittedApplication = (SubmittedApplication) application;
-        submittedApplication.setFinalComment(finalComment);
-        submittedApplication.setApprovalTime((approve) ? LocalDateTime.now():null);
+        application.setFinalComment(finalComment);
+        application.setApprovalTime((approve) ? LocalDateTime.now():null);
         createApplication(application, true);
+
+        // TODO send notification of approval status by email
 
         return application;
     }
@@ -433,30 +449,30 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true)
     })
     public Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException {
-        // TODO here, you will trigger the email notification that the application has been referred to the user
-
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
 
-        Map<String, ApplicationComments> comments = mapComments(submitted.getComments());
-        Comment finalComment = submitted.getFinalComment();
+        Map<String, ApplicationComments> comments = mapComments(application.getComments());
+        Comment finalComment = application.getFinalComment();
 
-        if (finalComment != null) {
+        if (finalComment != null)
             finalComment.setId(null);
-        }
 
-        Map<String, Answer> answers = mapAnswers(submitted.getAnswers());
+        Map<String, Answer> answers = mapAnswers(application.getAnswers());
 
-        ReferredApplication referredApplication =
+        Application referredApplication =
                 new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
-                        answers, new ArrayList<>(comments.values()), submitted.getAssignedCommitteeMembers(), finalComment,
+                        answers, new ArrayList<>(comments.values()), application.getAssignedCommitteeMembers(), finalComment,
                         editableFields, referrer);
+
+        referredApplication.setLastUpdated(LocalDateTime.now());
+        referredApplication.setSubmittedTime(application.getSubmittedTime());
 
         applicationRepository.delete(application);
         applicationRepository.save(referredApplication);
-        referredApplication.setLastUpdated(LocalDateTime.now());
+
+        emailService.sendApplicationReferredEmail(application, referrer);
 
         return referredApplication;
     }
@@ -475,5 +491,16 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void deleteApplication(Application application) {
         this.applicationRepository.delete(application);
         this.templateRepository.delete(application.getApplicationTemplate());
+    }
+
+    /**
+     * Search for applications matching the given specification
+     *
+     * @param specification the specification to search with
+     * @return the list of found applications
+     */
+    @Override
+    public List<Application> search(Specification<Application> specification) {
+        return this.applicationRepository.findAll(specification);
     }
 }

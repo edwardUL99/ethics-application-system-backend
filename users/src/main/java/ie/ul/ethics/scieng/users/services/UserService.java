@@ -3,6 +3,7 @@ package ie.ul.ethics.scieng.users.services;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.models.authorization.Role;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 
@@ -57,4 +58,11 @@ public interface UserService {
      * @param role the role to change
      */
     void updateRole(User user, Role role);
+
+    /**
+     * Search for users with the given specification
+     * @param specification the specification to search with
+     * @return the list of found users
+     */
+    List<User> search(Specification<User> specification);
 }

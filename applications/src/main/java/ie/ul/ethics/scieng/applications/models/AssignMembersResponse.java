@@ -1,6 +1,6 @@
 package ie.ul.ethics.scieng.applications.models;
 
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
+import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.users.models.UserResponseShortened;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
@@ -38,7 +38,7 @@ public class AssignMembersResponse {
      * Create a response from the given application
      * @param application the application to create the response from
      */
-    public AssignMembersResponse(SubmittedApplication application) {
+    public AssignMembersResponse(Application application) {
         this.id = application.getApplicationId();
         this.members = application.getAssignedCommitteeMembers().stream()
                 .map(AssignedCommitteeMember::new)
@@ -60,6 +60,10 @@ public class AssignMembersResponse {
          */
         private Long id;
         /**
+         * The ID of the application the member is assigned to
+         */
+        private String applicationId;
+        /**
          * The member assigned
          */
         private UserResponseShortened member;
@@ -72,7 +76,7 @@ public class AssignMembersResponse {
          * Create the response object from the provided entity
          * @param member the entity to convert to the response
          */
-        public AssignedCommitteeMember(SubmittedApplication.AssignedCommitteeMember member) {
+        public AssignedCommitteeMember(ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember member) {
             this.id = member.getId();
             this.member = new UserResponseShortened(member.getUser());
             this.finishReview = member.isFinishReview();
