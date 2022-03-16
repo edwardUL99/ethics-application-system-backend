@@ -4,7 +4,6 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,14 +14,14 @@ import lombok.Setter;
 @EqualsAndHashCode(callSuper = false)
 @Getter
 @Setter
-@ApplicationResponseRegistration(status = ApplicationStatus.DRAFT, applicationClass = DraftApplication.class)
+@ApplicationResponseRegistration(status = ApplicationStatus.DRAFT)
 public class DraftApplicationResponse extends ApplicationResponse {
     /**
      * Create a response from the application
      *
      * @param application the application to create the response from
      */
-    public DraftApplicationResponse(DraftApplication application) {
+    public DraftApplicationResponse(Application application) {
         super(application);
     }
 

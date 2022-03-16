@@ -4,7 +4,6 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.users.models.User;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 @EqualsAndHashCode(callSuper = false)
-@ApplicationResponseRegistration(status = ApplicationStatus.RESUBMITTED, applicationClass = SubmittedApplication.class)
+@ApplicationResponseRegistration(status = ApplicationStatus.RESUBMITTED)
 public class ResubmittedApplicationResponse extends SubmittedApplicationResponse {
     /**
      * The list of previous committee members
@@ -31,7 +30,7 @@ public class ResubmittedApplicationResponse extends SubmittedApplicationResponse
      *
      * @param application the application to create the response from
      */
-    public ResubmittedApplicationResponse(SubmittedApplication application) {
+    public ResubmittedApplicationResponse(Application application) {
         super(application);
         previousCommitteeMembers = application.getPreviousCommitteeMembers()
                 .stream()
