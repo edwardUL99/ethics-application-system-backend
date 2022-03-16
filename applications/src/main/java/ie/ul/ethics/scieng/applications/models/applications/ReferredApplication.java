@@ -148,6 +148,7 @@ public class ReferredApplication extends SubmittedApplication {
                 new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()),
                 new ArrayList<>(assignedCommitteeMembers), finalComment, new ArrayList<>(editableFields), referredBy);
         referred.setLastUpdated(lastUpdated);
+        referred.setApprovalTime(approvalTime);
         referred.setSubmittedTime(submittedTime);
 
         return referred;
