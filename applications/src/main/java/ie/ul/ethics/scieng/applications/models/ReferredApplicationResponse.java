@@ -4,7 +4,6 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +16,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = false)
 @Getter
 @Setter
-@ApplicationResponseRegistration(status = ApplicationStatus.REFERRED, applicationClass = ReferredApplication.class)
+@ApplicationResponseRegistration(status = ApplicationStatus.REFERRED)
 public class ReferredApplicationResponse extends SubmittedApplicationResponse {
     /**
      * The list of field component IDs that can be edited
@@ -33,7 +32,7 @@ public class ReferredApplicationResponse extends SubmittedApplicationResponse {
      *
      * @param application the application to create the response from
      */
-    public ReferredApplicationResponse(ReferredApplication application) {
+    public ReferredApplicationResponse(Application application) {
         super(application);
         this.editableFields = application.getEditableFields();
         this.referredBy = application.getReferredBy().getUsername();

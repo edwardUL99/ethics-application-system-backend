@@ -1,6 +1,7 @@
 package ie.ul.ethics.scieng.applications.models.applications;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
+import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.models.User;
 import lombok.AccessLevel;
@@ -10,12 +11,15 @@ import lombok.Setter;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
- * This abstract class provides the "interface" (has to be an abstract class for hibernate) for applications in the system
+ * This abstract class provides the "interface" (has to be an abstract class for hibernate) for applications in the system.
+ * It provides a base for an application at different stages/statuses of application management.
+ * Contains operations that provide a no-op implementation that can be implemented by sub-classes where it makes sense
  */
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
@@ -77,7 +81,7 @@ public abstract class Application {
     /**
      * Create a default Application
      */
-    public Application() {
+    protected Application() {
         this(null, null, null, null, null, new HashMap<>());
     }
 
@@ -90,7 +94,7 @@ public abstract class Application {
      * @param applicationTemplate the template that this application was answered on
      * @param answers the answers to the application
      */
-    public Application(Long id, String applicationId, User user, ApplicationStatus status, ApplicationTemplate applicationTemplate, Map<String, Answer> answers) {
+    protected Application(Long id, String applicationId, User user, ApplicationStatus status, ApplicationTemplate applicationTemplate, Map<String, Answer> answers) {
         this(id, applicationId, user, status, applicationTemplate, answers, new ArrayList<>());
     }
 
@@ -104,8 +108,8 @@ public abstract class Application {
      * @param answers the answers to the application
      * @param attachedFiles a list of attached files
      */
-    public Application(Long id, String applicationId, User user, ApplicationStatus status, ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
-                       List<AttachedFile> attachedFiles) {
+    protected Application(Long id, String applicationId, User user, ApplicationStatus status, ApplicationTemplate applicationTemplate, Map<String, Answer> answers,
+                          List<AttachedFile> attachedFiles) {
         this.id = id;
         this.applicationId = applicationId;
         this.user = user;
@@ -122,6 +126,151 @@ public abstract class Application {
      */
     public void attachFile(AttachedFile file) {
         this.attachedFiles.put(file.getComponentId(), file);
+    }
+
+    /**
+     * Assign committee member to the application
+     * @param user the committee member to assign
+     * @throws ApplicationException if the user does not have REVIEW_APPLICATIONS permissions
+     */
+    public void assignCommitteeMember(User user) {
+        // no-op in base application
+    }
+
+    /**
+     * Get an unmodifiable view of this application's committee members
+     * @return the unmodifiable list of assigned committee members
+     */
+    public List<AssignedCommitteeMember> getAssignedCommitteeMembers() {
+        // no-op in base application
+        return Collections.emptyList();
+    }
+
+    /**
+     * Assigns all this application's assigned committee members to the previous committee members
+     * @throws InvalidStatusException if the application is not in a resubmitted status
+     */
+    public void assignCommitteeMembersToPrevious() {
+        // no-op in base application
+    }
+
+    /**
+     * Get an unmodifiable view of this application's previous committee members
+     * @return the unmodifiable list of previous committee members before it was referred.
+     */
+    public List<User> getPreviousCommitteeMembers() {
+        // no-op in base application
+        return Collections.emptyList();
+    }
+
+    /**
+     * Clear the list of previous committee members
+     */
+    public void clearPreviousCommitteeMembers() {
+        // no-op in base application
+    }
+
+    /**
+     * Gets the comments added to the application
+     * @return the map of comments added to the application
+     */
+    public Map<String, Comment> getComments() {
+        // no-op in base application
+        return Collections.emptyMap();
+    }
+
+    /**
+     * Adds the provided comment to the application
+     * @param comment the comment to add
+     */
+    public void addComment(Comment comment) {
+        // no-op in base application
+    }
+
+    /**
+     * Get the final comment left on the application after approval/rejection
+     * @return the final comment left
+     */
+    public Comment getFinalComment() {
+        // no-op in base application
+        return null;
+    }
+
+    /**
+     * Set the final comment of the application
+     * @param finalComment the last comment of the application if it makes sense for the application status
+     */
+    public void setFinalComment(Comment finalComment) {
+        // no-op in base application
+    }
+
+    /**
+     * Get the timestamp of when the application was submitted
+     * @return the timestamp of when the application was submitted
+     */
+    public LocalDateTime getSubmittedTime() {
+        // no-op in base application
+        return null;
+    }
+
+    /**
+     * Set the timestamp of when the application was submitted
+     * @param submittedTime the time when the application was submitted
+     */
+    public void setSubmittedTime(LocalDateTime submittedTime) {
+        // no-op in base application
+    }
+
+    /**
+     * Get the timestamp of when the application was approved/rejected
+     * @return timestamp of when an approval decision was made
+     */
+    public LocalDateTime getApprovalTime() {
+        // no-op in base application
+        return null;
+    }
+
+    /**
+     * Sets the approval timestamp of the application
+     * @param approvalTime approval/rejection timestamp
+     */
+    public void setApprovalTime(LocalDateTime approvalTime) {
+        // no-op in base application
+    }
+
+    /**
+     * Gets the list of field component IDs that can be edited in this state
+     * @return the list of field IDs that can be edited in this application status
+     */
+    public List<String> getEditableFields() {
+        // no-op in base application
+        return Collections.emptyList();
+    }
+
+    /**
+     * Set the list of editable field component IDs
+     * @param editableFields the list of editable field component IDs. If these IDs don't exist
+     *                       within the application template, they won't be rendered in the front-end as editable
+     */
+    public void setEditableFields(List<String> editableFields) {
+        // no-op in base application
+    }
+
+    /**
+     * If the application has been referred, this method gets the user that referred the application
+     * @return the user that referred the application
+     */
+    public User getReferredBy() {
+        // no-op in base application
+        return null;
+    }
+
+    /**
+     * Set the user that referred the application
+     * @param referredBy the user that referred the application
+     */
+    public void setReferredBy(User referredBy) {
+        // no-op in base application
     }
 
     /**
