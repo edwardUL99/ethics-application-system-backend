@@ -23,6 +23,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -173,11 +174,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true),
             @CacheEvict(value = "template", allEntries = true)
     })
+    @Transactional
     public Application createApplication(Application application, boolean update) {
         if (update && application.getId() == null)
             throw new ApplicationException("You cannot update an Application that has no ID");
 
-        templateRepository.save(application.getApplicationTemplate());
+        ApplicationTemplate template = application.getApplicationTemplate();
+
+        templateRepository.save(template);
 
         application.setLastUpdated(LocalDateTime.now());
         applicationRepository.save(application);
