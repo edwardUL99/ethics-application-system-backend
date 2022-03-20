@@ -26,6 +26,8 @@ public abstract class OptionsConverter extends QuestionConverter {
             Map<String, Object> optionMap = (Map<String, Object>)option;
             parsed = new SelectQuestionComponent.Option((String)optionMap.get("label"), (String)optionMap.get("value"));
             identifier = (String)optionMap.get("identifier");
+
+            parsed.setId(ComponentConverter.parseDatabaseId(optionMap.getOrDefault("id", null)));
         } else if (option instanceof String) {
             parsed = new SelectQuestionComponent.Option((String)option);
         } else {

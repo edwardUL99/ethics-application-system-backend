@@ -30,7 +30,10 @@ public class MultipartQuestionConverter extends QuestionConverter {
      * @return the converted branch
      */
     private MultipartQuestionComponent.QuestionBranch convertBranch(Map<String, Object> branch) {
-        return new MultipartQuestionComponent.QuestionBranch((String)branch.get("part"), (String)branch.get("value"));
+        MultipartQuestionComponent.QuestionBranch parsed = new MultipartQuestionComponent.QuestionBranch((String)branch.get("part"), (String)branch.get("value"));
+        parsed.setBranchId(ComponentConverter.parseDatabaseId(branch.getOrDefault("branchId", null)));
+
+        return parsed;
     }
 
     /**
@@ -64,7 +67,9 @@ public class MultipartQuestionConverter extends QuestionConverter {
                 branches.add(convertBranch(branch));
             }
 
-            parts.put(part, new MultipartQuestionComponent.QuestionPart(null, part, questionComponent, branches));
+            Long id = ComponentConverter.parseDatabaseId(partMap.getOrDefault("id", null));
+
+            parts.put(part, new MultipartQuestionComponent.QuestionPart(id, part, questionComponent, branches));
         }
 
         multipart.setTitle((String)map.getOrDefault("title", null));

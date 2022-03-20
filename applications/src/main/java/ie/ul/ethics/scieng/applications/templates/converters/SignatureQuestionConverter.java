@@ -1,7 +1,7 @@
 package ie.ul.ethics.scieng.applications.templates.converters;
 
-import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.applications.templates.components.ComponentType;
+import ie.ul.ethics.scieng.applications.templates.components.QuestionComponent;
 import ie.ul.ethics.scieng.applications.templates.components.SignatureQuestionComponent;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationParseException;
 
@@ -11,7 +11,7 @@ import java.util.Map;
  * This class converts maps into signature questions
  */
 @Converter(ComponentType.SIGNATURE)
-public class SignatureQuestionConverter implements ComponentConverter {
+public class SignatureQuestionConverter extends QuestionConverter {
     /**
      * Validates the map for conversion
      *
@@ -24,17 +24,14 @@ public class SignatureQuestionConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent.
-     * Should call the validate method to ensure the map is valid
+     * Create the base question component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
-
+    protected QuestionComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         return new SignatureQuestionComponent((String)map.get("title"), (String)map.get("name"),
                 Converters.parseLongString(ComponentType.SIGNATURE, "description", map.getOrDefault("description", null)),
                 (String)map.get("label"));
