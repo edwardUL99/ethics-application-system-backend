@@ -206,8 +206,8 @@ public class ApplicationRequestMapperTest {
         Map<String, Answer> newValues = new HashMap<>(oldValues);
         newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
 
-        AttachedFile old = new AttachedFile(null, "filename", "directory");
-        AttachedFile newFile = new AttachedFile(null, "filename1", "directory");
+        AttachedFile old = new AttachedFile(null, "filename", "directory", USERNAME);
+        AttachedFile newFile = new AttachedFile(null, "filename1", "directory", USERNAME);
 
         draftApplication.attachFile(old);
 
