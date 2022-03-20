@@ -22,7 +22,6 @@ import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 import ie.ul.ethics.scieng.authentication.jwt.JWT;
 import ie.ul.ethics.scieng.authentication.jwt.JwtRequestFilter;
 import ie.ul.ethics.scieng.authentication.models.Account;
-import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
@@ -72,11 +71,6 @@ public class ApplicationRequestMapperTest {
      */
     @MockBean
     private ApplicationService applicationService;
-    /**
-     * The mocked file service
-     */
-    @MockBean
-    private FileService fileService;
     /**
      * The request mapper under test
      */
@@ -197,7 +191,6 @@ public class ApplicationRequestMapperTest {
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_ID);
-        verifyNoInteractions(fileService);
     }
 
     /**
@@ -213,26 +206,24 @@ public class ApplicationRequestMapperTest {
         Map<String, Answer> newValues = new HashMap<>(oldValues);
         newValues.put("component5", new Answer(null, "component5", "answer5", Answer.ValueType.TEXT));
 
-        AttachedFile old = new AttachedFile(null, "filename", "directory", "component6");
-        AttachedFile newFile = new AttachedFile(null, "filename1", "directory", "component6");
+        AttachedFile old = new AttachedFile(null, "filename", "directory");
+        AttachedFile newFile = new AttachedFile(null, "filename1", "directory");
 
         draftApplication.attachFile(old);
 
         UpdateDraftApplicationRequest request =
-                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, Map.of("component6", newFile), template);
+                new UpdateDraftApplicationRequest(APPLICATION_ID, newValues, List.of(newFile), template);
 
         assertNotEquals(oldValues, newValues);
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(draftApplication);
-        doNothing().when(fileService).deleteFile("filename", "directory", USERNAME);
 
         Application returned = requestMapper.updateDraftRequestToDraft(request);
 
         assertEquals(draftApplication, returned);
         assertEquals(draftApplication.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_ID);
-        verify(fileService).deleteFile("filename", "directory", USERNAME);
     }
 
     /**
@@ -266,7 +257,6 @@ public class ApplicationRequestMapperTest {
         assertEquals(referred, returned);
         assertEquals(returned.getAnswers(), newValues);
         verify(applicationService).getApplication(APPLICATION_ID);
-        verifyNoInteractions(fileService);
     }
 
     /**

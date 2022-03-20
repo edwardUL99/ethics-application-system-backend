@@ -65,14 +65,10 @@ public abstract class Application {
     @MapKey(name = "componentId")
     protected Map<String, Answer> answers;
     /**
-     * The map of component IDs to the attached files
+     * The list of files attached to the application
      */
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(name = "attachments_mapping",
-            joinColumns = {@JoinColumn(name = "database_ID", referencedColumnName = "id")},
-            inverseJoinColumns = {@JoinColumn(name = "files_id", referencedColumnName = "id")})
-    @MapKey(name = "componentId")
-    protected Map<String, AttachedFile> attachedFiles;
+    @OneToMany(cascade = CascadeType.ALL)
+    protected List<AttachedFile> attachedFiles;
     /**
      * The timestamp of when the application was last updated
      */
@@ -116,7 +112,7 @@ public abstract class Application {
         this.setStatus(status);
         this.applicationTemplate = applicationTemplate;
         this.answers = answers;
-        this.attachedFiles = new HashMap<>();
+        this.attachedFiles = new ArrayList<>();
         attachedFiles.forEach(this::attachFile);
     }
 
@@ -125,7 +121,7 @@ public abstract class Application {
      * @param file the file to attach
      */
     public void attachFile(AttachedFile file) {
-        this.attachedFiles.put(file.getComponentId(), file);
+        this.attachedFiles.add(file);
     }
 
     /**

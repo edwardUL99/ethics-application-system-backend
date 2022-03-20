@@ -12,6 +12,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -54,7 +55,7 @@ public abstract class ApplicationResponse {
     /**
      * The files attached to the application
      */
-    protected Map<String, AttachedFile> attachedFiles;
+    protected List<AttachedFile> attachedFiles;
 
     /**
      * Create a response from the application
