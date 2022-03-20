@@ -145,7 +145,7 @@ public class ReferredApplication extends SubmittedApplication {
     @Override
     public ReferredApplication copy() {
         ReferredApplication referred = new ReferredApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()),
+                new ArrayList<>(attachedFiles), new ArrayList<>(comments.values()),
                 new ArrayList<>(assignedCommitteeMembers), finalComment, new ArrayList<>(editableFields), referredBy);
         referred.setLastUpdated(lastUpdated);
         referred.setApprovalTime(approvalTime);

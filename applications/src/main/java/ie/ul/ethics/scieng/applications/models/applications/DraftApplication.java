@@ -101,7 +101,7 @@ public class DraftApplication extends Application {
      */
     @Override
     public DraftApplication copy() {
-        DraftApplication draft = new DraftApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers), new ArrayList<>(attachedFiles.values()));
+        DraftApplication draft = new DraftApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers), new ArrayList<>(attachedFiles));
         draft.setLastUpdated(lastUpdated);
 
         return draft;

@@ -122,6 +122,11 @@ public class FileController {
             if (directory != null)
                 uri += "?directory=" + directory;
 
+            if (!uri.contains("?"))
+                uri += "?";
+
+            uri += "username=" + username;
+
             return ResponseEntity.ok(new UploadFileResponse(fileName, uri, file.getContentType(), file.getSize()));
         } catch (FileException | IOException | ClamavException ex) {
             ex.printStackTrace();
@@ -159,6 +164,34 @@ public class FileController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);
+        } catch (PermissionDeniedException ex) {
+            ex.printStackTrace();
+            return respondError(FILE_PERMISSION_DENIED);
+        } catch (FileException ex) {
+            ex.printStackTrace();
+            return respondError(FILE_ERROR);
+        }
+    }
+
+    /**
+     * The endpoint for deleting a file
+     * @param filename the name of the file to download
+     * @param directory the directory to delete the file from
+     * @param username the username of the file to retrieve. Defaults to authentication information
+     * @return the response body
+     */
+    @DeleteMapping("/delete/{filename:.+}")
+    public ResponseEntity<?> deleteFile(@PathVariable String filename, @RequestParam(required = false) String directory,
+                                        @RequestParam(required = false) String username) {
+        try {
+            username = (username == null) ? authenticationInformation.getUsername():username;
+
+            if (fileService.loadFile(filename, directory, username) == null)
+                return ResponseEntity.notFound().build();
+
+            fileService.deleteFile(filename, directory, username);
+
+            return ResponseEntity.ok().build();
         } catch (PermissionDeniedException ex) {
             ex.printStackTrace();
             return respondError(FILE_PERMISSION_DENIED);

@@ -13,8 +13,6 @@ import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
-import ie.ul.ethics.scieng.files.exceptions.FileException;
-import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import lombok.extern.log4j.Log4j2;
@@ -23,7 +21,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -41,22 +38,16 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * The application service to help with mapping
      */
     private final ApplicationService applicationService;
-    /**
-     * The file service used for deleting old files
-     */
-    private final FileService fileService;
 
     /**
      * Create an ApplicationRequestMapperImpl
      * @param userService the user service to help with mapping
      * @param applicationService the application service to help with mapping
-     * @param fileService the fileService to delete old files
      */
     @Autowired
-    public ApplicationRequestMapperImpl(UserService userService, ApplicationService applicationService, FileService fileService) {
+    public ApplicationRequestMapperImpl(UserService userService, ApplicationService applicationService) {
         this.userService = userService;
         this.applicationService = applicationService;
-        this.fileService = fileService;
     }
 
     /**
@@ -85,26 +76,12 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
 
             loaded.setAnswers(request.getAnswers());
 
-            Map<String, AttachedFile> currentFiles = loaded.getAttachedFiles();
-            Map<String, AttachedFile> newFiles = request.getAttachedFiles();
+            List<AttachedFile> currentFiles = loaded.getAttachedFiles();
+            List<AttachedFile> newFiles = request.getAttachedFiles();
 
-            String username = loaded.getUser().getUsername();
-
-            for (Map.Entry<String, AttachedFile> e : newFiles.entrySet()) {
-                String key = e.getKey();
-                AttachedFile value = e.getValue();
-                AttachedFile current = currentFiles.get(key);
-
-                try {
-                    if (current != null && !current.equals(value))
-                        fileService.deleteFile(current.getFilename(), current.getDirectory(), username);
-                } catch (FileException ex) {
-                    ex.printStackTrace();
-                    log.error("Failed to delete an AttachedFile that was meant to exist, overwriting with new file");
-                }
-
-                currentFiles.put(key, value);
-            }
+            newFiles.stream()
+                    .filter(file -> !currentFiles.contains(file))
+                    .forEach(currentFiles::add);
 
             return loaded;
         } else {

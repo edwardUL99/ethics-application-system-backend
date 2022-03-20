@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * The response to a upload file request
+ * The response to an upload file request
  */
 @Getter
 @Setter
