@@ -234,11 +234,10 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     private ResponseEntity<?> updateInternal(Application application) {
         try {
-            Map<String, Object> response = new HashMap<>();
             applicationService.createApplication(application, true);
-            response.put(MESSAGE, APPLICATION_UPDATED);
-            response.put("answers", application.getAnswers());
-            response.put("lastUpdated", application.getLastUpdated());
+
+            UpdateDraftApplicationResponse response =
+                    new UpdateDraftApplicationResponse(APPLICATION_UPDATED, application.getAnswers(), application.getLastUpdated(), application.getAttachedFiles());
 
             return ResponseEntity.ok(response);
         } catch (IllegalStateException ex) {

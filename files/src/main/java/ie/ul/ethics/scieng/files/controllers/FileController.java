@@ -22,6 +22,9 @@ import xyz.capybara.clamav.ClamavException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -96,6 +99,20 @@ public class FileController {
     }
 
     /**
+     * Encode the value in URL encoding
+     * @param value the value to encode
+     * @return the encoded value
+     */
+    private String encodeValue(String value) {
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+            return value;
+        }
+    }
+
+    /**
      * This is the endpoint for uploading files
      * @param request the request for uploading the file
      * @return the response body
@@ -118,14 +135,16 @@ public class FileController {
             fileName = resolved[1];
 
             String uri = "/api/files/download/" + fileName;
+            String queryParams = "";
 
             if (directory != null)
-                uri += "?directory=" + directory;
+                queryParams += "directory=" + encodeValue(directory);
 
-            if (!uri.contains("?"))
-                uri += "?";
+            if (!queryParams.isEmpty())
+                queryParams += "&";
 
-            uri += "username=" + username;
+            queryParams += "username=" + encodeValue(username);
+            uri += "?" + queryParams;
 
             return ResponseEntity.ok(new UploadFileResponse(fileName, uri, file.getContentType(), file.getSize()));
         } catch (FileException | IOException | ClamavException ex) {
