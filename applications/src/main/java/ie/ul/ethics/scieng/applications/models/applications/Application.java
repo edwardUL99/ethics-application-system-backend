@@ -121,6 +121,11 @@ public abstract class Application {
      * @param file the file to attach
      */
     public void attachFile(AttachedFile file) {
+        for (AttachedFile attachedFile : this.attachedFiles)
+            if (attachedFile.getDirectory().equals(file.getDirectory()) && attachedFile.getUsername().equals(file.getUsername())
+                && attachedFile.getFilename().equals(file.getFilename()))
+                return;
+
         this.attachedFiles.add(file);
     }
 

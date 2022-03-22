@@ -23,6 +23,7 @@ public class FilesConfigurationProperties {
     /**
      * The storage directory
      */
+    @Getter(AccessLevel.NONE)
     private String storageDir = "/tmp/uploads";
     /**
      * The supported MIME-Types
@@ -33,6 +34,22 @@ public class FilesConfigurationProperties {
      * The antivirus configuration properties
      */
     private Antivirus antivirus = new Antivirus();
+
+    /**
+     * Get the configured location to store files
+     * @return the path to the location to store files
+     */
+    public String getStorageDir() {
+        String environmentDir = System.getenv("ETHICS_STORAGE_LOCATION");
+
+        if (environmentDir != null)
+            if (environmentDir.equalsIgnoreCase("pwd"))
+                return System.getProperty("user.dir") + "/ethics-system-uploads";
+            else
+                return environmentDir;
+
+        return storageDir;
+    }
 
     /**
      * Get the list of supported types
