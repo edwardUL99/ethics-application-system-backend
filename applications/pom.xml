@@ -38,5 +38,10 @@
             <artifactId>reflections</artifactId>
             <version>0.10.2</version>
         </dependency>
+        <dependency>
+            <groupId>ie.ul.ethics.scieng</groupId>
+            <artifactId>files</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>

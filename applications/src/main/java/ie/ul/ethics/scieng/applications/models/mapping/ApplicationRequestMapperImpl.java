@@ -76,12 +76,9 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
 
             loaded.setAnswers(request.getAnswers());
 
-            List<AttachedFile> currentFiles = loaded.getAttachedFiles();
-            List<AttachedFile> newFiles = request.getAttachedFiles();
-
-            newFiles.stream()
-                    .filter(file -> !currentFiles.contains(file))
-                    .forEach(currentFiles::add);
+            List<AttachedFile> attachedFiles = loaded.getAttachedFiles();
+            attachedFiles.clear();
+            request.getAttachedFiles().forEach(loaded::attachFile);
 
             return loaded;
         } else {

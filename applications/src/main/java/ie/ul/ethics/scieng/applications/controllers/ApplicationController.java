@@ -208,7 +208,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
             return respondError(USER_NOT_FOUND);
         } else {
             Application application = applicationService.createApplication(draftApplication, false);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse(application));
         }
     }
 
