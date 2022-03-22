@@ -540,10 +540,8 @@ public class ApplicationControllerTest {
         Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
 
         UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
-        Map<String, Object> response = new HashMap<>();
-        response.put(MESSAGE, APPLICATION_UPDATED);
-        response.put("lastUpdated", draftApplication.getLastUpdated());
-        response.put("answers", draftApplication.getAnswers());
+        UpdateDraftApplicationResponse response
+                = new UpdateDraftApplicationResponse(APPLICATION_UPDATED, draftApplication.getAnswers(), draftApplication.getLastUpdated(), draftApplication.getAttachedFiles());
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);

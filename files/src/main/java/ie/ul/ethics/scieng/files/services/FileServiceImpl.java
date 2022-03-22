@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.nio.file.Files;
@@ -133,6 +134,11 @@ public class FileServiceImpl implements FileService {
 
         try {
             Files.delete(file);
+            Path parent = file.getParent();
+            File[] files = parent.toFile().listFiles();
+
+            if (files != null && files.length == 0)
+                Files.delete(parent);
         } catch (IOException ex) {
             throw new FileException("Failed to delete file " + file, ex);
         }

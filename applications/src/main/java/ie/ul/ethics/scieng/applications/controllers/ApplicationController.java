@@ -6,7 +6,6 @@ import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
@@ -208,7 +207,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
             return respondError(USER_NOT_FOUND);
         } else {
             Application application = applicationService.createApplication(draftApplication, false);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse(application));
         }
     }
 
@@ -234,11 +233,10 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     private ResponseEntity<?> updateInternal(Application application) {
         try {
-            Map<String, Object> response = new HashMap<>();
             applicationService.createApplication(application, true);
-            response.put(MESSAGE, APPLICATION_UPDATED);
-            response.put("answers", application.getAnswers());
-            response.put("lastUpdated", application.getLastUpdated());
+
+            UpdateDraftApplicationResponse response =
+                    new UpdateDraftApplicationResponse(APPLICATION_UPDATED, application.getAnswers(), application.getLastUpdated(), application.getAttachedFiles());
 
             return ResponseEntity.ok(response);
         } catch (IllegalStateException ex) {

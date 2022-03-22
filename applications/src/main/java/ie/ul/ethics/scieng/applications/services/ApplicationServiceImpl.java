@@ -7,6 +7,7 @@ import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
@@ -14,8 +15,11 @@ import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTemplateRepository;
+import ie.ul.ethics.scieng.files.exceptions.FileException;
+import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheConfig;
@@ -24,6 +28,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -38,6 +43,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @CacheConfig(cacheNames = "applications")
+@Log4j2
 public class ApplicationServiceImpl implements ApplicationService {
     /**
      * The template repository for saving application templates
@@ -55,6 +61,10 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The email service to use for sending notification e-mails
      */
     private final ApplicationsEmailService emailService;
+    /**
+     * The service for interacting with files
+     */
+    private final FileService fileService;
 
     /**
      * Create an ApplicationServiceImpl
@@ -62,14 +72,17 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param applicationRepository the repository for saving and loading applications
      * @param templateLoader the loader for application template loading
      * @param emailService the service for sending applications notifications
+     * @param fileService the service for interacting with files
      */
     @Autowired
     public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository,
-                                  ApplicationTemplateLoader templateLoader, @Qualifier("applicationsEmail") ApplicationsEmailService emailService) {
+                                  ApplicationTemplateLoader templateLoader, @Qualifier("applicationsEmail") ApplicationsEmailService emailService,
+                                  FileService fileService) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
         this.templateLoader = templateLoader;
         this.emailService = emailService;
+        this.fileService = fileService;
     }
 
     /**
@@ -174,11 +187,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true),
             @CacheEvict(value = "template", allEntries = true)
     })
+    @Transactional
     public Application createApplication(Application application, boolean update) {
         if (update && application.getId() == null)
             throw new ApplicationException("You cannot update an Application that has no ID");
 
-        templateRepository.save(application.getApplicationTemplate());
+        ApplicationTemplate template = application.getApplicationTemplate();
+
+        templateRepository.save(template);
 
         application.setLastUpdated(LocalDateTime.now());
         applicationRepository.save(application);
@@ -452,7 +468,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
 
-
         Map<String, ApplicationComments> comments = mapComments(application.getComments());
         Comment finalComment = application.getFinalComment();
 
@@ -491,6 +506,14 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void deleteApplication(Application application) {
         this.applicationRepository.delete(application);
         this.templateRepository.delete(application.getApplicationTemplate());
+
+        for (AttachedFile attachedFile : application.getAttachedFiles()) {
+            try {
+                this.fileService.deleteFile(attachedFile.getFilename(), attachedFile.getDirectory(), attachedFile.getUsername());
+            } catch (FileException ex) {
+                log.error(ex);
+            }
+        }
     }
 
     /**
