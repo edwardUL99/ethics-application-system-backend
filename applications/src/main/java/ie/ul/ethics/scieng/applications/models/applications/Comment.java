@@ -48,8 +48,14 @@ public class Comment {
     /**
      * The list of subComments of this comment
      */
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
     private List<Comment> subComments = new ArrayList<>();
+    /**
+     * A parent comment if this comment is a sub-comment
+     */
+    @ManyToOne
+    @JsonIgnore
+    private Comment parent;
     /**
      * The time when the comment was created
      */
@@ -91,6 +97,7 @@ public class Comment {
      */
     public void addSubComment(Comment comment) {
         comment.setComponentId(componentId); // attaches to the same component
+        comment.parent = this;
         subComments.add(comment);
     }
 

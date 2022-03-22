@@ -172,20 +172,20 @@ public abstract class Application {
     }
 
     /**
-     * Gets the comments added to the application
-     * @return the map of comments added to the application
-     */
-    public Map<String, Comment> getComments() {
-        // no-op in base application
-        return Collections.emptyMap();
-    }
-
-    /**
      * Adds the provided comment to the application
      * @param comment the comment to add
      */
     public void addComment(Comment comment) {
         // no-op in base application
+    }
+
+    /**
+     * Gets the comments added to the application
+     * @return the map of comments added to the application
+     */
+    public Map<String, ApplicationComments> getComments() {
+        // no-op in base application
+        return Collections.emptyMap();
     }
 
     /**

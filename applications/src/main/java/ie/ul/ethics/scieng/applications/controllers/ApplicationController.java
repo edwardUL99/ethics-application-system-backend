@@ -6,7 +6,6 @@ import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;

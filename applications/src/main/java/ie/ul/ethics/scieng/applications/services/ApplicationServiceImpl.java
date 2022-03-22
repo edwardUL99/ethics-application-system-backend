@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
@@ -241,6 +242,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
+     * Get the attached files from the application to attach to a new application
+     * @param application the application to map attachments from
+     * @return the list of attachments
+     */
+    private List<AttachedFile> getAttachedFiles(Application application) {
+        return application.getAttachedFiles()
+                .stream()
+                .peek(file -> file.setId(null))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Submit an application from the applicant to the committee and convert the application to a submitted state.
      * The draft instance of the application will be removed and replaced with the submitted instance. The database IDs
      * will differ but the applicationId field will remain the same.
@@ -265,7 +278,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
                 ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), answers,
-                new ArrayList<>(), new ArrayList<>(), null);
+                getAttachedFiles(application), new ArrayList<>(), new ArrayList<>(), null);
 
         if (status == ApplicationStatus.REFERRED) {
             submittedApplication.assignCommitteeMember(application.getReferredBy());
@@ -360,9 +373,9 @@ public class ApplicationServiceImpl implements ApplicationService {
     public Application reviewApplication(Application application, boolean finishReview) throws InvalidStatusException {
         ApplicationStatus status = application.getStatus();
 
-        if (!finishReview && status != ApplicationStatus.SUBMITTED)
+        if (!finishReview && status != ApplicationStatus.SUBMITTED && status != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
-                + ApplicationStatus.SUBMITTED + " status");
+                + ApplicationStatus.SUBMITTED + " or " + ApplicationStatus.REVIEWED + " status");
         else if (finishReview && status != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);
 
@@ -437,9 +450,12 @@ public class ApplicationServiceImpl implements ApplicationService {
      * Map comments to a way where they're able to be saved without detached instance exceptions
      * @param comments the comments to map
      */
-    private Map<String, Comment> mapComments(Map<String, Comment> comments) {
-        Map<String, Comment> mapped = new HashMap<>(comments);
-        mapped.forEach((k, v) -> v.setId(null));
+    private Map<String, ApplicationComments> mapComments(Map<String, ApplicationComments> comments) {
+        Map<String, ApplicationComments> mapped = new HashMap<>(comments);
+        mapped.forEach((k, v) -> {
+            v.setId(null);
+            v.getComments().forEach(c -> c.setId(null));
+        });
 
         return mapped;
     }
@@ -464,7 +480,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
 
-        Map<String, Comment> comments = mapComments(application.getComments());
+        Map<String, ApplicationComments> comments = mapComments(application.getComments());
         Comment finalComment = application.getFinalComment();
 
         if (finalComment != null)
@@ -474,7 +490,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Application referredApplication =
                 new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
-                        answers, new ArrayList<>(comments.values()), application.getAssignedCommitteeMembers(), finalComment,
+                        answers, getAttachedFiles(application), new ArrayList<>(comments.values()), application.getAssignedCommitteeMembers(), finalComment,
                         editableFields, referrer);
 
         referredApplication.setLastUpdated(LocalDateTime.now());
