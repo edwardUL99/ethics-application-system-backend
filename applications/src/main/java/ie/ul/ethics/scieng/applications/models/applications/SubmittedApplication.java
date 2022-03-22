@@ -214,7 +214,20 @@ public class SubmittedApplication extends Application {
         ApplicationComments comments = this.comments.get(componentId);
 
         if (comments != null) {
-            comments.getComments().add(comment);
+            List<Comment> commentsList = comments.getComments();
+            boolean added = false;
+
+            for (int i = 0; i < commentsList.size() && !added; i++) {
+                Comment comment1 = commentsList.get(i);
+
+                if (Objects.equals(comment1.getId(), comment.getId())) {
+                    added = true;
+                    commentsList.set(i, comment);
+                }
+            }
+
+            if (!added)
+                commentsList.add(comment);
         } else {
             this.comments.put(componentId, new ApplicationComments(null, componentId, new ArrayList<>(List.of(comment))));
         }
@@ -230,8 +243,9 @@ public class SubmittedApplication extends Application {
     public boolean canBeViewedBy(User user) {
         Collection<Permission> permissions = user.getRole().getPermissions();
 
+        String username = user.getUsername();
         boolean isAssigned = assignedCommitteeMembers.stream().map(AssignedCommitteeMember::getUser)
-                .anyMatch(u -> u.equals(user));
+                .anyMatch(u -> u.getUsername().equals(username));
 
         return (this.user.getUsername().equals(user.getUsername()) && permissions.contains(Permissions.VIEW_OWN_APPLICATIONS))
                 || (permissions.contains(Permissions.REVIEW_APPLICATIONS) && isAssigned)
