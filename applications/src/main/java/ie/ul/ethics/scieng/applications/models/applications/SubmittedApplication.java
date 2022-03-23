@@ -35,7 +35,6 @@ public class SubmittedApplication extends Application {
      * The list of assigned committee members
      */
     @OneToMany(cascade = CascadeType.ALL)
-    @Getter(AccessLevel.NONE)
     protected List<AssignedCommitteeMember> assignedCommitteeMembers;
     /**
      * This comment is the final comment given to the application (i.e. when approved or rejected). Is not set through a

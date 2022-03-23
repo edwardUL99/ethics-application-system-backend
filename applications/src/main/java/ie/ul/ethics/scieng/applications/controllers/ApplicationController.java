@@ -323,7 +323,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
             } else {
                 try {
                     Application assigned = this.applicationService.assignCommitteeMembers(application, members);
-                    return ResponseEntity.ok(new AssignMembersResponse((SubmittedApplication) assigned));
+                    return ResponseEntity.ok(new AssignMembersResponse(assigned));
                 } catch (InvalidStatusException ex) {
                     ex.printStackTrace();
                     return respondError(INVALID_APPLICATION_STATUS);
@@ -336,6 +336,29 @@ public class ApplicationController implements SearchController<ApplicationRespon
                         return respondError(ex.getMessage());
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * The endpoint for unassigning a committee member from the application
+     * @param username the username of the committee member to remove
+     * @param id the ID of the application
+     * @return the response body
+     */
+    @PostMapping("/unassign/{username}")
+    public ResponseEntity<?> unassignCommitteeMember(@PathVariable String username, @RequestParam String id) {
+        Application application = this.applicationService.getApplication(id);
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            try {
+                application = this.applicationService.unassignCommitteeMember(application, username);
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+            } catch (InvalidStatusException ex) {
+                return respondError(INVALID_APPLICATION_STATUS);
             }
         }
     }

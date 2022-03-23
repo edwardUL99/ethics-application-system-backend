@@ -102,10 +102,18 @@ public interface ApplicationService {
      * @param application the application to assign the committee members to
      * @param committeeMembers the list of committee members to assign
      * @return the application after updating it
-     * @throws ApplicationException if the status is incorrect or an exception with message
      * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
      */
     Application assignCommitteeMembers(Application application, List<User> committeeMembers) throws ApplicationException;
+
+    /**
+     * Unassign the user from the committee member
+     * @param application the application to remove the member from
+     * @param username the username of the committee member to remove
+     * @return the modified application
+     * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
+     */
+    Application unassignCommitteeMember(Application application, String username) throws ApplicationException;
 
     /**
      * Accept an application that has been re-submitted and assign the list of committee members to the application.

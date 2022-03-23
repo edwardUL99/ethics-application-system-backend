@@ -61,7 +61,7 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
         this.comments = application.getComments();
         this.assignedCommitteeMembers = application.getAssignedCommitteeMembers()
                 .stream()
-                .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getUser().getUsername(), u.isFinishReview()))
+                .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getApplicationId(), u.getUser().getUsername(), u.isFinishReview()))
                 .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
         this.submittedTime = application.getSubmittedTime();
@@ -97,6 +97,10 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
          * The database ID
          */
         private Long id;
+        /**
+         * The ID of the application the member is assigned to
+         */
+        private String applicationId;
         /**
          * The username of the committee member
          */
