@@ -7,6 +7,7 @@ import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
@@ -323,6 +324,35 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         this.createApplication(application, true);
+
+        return application;
+    }
+
+    /**
+     * Unassign the user from the committee member
+     *
+     * @param application the application to remove the member from
+     * @param username    the username of the committee member to remove
+     * @return the modified application
+     * @throws ApplicationException if the status is incorrect or no committee member with username is assigned
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application unassignCommitteeMember(Application application, String username) throws ApplicationException {
+        if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
+            throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
+
+        List<AssignedCommitteeMember> assigned = application.getAssignedCommitteeMembers()
+                .stream()
+                .filter(a -> !a.getUser().getUsername().equals(username))
+                .collect(Collectors.toList());
+
+        application.setAssignedCommitteeMembers(assigned);
+        createApplication(application, true);
 
         return application;
     }

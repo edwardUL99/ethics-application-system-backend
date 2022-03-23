@@ -18,6 +18,7 @@ is no extra path elements after the prefix
 | /submit    | POST   | Submit the draft application that is being created to the ethics committee and set it to a Submitted status                  |
 | /resubmit  | POST   | Allows an admin/chair to accept an application that has been re-submitted back after being referred and assign committee members to it |
 | /assign    | POST   | Allows an admin/chair to assign committee members to an application
+| /unassign/{username} | POST | Allows the committee member with username to be unassigned from the application  |
 | /review    | POST   | Set a submitted application to in review or an application in review to reviewed                                             |
 |            | PUT    | Allows a reviewer to add comments to an application in review |
 | /review/finish | POST | Allows an individual committee member mark that their review has completed |

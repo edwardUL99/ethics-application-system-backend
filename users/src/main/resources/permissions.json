@@ -28,6 +28,10 @@
       "permissions": "ASSIGN_APPLICATIONS"
     },
     {
+      "path": "/api/applications/unassign/**",
+      "permissions": "ADMIN"
+    },
+    {
       "path": "/api/applications/review/",
       "permissions": "REVIEW_APPLICATIONS"
     },

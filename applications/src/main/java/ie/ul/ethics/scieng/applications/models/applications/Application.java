@@ -139,6 +139,14 @@ public abstract class Application {
     }
 
     /**
+     * Set the list of assigned committee members
+     * @param assignedCommitteeMembers the new list of assigned committee members
+     */
+    public void setAssignedCommitteeMembers(List<AssignedCommitteeMember> assignedCommitteeMembers) {
+        // no-op in base application
+    }
+
+    /**
      * Get an unmodifiable view of this application's committee members
      * @return the unmodifiable list of assigned committee members
      */

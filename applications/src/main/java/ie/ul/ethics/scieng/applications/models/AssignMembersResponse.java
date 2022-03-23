@@ -78,6 +78,7 @@ public class AssignMembersResponse {
          */
         public AssignedCommitteeMember(ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember member) {
             this.id = member.getId();
+            this.applicationId = member.getApplicationId();
             this.member = new UserResponseShortened(member.getUser());
             this.finishReview = member.isFinishReview();
         }
