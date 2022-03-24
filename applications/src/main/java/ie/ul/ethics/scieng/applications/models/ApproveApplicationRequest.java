@@ -1,6 +1,5 @@
 package ie.ul.ethics.scieng.applications.models;
 
-import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,5 +30,5 @@ public class ApproveApplicationRequest {
     /**
      * The final comment to leave on the application after approving it
      */
-    private Comment finalComment;
+    private ReviewSubmittedApplicationRequest.Comment finalComment;
 }

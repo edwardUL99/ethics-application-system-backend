@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
+import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
@@ -218,5 +219,20 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
 
             return loaded;
         }
+    }
+
+    /**
+     * Maps the approve application request
+     *
+     * @param request the request to map
+     * @return the mapped request
+     */
+    @Override
+    public MappedApprovalRequest mapApprovalRequest(ApproveApplicationRequest request) {
+        Application application = applicationService.getApplication(request.getId());
+        ReviewSubmittedApplicationRequest.Comment finalComment = request.getFinalComment();
+        Comment mapped = new Comment(null, userService.loadUser(finalComment.getUsername()), finalComment.getComment(), null, new ArrayList<>());
+
+        return new MappedApprovalRequest(application, request.isApprove(), mapped);
     }
 }

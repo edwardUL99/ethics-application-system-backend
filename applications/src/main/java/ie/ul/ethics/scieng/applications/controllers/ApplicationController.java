@@ -6,11 +6,12 @@ import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedApprovalRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.search.ApplicationSpecification;
 import ie.ul.ethics.scieng.applications.search.DraftApplicationSpecification;
@@ -468,12 +469,14 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/approve")
     public ResponseEntity<?> approveApplication(@RequestBody @Valid ApproveApplicationRequest request) {
         try {
-            Application application = applicationService.getApplication(request.getId());
+            MappedApprovalRequest mapped = requestMapper.mapApprovalRequest(request);
+            Application application = mapped.getApplication();
+            Comment finalComment;
 
-            if (application == null) {
+            if (application == null || ((finalComment = mapped.getFinalComment()) != null && finalComment.getUser() == null)) {
                 return ResponseEntity.notFound().build();
             } else {
-                application = applicationService.approveApplication(application, request.isApprove(), request.getFinalComment());
+                application = applicationService.approveApplication(application, mapped.isApprove(), finalComment);
 
                 return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
             }

@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
+import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
@@ -71,4 +72,11 @@ public interface ApplicationRequestMapper {
      */
     Application reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException,
             InvalidStatusException;
+
+    /**
+     * Maps the approve application request
+     * @param request the request to map
+     * @return the mapped request
+     */
+    MappedApprovalRequest mapApprovalRequest(ApproveApplicationRequest request);
 }

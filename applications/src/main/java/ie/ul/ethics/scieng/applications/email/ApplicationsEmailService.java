@@ -31,7 +31,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
     public void sendApplicationReferredEmail(Application application, User referrer) {
         String content = "<h2>Application Referred - %s</h2>"
                 + "<p>Hello %s,<br>This e-mail is a quick notification that your ethics application"
-                + " has been referred back to you for more information. This means that some fields of your application"
+                + " has been referred back to you for more information. This means that some fields of your application "
                 + "requires some attention from you before we can proceed with reviewing your application</p>"
                 + "<br>"
                 + "<p>Application ID: <b>%s</b></p>"
@@ -40,7 +40,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<h4>What do I need to do?</h4>"
                 + "<p>You can go to your application to review the actions required of you by clicking: <a href=\"%s\">%s</a></p>"
                 + "<br>"
-                + "If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
+                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
                 + "<br>"
                 + "<p>Once you have reviewed the changes required from you, you can re-submit the application to the committee</p>"
                 + "<br>"

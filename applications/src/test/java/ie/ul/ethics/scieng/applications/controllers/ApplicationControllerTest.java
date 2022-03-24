@@ -13,6 +13,7 @@ import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPol
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedApprovalRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -1391,16 +1392,17 @@ public class ApplicationControllerTest {
         Application approved = createSubmittedApplication(draft);
         approved.setStatus(ApplicationStatus.APPROVED);
         Comment finalComment = new Comment();
+        finalComment.setUser(createTestUser());
         approved.setFinalComment(finalComment);
 
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, new ReviewSubmittedApplicationRequest.Comment());
         ApplicationResponse response = ApplicationResponseFactory.buildResponse(approved);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(reviewed);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(reviewed, true, finalComment));
         given(applicationService.approveApplication(reviewed, true, finalComment))
                 .willReturn(approved);
 
@@ -1411,7 +1413,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verify(applicationService).approveApplication(reviewed, true, finalComment);
     }
 
@@ -1426,16 +1428,17 @@ public class ApplicationControllerTest {
         Application rejected = createSubmittedApplication(draft);
         rejected.setStatus(ApplicationStatus.APPROVED);
         Comment finalComment = new Comment();
+        finalComment.setUser(createTestUser());
         rejected.setFinalComment(finalComment);
 
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, false, finalComment);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, false, new ReviewSubmittedApplicationRequest.Comment());
         ApplicationResponse response = ApplicationResponseFactory.buildResponse(rejected);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(reviewed);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(reviewed, false, finalComment));
         given(applicationService.approveApplication(reviewed, false, finalComment))
                 .willReturn(rejected);
 
@@ -1446,7 +1449,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verify(applicationService).approveApplication(reviewed, false, finalComment);
     }
 
@@ -1455,12 +1458,10 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowIfApplicationNotFoundOnApprove() throws Exception {
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(null);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, new ReviewSubmittedApplicationRequest.Comment());
 
-        Comment finalComment = new Comment();
-
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(null, true, new Comment()));
 
         String json = JSON.convertJSON(request);
 
@@ -1469,7 +1470,7 @@ public class ApplicationControllerTest {
                         .content(json))
                 .andExpect(status().isNotFound());
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verifyNoMoreInteractions(applicationService);
     }
 
@@ -1481,16 +1482,17 @@ public class ApplicationControllerTest {
         Application draft = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draft);
         Comment finalComment = new Comment();
+        finalComment.setUser(createTestUser());
 
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, new ReviewSubmittedApplicationRequest.Comment());
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INVALID_APPLICATION_STATUS);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(submitted);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(submitted, true, finalComment));
         doThrow(InvalidStatusException.class).when(applicationService).approveApplication(submitted, true, finalComment);
 
         mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "approve"))
@@ -1500,7 +1502,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verify(applicationService).approveApplication(submitted, true, finalComment);
     }
 
