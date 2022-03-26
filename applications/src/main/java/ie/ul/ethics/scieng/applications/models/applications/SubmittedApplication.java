@@ -14,6 +14,7 @@ import org.hibernate.Hibernate;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class represents an application that has been submitted
@@ -271,6 +272,33 @@ public class SubmittedApplication extends Application {
     }
 
     /**
+     * Filters comments based on permissions and application shared
+     * @param comments the comments to filter
+     * @param permissions the permissions of the user
+     * @return the filtered comments
+     */
+    protected Map<String, ApplicationComments> filterComments(Map<String, ApplicationComments> comments, Collection<Permission> permissions) {
+        Map<String, ApplicationComments> filtered = new HashMap<>();
+        boolean review = permissions.contains(Permissions.REVIEW_APPLICATIONS);
+
+        for (Map.Entry<String, ApplicationComments> e : comments.entrySet()) {
+            String id = e.getKey();
+            ApplicationComments appComments = e.getValue();
+            List<Comment> filteredComments = appComments.getComments()
+                    .stream()
+                    .filter(comment -> review || comment.isSharedApplicant())
+                    .collect(Collectors.toList());
+
+            if (filteredComments.size() > 0) {
+                appComments.setComments(filteredComments);
+                filtered.put(id, appComments);
+            }
+        }
+
+        return filtered;
+    }
+
+    /**
      * If this application is being used in a response, it should be "cleaned" to remove information from it
      * that may not be viewable by the user depending on their permissions. If the user can view everything regardless of
      * permissions, this method can safely be a no-op
@@ -286,12 +314,12 @@ public class SubmittedApplication extends Application {
 
         if (status == ApplicationStatus.SUBMITTED || status == ApplicationStatus.REVIEW || status == ApplicationStatus.REVIEWED) {
             if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
-                application.comments.clear();
+                application.comments = filterComments(application.comments, permissions);
                 application.finalComment = null;
             }
         } else if (status == ApplicationStatus.RESUBMITTED) {
             if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
-                application.comments.clear();
+                application.comments = filterComments(application.comments, permissions);
                 application.finalComment = null;
                 application.previousCommitteeMembers.clear();
             }

@@ -197,6 +197,14 @@ public abstract class Application {
     }
 
     /**
+     * Sets the comments of the application
+     * @param comments the comments to set
+     */
+    public void setComments(Map<String, ApplicationComments> comments) {
+        // no-op in base application
+    }
+
+    /**
      * Get the final comment left on the application after approval/rejection
      * @return the final comment left
      */

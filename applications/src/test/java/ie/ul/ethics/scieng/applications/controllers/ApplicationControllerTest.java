@@ -1279,7 +1279,8 @@ public class ApplicationControllerTest {
         comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
         mapped.addComment(comment);
 
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        ReviewSubmittedApplicationRequest.Comment requestComment =
+                new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
         requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 

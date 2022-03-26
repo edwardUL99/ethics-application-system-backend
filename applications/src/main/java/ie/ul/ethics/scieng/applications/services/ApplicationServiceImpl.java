@@ -286,6 +286,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             application.getAssignedCommitteeMembers().forEach(u -> application.assignCommitteeMember(u.getUser()));
             submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
             submittedApplication.assignCommitteeMembersToPrevious();
+            submittedApplication.setComments(mapComments(application.getComments()));
         }
 
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
