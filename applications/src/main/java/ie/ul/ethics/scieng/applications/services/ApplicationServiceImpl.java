@@ -472,7 +472,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setApprovalTime((approve) ? LocalDateTime.now():null);
         createApplication(application, true);
 
-        // TODO send notification of approval status by email
+        emailService.sendApplicationApprovalEmail(application);
 
         return application;
     }
