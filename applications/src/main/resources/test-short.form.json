@@ -116,6 +116,20 @@
               "branches": []
             }
           }
+        },
+        {
+          "type": "signature",
+          "title": "Insurance Cover",
+          "description": [
+            "Insurance cover is required for all research carried out by UL employees. Principal Investigators/Supervisors ",
+            "should carefully view the University’s ‘Guidelines on Insurance Cover for Research’ document and the University’s ",
+            "Insurance cover to ascertain if their proposed research is covered. These documents are available at www.ul.ie/insurance. \\n",
+            "Where any query arises about whether or not proposed research is covered by insurance, the Principal Investigator/Supervisor must ",
+            "contact the University’s Insurance Administrator at cliona.donnellan@ul.ie to confirm that the required level of insurance cover is in place.\\n",
+            "Please indicate by way of signature that the research project is covered by UL's insurance policies"
+          ],
+          "name": "insurance_signature",
+          "label": "PI/Supervisor signature"
         }
       ]
     }

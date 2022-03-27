@@ -80,7 +80,7 @@ public class User {
      * @param department the department the user belongs to
      * @param role the role the user owns
      */
-    private User(String username, String name, Account account, String department , Role role) {
+    private User(String username, String name, Account account, String department, Role role) {
         this.username = username;
         this.name = name;
         this.account = account;
