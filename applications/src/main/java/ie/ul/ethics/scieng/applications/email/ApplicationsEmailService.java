@@ -39,7 +39,6 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>Hello %s,<br>This e-mail is a quick notification that your ethics application"
                 + " has been referred back to you for more information. This means that some fields of your application "
                 + "requires some attention from you before we can proceed with reviewing your application</p>"
-                + "<br>"
                 + "<p>Application ID: <b>%s</b></p>"
                 + "<p>Your application has been referred by: %s (%s)</p>"
                 + "<h4>What do I need to do?</h4>"
@@ -55,7 +54,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
         String applicationId = application.getApplicationId();
 
         String urlBase = getFrontendURL();
-        urlBase = urlBase + "/applications?id=" + applicationId;
+        urlBase = urlBase + "/application?id=" + applicationId;
 
         String email = applicant.getAccount().getEmail();
         content = String.format(content, applicationId, applicant.getName(), applicationId,
@@ -88,7 +87,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
             if (user == null || createdAt == null || comment == null)
                 return parseFinalComment(null);
 
-            content = "<h5>%s</h5>"
+            content = "<h4>%s</h4>"
                     + "<p style=\"color: grey;\">"
                     + "%s"
                     + "</p>"
@@ -137,7 +136,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
             throw new InvalidStatusException("Can only send an outcome email for APPROVED or REJECTED statuses");
 
         String urlBase = getFrontendURL();
-        urlBase = urlBase + "/applications?id=" + applicationId;
+        urlBase = urlBase + "/application?id=" + applicationId;
         String email = applicant.getAccount().getEmail();
         String action = (approved) ? "You do not need to do anything as your application has been approved. However, " +
                 "should anything change regarding your application, please update the ethics committee" :

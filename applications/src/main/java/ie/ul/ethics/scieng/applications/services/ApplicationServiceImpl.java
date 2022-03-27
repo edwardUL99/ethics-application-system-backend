@@ -31,6 +31,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -66,6 +68,11 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The service for interacting with files
      */
     private final FileService fileService;
+    /**
+     * The entity manager for interacting with entity API
+     */
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Create an ApplicationServiceImpl
@@ -269,6 +276,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "user_applications", allEntries = true),
             @CacheEvict(value = "status_applications", allEntries = true)
     })
+    @Transactional
     public Application submitApplication(Application application) throws InvalidStatusException {
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
         ApplicationStatus status = application.getStatus();
@@ -282,17 +290,16 @@ public class ApplicationServiceImpl implements ApplicationService {
                 getAttachedFiles(application), new ArrayList<>(), new ArrayList<>(), null);
 
         if (status == ApplicationStatus.REFERRED) {
-            submittedApplication.assignCommitteeMember(application.getReferredBy());
-            application.getAssignedCommitteeMembers().forEach(u -> application.assignCommitteeMember(u.getUser()));
+            application.getAssignedCommitteeMembers().forEach(u -> submittedApplication.assignCommitteeMember(u.getUser()));
             submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
             submittedApplication.assignCommitteeMembersToPrevious();
             submittedApplication.setComments(mapComments(application.getComments()));
         }
 
-        applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
-
         submittedApplication.setLastUpdated(LocalDateTime.now());
         submittedApplication.setSubmittedTime(LocalDateTime.now());
+        applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
+        entityManager.flush();
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
@@ -411,6 +418,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);
 
         application.setStatus((finishReview) ? ApplicationStatus.REVIEWED:ApplicationStatus.REVIEW);
+        application.getAssignedCommitteeMembers().forEach(a -> {
+            if (finishReview)
+                a.setFinishReview(true);
+        });
         createApplication(application, true);
 
         return application;
@@ -431,9 +442,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true)
     })
     public Application markMemberReviewComplete(Application application, String member) throws InvalidStatusException {
-        if (application.getStatus() != ApplicationStatus.SUBMITTED)
+        if (application.getStatus() != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("You can only mark a committee member as having finished their review on an application in " +
-                    "the status " + ApplicationStatus.SUBMITTED);
+                    "the status " + ApplicationStatus.REVIEW);
 
         application.getAssignedCommitteeMembers()
                 .stream()
@@ -507,6 +518,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "user_applications", allEntries = true),
             @CacheEvict(value = "status_applications", allEntries = true)
     })
+    @Transactional
     public Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException {
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
@@ -519,15 +531,21 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         Map<String, Answer> answers = mapAnswers(application.getAnswers());
 
+        List<AssignedCommitteeMember> assigned = application.getAssignedCommitteeMembers()
+                .stream()
+                .peek(a -> a.setId(null))
+                .collect(Collectors.toList());
+
         Application referredApplication =
                 new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
-                        answers, getAttachedFiles(application), new ArrayList<>(comments.values()), application.getAssignedCommitteeMembers(), finalComment,
+                        answers, getAttachedFiles(application), new ArrayList<>(comments.values()), assigned, finalComment,
                         editableFields, referrer);
 
         referredApplication.setLastUpdated(LocalDateTime.now());
         referredApplication.setSubmittedTime(application.getSubmittedTime());
 
         applicationRepository.delete(application);
+        entityManager.flush();
         applicationRepository.save(referredApplication);
 
         emailService.sendApplicationReferredEmail(application, referrer);

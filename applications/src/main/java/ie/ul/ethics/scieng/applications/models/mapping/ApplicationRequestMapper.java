@@ -68,7 +68,7 @@ public interface ApplicationRequestMapper {
      * @param request the request to map
      * @return the submitted application
      * @throws MappingException if any user in the comments are null;
-     * @throws InvalidStatusException if the application is not in a review state
+     * @throws InvalidStatusException if the application is not in a review/reviewed state
      */
     Application reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException,
             InvalidStatusException;
