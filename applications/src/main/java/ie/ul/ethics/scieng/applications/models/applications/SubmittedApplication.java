@@ -141,7 +141,10 @@ public class SubmittedApplication extends Application {
     @Override
     public void assignCommitteeMember(User user) {
         verifyMemberReview(user);
-        this.assignedCommitteeMembers.add(new AssignedCommitteeMember(null, this.applicationId, user, false));
+        String username = user.getUsername();
+
+        if (this.assignedCommitteeMembers.stream().map(AssignedCommitteeMember::getUser).noneMatch(u -> u.getUsername().equals(username)))
+            this.assignedCommitteeMembers.add(new AssignedCommitteeMember(null, this.applicationId, user, false));
     }
 
     /**
@@ -170,7 +173,9 @@ public class SubmittedApplication extends Application {
      */
     private static void assignCommitteeMember(User member, List<User> userList) {
         verifyMemberReview(member);
-        userList.add(member);
+
+        if (userList.stream().noneMatch((u -> u.getUsername().equals(member.getUsername()))))
+            userList.add(member);
     }
 
     /**
@@ -323,6 +328,9 @@ public class SubmittedApplication extends Application {
                 application.finalComment = null;
                 application.previousCommitteeMembers.clear();
             }
+        } else if ((status == ApplicationStatus.APPROVED || status == ApplicationStatus.REJECTED) && !permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+            application.comments.clear();
+            application.previousCommitteeMembers.clear();
         }
 
         return application;
@@ -338,7 +346,7 @@ public class SubmittedApplication extends Application {
     public SubmittedApplication copy() {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
                 new ArrayList<>(attachedFiles), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, submittedTime, approvalTime);
-        submitted.previousCommitteeMembers = new ArrayList<>(submitted.previousCommitteeMembers);
+        submitted.previousCommitteeMembers = new ArrayList<>(previousCommitteeMembers);
         submitted.setLastUpdated(lastUpdated);
 
         return submitted;

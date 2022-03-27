@@ -548,7 +548,6 @@ public class ApplicationServiceTest {
                 draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
 
         Application submitted = createSubmittedApplication(draftApplication);
-        submitted.assignCommitteeMember(referrer);
         submitted.setStatus(ApplicationStatus.RESUBMITTED);
         submitted.assignCommitteeMembersToPrevious();
 
@@ -556,7 +555,6 @@ public class ApplicationServiceTest {
         submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
-        assertTrue(returned.getPreviousCommitteeMembers().contains(referrer));
         assertEquals(ApplicationStatus.RESUBMITTED, returned.getStatus());
         assertNotNull(returned.getSubmittedTime());
         verify(applicationRepository).delete(referred);
@@ -729,7 +727,8 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldFinishCommitteeMemberReview() {
-        Application submittedApplication = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submittedApplication = createSubmittedApplication(createDraftApplication(templates[0]));
+        submittedApplication.setStatus(ApplicationStatus.REVIEW);
         submittedApplication.setId(APPLICATION_DB_ID);
 
         User user = submittedApplication.getUser();

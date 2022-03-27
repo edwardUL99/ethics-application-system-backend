@@ -209,11 +209,12 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
     @Override
     public Application reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException, InvalidStatusException {
         Application loaded = applicationService.getApplication(request.getId());
+        ApplicationStatus status = (loaded == null) ? null:loaded.getStatus();
 
         if (loaded == null) {
             return null;
-        } else if (loaded.getStatus() != ApplicationStatus.REVIEW) {
-            throw new InvalidStatusException("The application must be in a " + ApplicationStatus.REVIEW + " status");
+        } else if (status != ApplicationStatus.REVIEW && status != ApplicationStatus.REVIEWED) {
+            throw new InvalidStatusException("The application must be in a " + ApplicationStatus.REVIEW + " or " + ApplicationStatus.REVIEWED + " status");
         } else {
             mapComments(request.getComments()).forEach(loaded::addComment);
 
