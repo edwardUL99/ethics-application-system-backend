@@ -99,9 +99,8 @@ public final class Converters {
         } else if (string instanceof List) {
             StringBuilder builder = new StringBuilder();
 
-            for (String s : (List<String>)string) {
+            for (String s : (List<String>)string)
                 builder.append(s);
-            }
 
             text = builder.toString();
         } else {

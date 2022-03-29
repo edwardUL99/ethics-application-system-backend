@@ -90,6 +90,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Collections.singletonList(frontendURL));
         corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
+        corsConfiguration.setExposedHeaders(Collections.singletonList("*"));
         List<String> allowedMethods= List.of("GET", "POST", "PUT", "HEAD", "PATCH", "DELETE");
         corsConfiguration.setAllowedMethods(allowedMethods);
 

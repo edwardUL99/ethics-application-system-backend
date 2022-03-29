@@ -37,9 +37,9 @@ public class AttachedFile {
      */
     private String directory;
     /**
-     * The ID of the file component the file is attached to
+     * The username of the user that owns the file
      */
-    private String componentId;
+    private String username;
 
     /**
      * {@inheritDoc}
@@ -49,7 +49,8 @@ public class AttachedFile {
         if (this == o) return true;
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         AttachedFile that = (AttachedFile) o;
-        return Objects.equals(id, that.id) && Objects.equals(filename, that.filename) && Objects.equals(directory, that.directory) && Objects.equals(componentId, that.componentId);
+        return Objects.equals(id, that.id) && Objects.equals(filename, that.filename) && Objects.equals(directory, that.directory)
+                && Objects.equals(username, that.username);
     }
 
     /**
@@ -57,6 +58,6 @@ public class AttachedFile {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, filename, directory, componentId);
+        return Objects.hash(id, filename, directory, username);
     }
 }

@@ -46,7 +46,7 @@ public final class Roles {
     public static final Role CHAIR =
             new Role(null, "Chair",
                     "This role gives a user access to all defined permissions",
-                    Permissions.getPermissions(), true);
+                    Permissions.getPermissions(), true, "COMMITTEE_MEMBER");
 
     /**
      * This is a role that has all the permissions of the CHAIR except for a certain set
@@ -56,7 +56,7 @@ public final class Roles {
                     "This role has the same permissions as the chair except for the permission to grant permissions to others",
                     Permissions.getPermissions().stream()
                             .filter(p -> !Objects.equals(Permissions.GRANT_PERMISSIONS, p))
-                            .collect(Collectors.toCollection(LinkedHashSet::new)), true);
+                            .collect(Collectors.toCollection(LinkedHashSet::new)), true, "COMMITTEE_MEMBER");
 
     /**
      * Get the default declared role objects
@@ -81,6 +81,18 @@ public final class Roles {
                 })
                 .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * Get the role by the given tag
+     * @param tag the tag identifying the role (same as field name)
+     * @return the found role
+     */
+    public static Role getRole(String tag) {
+        return getRoles().stream()
+                .filter(r -> r.getTag().equals(tag))
+                .findFirst()
+                .orElse(null);
     }
 
     /**

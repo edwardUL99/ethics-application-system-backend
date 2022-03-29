@@ -8,6 +8,7 @@ import org.hibernate.annotations.Type;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Lob;
 import javax.persistence.OneToMany;
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ public class SectionComponent extends CompositeComponent {
     /**
      * The sub-components of this section
      */
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     private List<ApplicationComponent> components;
     /**
      * This field indicates that when the whole section's questions are answered, the application being filled out should be auto-saved.

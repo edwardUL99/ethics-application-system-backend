@@ -17,6 +17,10 @@ public class Role extends Authorization {
      * This field determines if the role is only allowed to be assigned to a single user or not
      */
     private boolean singleUser;
+    /**
+     * The role to downgrade users to if singleUser is true and users need to be downgraded
+     */
+    private String downgradeTo;
 
     /**
      * Create a default role
@@ -33,7 +37,7 @@ public class Role extends Authorization {
      * @param permissions the permissions this role contains
      */
     public Role(Long id, String name, String description, Collection<Permission> permissions) {
-        this(id, name, description, permissions, false);
+        this(id, name, description, permissions, false, null);
     }
 
     /**
@@ -43,11 +47,16 @@ public class Role extends Authorization {
      * @param description a short description of this role
      * @param permissions the permissions this role contains
      * @param singleUser true if the role is only allowed to be assigned to a single user at a time
+     * @param downgradeTo the tag of the role to downgrade users to if singleUser is true
      */
-    public Role(Long id, String name, String description, Collection<Permission> permissions, boolean singleUser) {
+    public Role(Long id, String name, String description, Collection<Permission> permissions, boolean singleUser, String downgradeTo) {
         super(id, name, description);
         this.permissions = new LinkedHashSet<>(permissions);
         this.singleUser = singleUser;
+        this.downgradeTo = downgradeTo;
+
+        if (this.singleUser && this.downgradeTo == null)
+            throw new IllegalArgumentException("If singleUser is true, downgradeTo must not be null");
     }
 
     /**
@@ -107,6 +116,22 @@ public class Role extends Authorization {
     }
 
     /**
+     * Get the tag of the role to downgrade the user to
+     * @return the tag of the role to downgrade to
+     */
+    public String getDowngradeTo() {
+        return downgradeTo;
+    }
+
+    /**
+     * Set the role to downgrade the user to
+     * @param downgradeTo the new tag of the role to downgrade to
+     */
+    public void setDowngradeTo(String downgradeTo) {
+        this.downgradeTo = downgradeTo;
+    }
+
+    /**
      * Check if the provided object matches this role
      * @param o the object to check equality of
      * @return true if equal, false if not
@@ -116,8 +141,8 @@ public class Role extends Authorization {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Role role = (Role) o;
-        return Objects.equals(id, role.id) && Objects.equals(name, role.name) && Objects.equals(permissions, role.permissions)
-                && Objects.equals(singleUser, role.singleUser);
+        return Objects.equals(name, role.name) && Objects.equals(description, role.description) && Objects.equals(permissions, role.permissions)
+                && Objects.equals(singleUser, role.singleUser) && Objects.equals(downgradeTo, role.downgradeTo);
     }
 
     /**
@@ -126,6 +151,6 @@ public class Role extends Authorization {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, permissions, singleUser);
+        return Objects.hash(name, description, permissions, singleUser, downgradeTo);
     }
 }

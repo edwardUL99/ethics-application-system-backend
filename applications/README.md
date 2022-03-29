@@ -18,12 +18,14 @@ is no extra path elements after the prefix
 | /submit    | POST   | Submit the draft application that is being created to the ethics committee and set it to a Submitted status                  |
 | /resubmit  | POST   | Allows an admin/chair to accept an application that has been re-submitted back after being referred and assign committee members to it |
 | /assign    | POST   | Allows an admin/chair to assign committee members to an application
+| /unassign/{username} | POST | Allows the committee member with username to be unassigned from the application  |
 | /review    | POST   | Set a submitted application to in review or an application in review to reviewed                                             |
 |            | PUT    | Allows a reviewer to add comments to an application in review |
 | /review/finish | POST | Allows an individual committee member mark that their review has completed |
 | /approve   | POST   | Approve/Reject an application that has been reviewed by committee members                                                    |
 | /refer     | POST   | Refer a reviewed application back to the applicant for more information                                                      |
 | /referred | PUT    | Allows the update of the answers given on the referred application   |
+| /search   | GET    | Allows the searchng of application using a query language in the URL query string |
 
 ## Configuration
 The module provides 1 main property in the [application.ethics.properties](src/main/resources/applications.ethics.properties) file:

@@ -7,12 +7,9 @@ import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.models.User;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
-
-/*
-TODO implement and test. May need other functions for application processing but they can be done/looked at later
- */
 
 /**
  * This interface represents a service for interacting with applications
@@ -105,10 +102,18 @@ public interface ApplicationService {
      * @param application the application to assign the committee members to
      * @param committeeMembers the list of committee members to assign
      * @return the application after updating it
-     * @throws ApplicationException if the status is incorrect or an exception with message
      * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
      */
     Application assignCommitteeMembers(Application application, List<User> committeeMembers) throws ApplicationException;
+
+    /**
+     * Unassign the user from the committee member
+     * @param application the application to remove the member from
+     * @param username the username of the committee member to remove
+     * @return the modified application
+     * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
+     */
+    Application unassignCommitteeMember(Application application, String username) throws ApplicationException;
 
     /**
      * Accept an application that has been re-submitted and assign the list of committee members to the application.
@@ -165,4 +170,11 @@ public interface ApplicationService {
      * @param application the application to delete
      */
     void deleteApplication(Application application);
+
+    /**
+     * Search for applications matching the given specification
+     * @param specification the specification to search with
+     * @return the list of found applications
+     */
+    List<Application> search(Specification<Application> specification);
 }

@@ -29,6 +29,8 @@ public abstract class BaseConverter implements ComponentConverter {
             component.setComponentId(componentId);
         }
 
+        component.setDatabaseId(ComponentConverter.parseDatabaseId(map.getOrDefault("databaseId", null)));
+
         return component;
     }
 

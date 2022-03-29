@@ -31,6 +31,8 @@ public abstract class QuestionConverter implements ComponentConverter {
             component.setComponentId(componentId);
         }
 
+        component.setDatabaseId(ComponentConverter.parseDatabaseId(map.getOrDefault("databaseId", null)));
+
         return component;
     }
 

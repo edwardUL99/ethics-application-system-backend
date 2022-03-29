@@ -158,7 +158,6 @@ public class UserDirectoryServiceImpl implements UserDirectoryService {
         Path file = createFilePath(base, filename, directory, user);
 
         // you can only retrieve a file if it is your own file, or you have the permission to review applications, or it is a profile photo.
-        // TODO when implementing profile photo functionality ensure that the filename is uploaded as profile-photo.jpeg/png and that this works
         return filename.contains("profile-photo") || file.toString().contains(authenticatedUsername) ||
                 authenticated.getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS);
     }

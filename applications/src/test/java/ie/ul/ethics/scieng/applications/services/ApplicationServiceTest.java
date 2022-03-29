@@ -4,6 +4,7 @@ import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
@@ -53,7 +54,8 @@ import static org.mockito.Mockito.*;
         "auth.jwt.secret=ethics-secret-hashing-key-thirty-five-characters-long",
         "auth.jwt.token.validity=2",
         "permissions.authorization.enabled=true",
-        "files.antivirus.enabled=false"
+        "files.antivirus.enabled=false",
+        "email.disable=true"
 })
 public class ApplicationServiceTest {
     /**
@@ -163,7 +165,7 @@ public class ApplicationServiceTest {
      * @param draftApplication the draft application to submit
      * @return the submitted application
      */
-    public static Application createSubmittedApplication(DraftApplication draftApplication) {
+    public static Application createSubmittedApplication(Application draftApplication) {
         return new SubmittedApplication(null, draftApplication.getApplicationId(), draftApplication.getUser(),
                 ApplicationStatus.SUBMITTED, draftApplication.getApplicationTemplate(), draftApplication.getAnswers(),
                 new ArrayList<>(), new ArrayList<>(), null);
@@ -353,20 +355,20 @@ public class ApplicationServiceTest {
     @Test
     public void shouldGetAssignedApplications() {
         Application draft = createDraftApplication(getTemplate());
-        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication((DraftApplication) draft);
+        Application submitted = createSubmittedApplication(draft);
         User assigned = createTestUser();
         assigned.setRole(Roles.CHAIR);
         submitted.assignCommitteeMember(assigned);
 
         List<Application> list = List.of(submitted);
 
-        given(applicationRepository.findUserAssignedApplications(assigned))
+        given(applicationRepository.findAll())
                 .willReturn(list);
 
         List<Application> returned = applicationService.getAssignedApplications(assigned);
 
         assertEquals(list, returned);
-        verify(applicationRepository).findUserAssignedApplications(assigned);
+        verify(applicationRepository).findAll();
     }
 
     /**
@@ -420,7 +422,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldUpdateApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
+        Application draftApplication = createDraftApplication(getTemplate());
         draftApplication.setApplicationId(APPLICATION_ID);
         LocalDateTime now = LocalDateTime.now();
         draftApplication.setLastUpdated(now);
@@ -450,7 +452,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationTemplate() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
+        Application draftApplication = createDraftApplication(getTemplate());
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
@@ -468,7 +470,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldGetApplicationTemplateCached() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(getTemplate());
+        Application draftApplication = createDraftApplication(getTemplate());
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 
@@ -517,15 +519,16 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldSubmitApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
 
         Application returned = applicationService.submitApplication(draftApplication);
+        submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
-        assertTrue(returned instanceof SubmittedApplication);
         assertEquals(ApplicationStatus.SUBMITTED, returned.getStatus());
         assertNotNull(returned.getLastUpdated());
+        assertNotNull(returned.getSubmittedTime());
         assertEquals(draftApplication.getApplicationId(), returned.getApplicationId());
         verify(applicationRepository).delete(draftApplication);
         verify(applicationRepository).save(submitted);
@@ -537,7 +540,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldSubmitReferredApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         User referrer = createTestUser();
         referrer.setUsername("referrer");
         referrer.setRole(Roles.CHAIR);
@@ -545,15 +548,15 @@ public class ApplicationServiceTest {
                 draftApplication.getAnswers(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
 
         Application submitted = createSubmittedApplication(draftApplication);
-        ((SubmittedApplication)submitted).assignCommitteeMember(referrer);
         submitted.setStatus(ApplicationStatus.RESUBMITTED);
-        ((SubmittedApplication) submitted).assignCommitteeMembersToPrevious();
+        submitted.assignCommitteeMembersToPrevious();
 
         Application returned = applicationService.submitApplication(referred);
+        submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
-        assertTrue(((SubmittedApplication)returned).getPreviousCommitteeMembers().contains(referrer));
         assertEquals(ApplicationStatus.RESUBMITTED, returned.getStatus());
+        assertNotNull(returned.getSubmittedTime());
         verify(applicationRepository).delete(referred);
         verify(applicationRepository).save(submitted);
     }
@@ -563,7 +566,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIfIncorrectApplicationBeingSubmitted() {
-        Application submitted = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submitted = createSubmittedApplication(createDraftApplication(templates[0]));
 
         assertThrows(InvalidStatusException.class, () -> applicationService.submitApplication(submitted));
 
@@ -575,15 +578,14 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldAssignCommitteeMember() {
-        SubmittedApplication submitted =
-                (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submitted = createSubmittedApplication(createDraftApplication(templates[0]));
         submitted.setId(APPLICATION_DB_ID);
         User user = submitted.getUser();
         user.setRole(Roles.COMMITTEE_MEMBER);
 
         List<User> users = List.of(user);
 
-        SubmittedApplication returned = (SubmittedApplication) applicationService.assignCommitteeMembers(submitted, users);
+        Application returned = applicationService.assignCommitteeMembers(submitted, users);
 
         assertSame(returned, submitted);
         assertEquals(1, returned.getAssignedCommitteeMembers().size());
@@ -609,7 +611,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIfMemberCannotReviewOnAssign() {
-        Application application = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application application = createSubmittedApplication(createDraftApplication(templates[0]));
         List<User> users = List.of(application.getUser());
 
         ApplicationException ex = assertThrows(ApplicationException.class, () -> this.applicationService.assignCommitteeMembers(application, users));
@@ -623,8 +625,8 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldAcceptResubmittedApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
-        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+        Application draftApplication = createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
         User referrer = createTestUser();
         referrer.setUsername("referrer");
         referrer.setRole(Roles.CHAIR);
@@ -634,7 +636,7 @@ public class ApplicationServiceTest {
 
         assertTrue(submitted.getPreviousCommitteeMembers().contains(referrer));
 
-        SubmittedApplication returned = (SubmittedApplication) applicationService.acceptResubmitted(submitted, List.of(referrer));
+        Application returned = applicationService.acceptResubmitted(submitted, List.of(referrer));
 
         boolean containsReferrer = returned.getAssignedCommitteeMembers().stream()
                         .anyMatch(u -> u.getUser().equals(referrer));
@@ -650,8 +652,8 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIllegalStatusOnAcceptResubmission() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
-        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+        Application draftApplication = createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
 
         assertThrows(InvalidStatusException.class, () -> applicationService.acceptResubmitted(submitted, new ArrayList<>()));
     }
@@ -661,7 +663,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldSetApplicationToReview() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setId(APPLICATION_DB_ID);
         Application inReview = createSubmittedApplication(draftApplication);
@@ -682,7 +684,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldSetApplicationToReviewed() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setId(APPLICATION_DB_ID);
         submitted.setStatus(ApplicationStatus.REVIEW);
@@ -705,7 +707,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIfReviewApplicationIncorrectStatus() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setStatus(ApplicationStatus.REVIEW);
         assertEquals(ApplicationStatus.REVIEW, submitted.getStatus());
@@ -725,14 +727,15 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldFinishCommitteeMemberReview() {
-        SubmittedApplication submittedApplication = (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submittedApplication = createSubmittedApplication(createDraftApplication(templates[0]));
+        submittedApplication.setStatus(ApplicationStatus.REVIEW);
         submittedApplication.setId(APPLICATION_DB_ID);
 
         User user = submittedApplication.getUser();
         user.setRole(Roles.COMMITTEE_MEMBER);
 
         submittedApplication.assignCommitteeMember(user);
-        SubmittedApplication.AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
+        AssignedCommitteeMember assigned = submittedApplication.getAssignedCommitteeMembers().get(0);
 
         assertFalse(assigned.isFinishReview());
 
@@ -748,7 +751,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldApproveApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setId(APPLICATION_DB_ID);
         submitted.setStatus(ApplicationStatus.REVIEWED);
@@ -758,15 +761,15 @@ public class ApplicationServiceTest {
         saved.setStatus(ApplicationStatus.APPROVED);
 
         Comment finalComment = new Comment();
-        ((SubmittedApplication)saved).setFinalComment(finalComment);
+        saved.setFinalComment(finalComment);
 
         Application returned = applicationService.approveApplication(submitted, true, finalComment);
-        LocalDateTime approvalTime = ((SubmittedApplication)returned).getApprovalTime();
+        LocalDateTime approvalTime = returned.getApprovalTime();
 
         assertSame(returned, submitted);
         assertEquals(ApplicationStatus.APPROVED, returned.getStatus());
         assertNotNull(approvalTime);
-        ((SubmittedApplication) saved).setApprovalTime(approvalTime);
+        saved.setApprovalTime(approvalTime);
         verify(applicationRepository).save(saved);
 
         saved.setStatus(ApplicationStatus.REJECTED);
@@ -774,11 +777,11 @@ public class ApplicationServiceTest {
         submitted.setStatus(ApplicationStatus.REVIEWED);
         assertEquals(ApplicationStatus.REVIEWED, submitted.getStatus());
         returned = applicationService.approveApplication(submitted, false, finalComment);
-        ((SubmittedApplication) saved).setApprovalTime(null);
+        saved.setApprovalTime(null);
 
         assertSame(returned, submitted);
         assertEquals(ApplicationStatus.REJECTED, returned.getStatus());
-        assertNull(((SubmittedApplication)returned).getApprovalTime());
+        assertNull(returned.getApprovalTime());
         verify(applicationRepository, times(2)).save(saved);
     }
 
@@ -788,7 +791,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIfApplicationIsNotReviewedOnApproveApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
 
         Comment finalComment = new Comment();
@@ -804,7 +807,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldReferApplication() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setStatus(ApplicationStatus.REVIEWED);
 
@@ -826,7 +829,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIfApplicationNotReviewedOnRefer() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
 
         User referrer = createTestUser();
@@ -845,7 +848,7 @@ public class ApplicationServiceTest {
      */
     @Test
     public void shouldThrowIfReferrerHasIncorrectPermissions() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
 
         User referrer = createTestUser();
