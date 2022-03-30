@@ -76,7 +76,7 @@ public class PDFExporterService implements ExporterService {
                 }
             }
 
-            return new PDFExportedApplication(outputStream, files);
+            return new PDFExportedApplication(outputStream, files, application);
         } else {
             return null;
         }
