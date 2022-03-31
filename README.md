@@ -7,8 +7,8 @@ This repository is the location of the back-end (server) development work done f
 The project requires the following tools installed on your local machine:
 * Java 11 for runtime, JDK 11 for development
 * Apache Maven 3.6.3
-* Python 3. **optional** - only required if you wish to use the `tools/apitest.py` tool for testing the backend API
-* The files module requires **ClamAV**. See [Files README.md](files/README.md) for instructions on setting it up. It can also 
+* Python 3. **optional** - only required if you wish to use the Python tools
+* The `files` module requires **ClamAV**. See [Files README.md](files/README.md) for instructions on setting it up. It can also 
 be disabled should the deployment not support it (not recommended).
 
 ## Modules
@@ -135,4 +135,9 @@ sudo apt-get install nodejs npm
 sudo npm install newman
 newman run tools/postman/EthicsBackend.postman_collection.json
 ```
+
+## Backup
+A Python utility to perform backups of the database and the uploaded files through the `files` module is described
+in the following [README.md](tools/backup/README.md). It has a single entrypoint and is configured through a YAML file.
+This utility can be run manually or possibly be scheduled to run also
 
