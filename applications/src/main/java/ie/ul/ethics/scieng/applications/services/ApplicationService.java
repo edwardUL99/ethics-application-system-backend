@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.services;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
@@ -10,6 +11,7 @@ import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This interface represents a service for interacting with applications
@@ -177,4 +179,13 @@ public interface ApplicationService {
      * @return the list of found applications
      */
     List<Application> search(Specification<Application> specification);
+
+    /**
+     * Patch the answers of the application. If an answer with the same component ID exists, it is replaced, else it is
+     * added
+     * @param application the application to patch
+     * @param answers the answers to patch
+     * @return the patched application
+     */
+    Application patchAnswers(Application application, Map<String, Answer> answers);
 }

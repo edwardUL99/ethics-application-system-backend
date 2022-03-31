@@ -26,6 +26,7 @@ is no extra path elements after the prefix
 | /refer     | POST   | Refer a reviewed application back to the applicant for more information                                                      |
 | /referred | PUT    | Allows the update of the answers given on the referred application   |
 | /search   | GET    | Allows the searchng of application using a query language in the URL query string |
+| /answers | PATCH | Allows the patching/updating of specific answers on the application |
 
 ## Configuration
 The module provides 1 main property in the [application.ethics.properties](src/main/resources/applications.ethics.properties) file:

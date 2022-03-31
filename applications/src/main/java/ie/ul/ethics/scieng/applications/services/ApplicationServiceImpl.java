@@ -587,4 +587,37 @@ public class ApplicationServiceImpl implements ApplicationService {
     public List<Application> search(Specification<Application> specification) {
         return this.applicationRepository.findAll(specification);
     }
+
+    /**
+     * Patch the answers of the application. If an answer with the same component ID exists, it is replaced, else it is
+     * added
+     *
+     * @param application the application to patch
+     * @param answers     the answers to patch
+     * @return the patched application
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application patchAnswers(Application application, Map<String, Answer> answers) {
+        Map<String, Answer> applicationAnswers = application.getAnswers();
+
+        for (Map.Entry<String, Answer> e : answers.entrySet()) {
+            String key = e.getKey();
+
+            if (!applicationAnswers.containsKey(key)) {
+                applicationAnswers.put(key, e.getValue());
+            } else {
+                Answer saved = applicationAnswers.get(key);
+                Answer newAnswer = e.getValue();
+                newAnswer.setId(saved.getId());
+                applicationAnswers.put(key, newAnswer);
+            }
+        }
+
+        return createApplication(application, true);
+    }
 }
