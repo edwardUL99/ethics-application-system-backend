@@ -5,12 +5,7 @@ import ie.ul.ethics.scieng.common.email.exceptions.EmailException;
 import lombok.extern.log4j.Log4j2;
 
 import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
 import java.io.File;
-import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -64,25 +59,42 @@ public class DefaultEmailSender implements EmailSender {
      */
     @Override
     public void sendEmail(String to, String subject, String email, File...attachments) throws EmailException {
+        AdvancedEmail advancedEmail = createAdvancedEmail()
+                .setSubject(subject)
+                .setFrom(configurationProperties.getFrom())
+                .setTo(to)
+                .setContent(email, true);
+
+        for (File attachment : attachments)
+            advancedEmail = advancedEmail.attachFile(attachment);
+
+        sendEmail(advancedEmail);
+    }
+
+    /**
+     * Send the advanced email by building it and sending it
+     *
+     * @param advancedEmail the email to build and send
+     * @throws EmailException if an error occurs sending the email
+     */
+    @Override
+    public void sendEmail(AdvancedEmail advancedEmail) throws EmailException {
+        Message message = advancedEmail.buildMessage();
+
         try {
-            MimeMessage message = new MimeMessage(session);
-            message.setFrom(new InternetAddress(configurationProperties.getFrom()));
-            message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
-            message.setSubject(subject);
-
-            Multipart multipart = new MimeMultipart();
-            MimeBodyPart mimeBodyPart = new MimeBodyPart();
-            mimeBodyPart.setContent(email, "text/html");
-
-            for (File f : attachments)
-                mimeBodyPart.attachFile(f);
-
-            multipart.addBodyPart(mimeBodyPart);
-            message.setContent(multipart);
-
             Transport.send(message);
-        } catch (MessagingException | IOException ex) {
+        } catch (MessagingException ex) {
             throw new EmailException("An error occurred sending email", ex);
         }
+    }
+
+    /**
+     * Instantiate an instance of AdvancedEmail by passing in an instance of Session
+     *
+     * @return the advanced email instance
+     */
+    @Override
+    public AdvancedEmail createAdvancedEmail() {
+        return new AdvancedEmail(session);
     }
 }

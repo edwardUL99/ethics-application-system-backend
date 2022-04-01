@@ -17,4 +17,17 @@ public interface EmailSender {
      * @throws EmailException if an error occurs sending the email
      */
     void sendEmail(String to, String subject, String email, File...attachments) throws EmailException;
+
+    /**
+     * Send the advanced email by building it and sending it
+     * @param advancedEmail the email to build and send
+     * @throws EmailException if an error occurs sending the email
+     */
+    void sendEmail(AdvancedEmail advancedEmail) throws EmailException;
+
+    /**
+     * Instantiate an instance of AdvancedEmail by passing in an instance of Session
+     * @return the advanced email instance
+     */
+    AdvancedEmail createAdvancedEmail();
 }
