@@ -1,4 +1,4 @@
-package ie.ul.ethics.scieng.exporter.pdf;
+package ie.ul.ethics.scieng.exporter.pdf.rendering;
 
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;

@@ -2,8 +2,8 @@ package ie.ul.ethics.scieng.exporter;
 
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -12,10 +12,10 @@ import java.util.List;
  */
 public interface ExportedApplication {
     /**
-     * Get the output stream that the application has been exported to
-     * @return the output stream
+     * Get the input stream that the application has been exported to
+     * @return the input stream
      */
-    ByteArrayOutputStream getOutputStream();
+    InputStream getInputStream();
 
     /**
      * Retrieve the list of files representing the attached files to export

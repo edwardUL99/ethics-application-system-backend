@@ -1,9 +1,6 @@
-package ie.ul.ethics.scieng.exporter.pdf;
+package ie.ul.ethics.scieng.exporter.pdf.rendering;
 
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Element;
-import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.List;
 import com.itextpdf.text.ListItem;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;

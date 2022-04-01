@@ -1,4 +1,4 @@
-package ie.ul.ethics.scieng.exporter.pdf;
+package ie.ul.ethics.scieng.exporter.pdf.rendering;
 
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 

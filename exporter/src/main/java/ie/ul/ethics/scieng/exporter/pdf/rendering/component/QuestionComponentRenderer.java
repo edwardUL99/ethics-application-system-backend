@@ -1,4 +1,4 @@
-package ie.ul.ethics.scieng.exporter.pdf;
+package ie.ul.ethics.scieng.exporter.pdf.rendering.component;
 
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
@@ -9,6 +9,10 @@ import com.itextpdf.text.Paragraph;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.QuestionComponent;
+import ie.ul.ethics.scieng.exporter.pdf.rendering.AnswerRenderer;
+import ie.ul.ethics.scieng.exporter.pdf.rendering.AnswerRenderers;
+
+import java.util.Map;
 
 /**
  * This is the implementation of the renderer for questions
@@ -39,25 +43,38 @@ public class QuestionComponentRenderer implements ComponentRenderer {
      * @return the rendered element
      */
     @Override
-    public Element renderToElement() {
+    public Element renderToElement(Map<String, Object> renderOptions) {
         Paragraph paragraph = new Paragraph();
 
-        Font font = FontFactory.getFont(FontFactory.COURIER_BOLD, 20, BaseColor.BLACK);
+        Font font = FontFactory.getFont(FontFactory.COURIER_BOLD, 16, BaseColor.BLACK);
         Chunk title = new Chunk(component.getTitle(), font);
         paragraph.add(title);
 
-        String descriptionValue = component.getDescription();
+        Element description = renderDescription();
 
-        if (descriptionValue != null && !descriptionValue.isEmpty()) {
-            font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.LIGHT_GRAY);
-            Chunk description = new Chunk(descriptionValue, font);
+        if (description != null)
             paragraph.add(description);
-        }
 
         Answer answer = application.getAnswers().get(component.getComponentId());
         paragraph.add(renderAnswer(answer));
 
         return paragraph;
+    }
+
+    /**
+     * Render the component description
+     * @return the element representing the description, null if no description exists
+     */
+    protected Element renderDescription() {
+        String descriptionValue = component.getDescription();
+
+        if (descriptionValue != null && !descriptionValue.isEmpty()) {
+            Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.LIGHT_GRAY);
+
+            return new Chunk(descriptionValue, font);
+        }
+
+        return null;
     }
 
     /**

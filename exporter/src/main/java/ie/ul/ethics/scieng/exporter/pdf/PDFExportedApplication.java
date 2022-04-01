@@ -3,9 +3,8 @@ package ie.ul.ethics.scieng.exporter.pdf;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.exporter.ExportedApplication;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.util.List;
 
 /**
@@ -13,9 +12,9 @@ import java.util.List;
  */
 public class PDFExportedApplication implements ExportedApplication {
     /**
-     * The stream the PDF is being written to
+     * The stream to read the PDF with
      */
-    private final ByteArrayOutputStream outputStream;
+    private final InputStream inputStream;
     /**
      * List of file attachments to export
      */
@@ -27,24 +26,24 @@ public class PDFExportedApplication implements ExportedApplication {
 
     /**
      * Create an instance
-     * @param outputStream the stream the PDF is being written to
+     * @param inputStream the stream the PDF is being written to
      * @param exportedAttachments the list of file attachments to export
      * @param application the application being exported
      */
-    public PDFExportedApplication(ByteArrayOutputStream outputStream, List<File> exportedAttachments, Application application) {
-        this.outputStream = outputStream;
+    public PDFExportedApplication(InputStream inputStream, List<File> exportedAttachments, Application application) {
+        this.inputStream = inputStream;
         this.exportedAttachments = exportedAttachments;
         this.application = application;
     }
 
     /**
-     * Get the output stream that the application has been exported to
+     * Get the input stream that the application has been exported to
      *
-     * @return the output stream
+     * @return the input stream
      */
     @Override
-    public ByteArrayOutputStream getOutputStream() {
-        return this.outputStream;
+    public InputStream getInputStream() {
+        return inputStream;
     }
 
     /**

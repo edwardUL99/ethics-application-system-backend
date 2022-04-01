@@ -6,12 +6,9 @@ import ie.ul.ethics.scieng.files.services.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.PrintWriter;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -53,15 +50,12 @@ public class ExportedSerializerImpl implements ExportedSerializer {
      * Export the application PDF
      * @param filename the name of the pdf
      * @param storage the storage directory
-     * @param outputStream the stream to write to the file
+     * @param inputStream the stream to write to the file
      */
-    private void exportPDF(String filename, Path storage, ByteArrayOutputStream outputStream) {
+    private void exportPDF(String filename, Path storage, InputStream inputStream) {
         try {
             Path path = storage.resolve(filename);
-            FileOutputStream fileOutputStream = new FileOutputStream(path.toFile());
-            PrintWriter writer = new PrintWriter(fileOutputStream);
-            writer.write(outputStream.toString());
-            writer.close();
+            Files.copy(inputStream, path, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException ex) {
             throw new FileException("Failed to write PDF", ex);
         }
@@ -119,7 +113,7 @@ public class ExportedSerializerImpl implements ExportedSerializer {
             returned = storage;
 
         createDirectory(storage);
-        exportPDF(String.format("%s.pdf", id), storage, exported.getOutputStream());
+        exportPDF(String.format("%s.pdf", id), storage, exported.getInputStream());
         exportAttachments(exported.getExportedAttachments(), storage);
 
         return returned.toFile();

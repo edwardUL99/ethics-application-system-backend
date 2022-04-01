@@ -3,13 +3,13 @@ package ie.ul.ethics.scieng.exporter.services;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.search.ApplicationSpecification;
 import ie.ul.ethics.scieng.applications.search.SubmittedApplicationSpecification;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.common.search.SearchParser;
 import ie.ul.ethics.scieng.exporter.ExportedApplication;
 import ie.ul.ethics.scieng.exporter.pdf.PDFExportedApplication;
+import ie.ul.ethics.scieng.exporter.pdf.rendering.ApplicationRenderer;
 import ie.ul.ethics.scieng.files.exceptions.FileException;
 import ie.ul.ethics.scieng.files.services.FileService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,12 +19,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * This class represents a service to export applications to PDF
@@ -52,31 +51,52 @@ public class PDFExporterService implements ExporterService {
     }
 
     /**
+     * Render the application to the Input Stream
+     * @param application the application to render
+     * @return the input stream representing the rendered PDF
+     */
+    private InputStream renderApplication(Application application) {
+        // TODO comments on questions will have to be rendered too, and assigned committee members in application info
+        ApplicationRenderer renderer = new ApplicationRenderer(application);
+        return renderer.render();
+    }
+
+    /**
+     * Create the list of files to export for the application
+     * @param application the application being exported
+     * @return the list of files to export
+     */
+    private List<File> exportFiles(Application application) {
+        List<AttachedFile> attachedFiles = application.getAttachedFiles();
+        List<File> files = new ArrayList<>();
+
+        if (attachedFiles != null) {
+            for (AttachedFile attachedFile : attachedFiles) {
+                try {
+                    Resource resource = fileService.loadFile(attachedFile.getFilename(), attachedFile.getDirectory(), attachedFile.getUsername());
+
+                    if (resource != null)
+                        files.add(resource.getFile());
+                } catch (FileException | IOException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+        return files;
+    }
+
+
+    /**
      * The internal method to export the application
      * @param application the application to export
      * @return the exported application
-     * @throws IOException if an error occurs
      */
-    private ExportedApplication export(Application application) throws IOException {
-        if (application.getStatus() == ApplicationStatus.DRAFT) {
-            OutputStream outputStream = null; // TODO parse application into a PDF output stream here
-            List<AttachedFile> attachedFiles = application.getAttachedFiles();
-            List<File> files = new ArrayList<>();
+    private ExportedApplication export(Application application) {
+        if (application.getStatus() != ApplicationStatus.DRAFT) {
+            InputStream inputStream = renderApplication(application);
 
-            if (attachedFiles != null) {
-                for (AttachedFile attachedFile : attachedFiles) {
-                    try {
-                        Resource resource = fileService.loadFile(attachedFile.getFilename(), attachedFile.getDirectory(), attachedFile.getUsername());
-
-                        if (resource != null)
-                            files.add(resource.getFile());
-                    } catch (FileException ex) {
-                        ex.printStackTrace();
-                    }
-                }
-            }
-
-            return new PDFExportedApplication(outputStream, files, application);
+            return new PDFExportedApplication(inputStream, exportFiles(application), application);
         } else {
             return null;
         }
