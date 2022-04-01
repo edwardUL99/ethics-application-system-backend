@@ -9,6 +9,7 @@ import ie.ul.ethics.scieng.common.email.EmailSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 /**
@@ -64,7 +65,8 @@ public class AuthenticationEmailService extends AsyncEmailService {
                 String.format("%s?email=%s&token=%s", urlBase, email, token),
                 urlBase, email, token, authenticationConfiguration.getUnconfirmedRemoval());
 
-        sendEmail(email, "Confirm Account Registration", content);
+        sendEmail(email, String.format("Confirm Account Registration - %s",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))), content);
     }
 
     /**
@@ -97,6 +99,7 @@ public class AuthenticationEmailService extends AsyncEmailService {
         content = String.format(content, username, username,
                 resetLink, resetLink, resetPasswordToken.getExpiry().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
 
-        sendEmail(email, "Reset Password", content);
+        sendEmail(email, String.format("Reset Password - %s",
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))), content);
     }
 }
