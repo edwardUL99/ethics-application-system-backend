@@ -96,6 +96,12 @@ public final class Permissions {
             new Permission(null, "Grant Permissions", "This permission allows a user to grant permissions and allocate roles to other users");
 
     /**
+     * A permission to allow users to export applications
+     */
+    public static final Permission EXPORT_APPLICATIONS =
+            new Permission(null, "Export Applications", "Allows a user to export applications");
+
+    /**
      * Retrieve all the defined permissions
      * @return collection of defined permissions
      */

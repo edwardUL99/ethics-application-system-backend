@@ -69,7 +69,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     /**
      * Expose the authentication manager as a bean
      * @return auth manager
-     * @throws Exception
      */
     @Override
     @Bean

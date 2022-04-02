@@ -118,20 +118,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
-     * Get all applications
-     *
-     * @return list of all applications
-     */
-    @Override
-    public List<Application> getApplications() {
-        List<Application> applications = new ArrayList<>();
-        this.applicationRepository.findAll()
-                .forEach(applications::add);
-
-        return applications;
-    }
-
-    /**
      * Get the list of applications created by the given user
      *
      * @param user the user to search for applications by

@@ -30,13 +30,6 @@ public interface ApplicationService {
     Application getApplication(String applicationId);
 
     /**
-     * Get all applications. Warning, this is an expensive operation and may lead to memory issues. Should not
-     * be cached. Better to use search or other more specific operations
-     * @return list of all applications
-     */
-    List<Application> getApplications();
-
-    /**
      * Get the list of applications created by the given user
      * @param user the user to search for applications by
      * @return the list of applications

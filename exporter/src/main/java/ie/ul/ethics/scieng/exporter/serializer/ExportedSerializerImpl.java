@@ -89,7 +89,7 @@ public class ExportedSerializerImpl implements ExportedSerializer {
      * @param name      the name to export the application under. If null, the application ID is used
      * @param directory a directory to store the folder under. If null, it's not stored under that directory, instead stored
      *                  in the root of the upload directory
-     * @return the file representing the directory the application is stored in (or directory if specified)
+     * @return the file representing the directory the application is stored in (or parent directory if specified)
      */
     @Override
     public File saveToDisk(ExportedApplication exported, String name, String directory) {
