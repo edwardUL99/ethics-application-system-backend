@@ -35,9 +35,11 @@ public class TextComponentRenderer extends DefaultComponentRenderer {
     public Element renderToElement(Map<String, Object> renderOptions) {
         Paragraph paragraph = new Paragraph();
         paragraph.add(renderTitle());
+        paragraph.add(Chunk.NEWLINE);
 
         TextComponent textComponent = (TextComponent) component;
         paragraph.add(new Chunk(textComponent.getContent(), FontFactory.getFont(FontFactory.COURIER, 14, BaseColor.LIGHT_GRAY)));
+        paragraph.add(Chunk.NEWLINE);
 
         return paragraph;
     }

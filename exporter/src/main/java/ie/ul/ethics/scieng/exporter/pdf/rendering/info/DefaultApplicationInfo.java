@@ -7,6 +7,7 @@ import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.users.models.User;
@@ -52,7 +53,10 @@ public class DefaultApplicationInfo implements ApplicationInfo {
      * @return the rendered chapter
      */
     private Chapter parseDefaultChapter(Application application) {
-        Chapter chapter = new ChapterAutoNumber(application.getApplicationId());
+        Paragraph title = new Paragraph();
+        title.add(new Chunk(application.getApplicationId(), FontFactory.getFont(FontFactory.COURIER_BOLD, 20, BaseColor.BLACK)));
+        title.add(Chunk.NEWLINE);
+        Chapter chapter = new ChapterAutoNumber(title);
         User applicant = application.getUser();
         LocalDateTime updated = application.getLastUpdated();
         String status = application.getStatus().label();
@@ -70,8 +74,11 @@ public class DefaultApplicationInfo implements ApplicationInfo {
         updatedPhrase.add(new Chunk((updated == null) ? "N/A":updated.format(DATE_FORMAT), NORMAL));
 
         chapter.add(statusPhrase);
+        chapter.add(Chunk.NEWLINE);
         chapter.add(applicantPhrase);
+        chapter.add(Chunk.NEWLINE);
         chapter.add(updatedPhrase);
+        chapter.add(Chunk.NEWLINE);
 
         return chapter;
     }

@@ -22,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 
 @RestController
@@ -90,7 +89,6 @@ public class ExporterController {
     @PostMapping("/single")
     public ResponseEntity<?> export(@RequestParam String id) {
         try {
-            LocalDateTime requested = LocalDateTime.now();
             User requester = userService.loadUser(authenticationInformation.getUsername());
 
             if (requester == null)

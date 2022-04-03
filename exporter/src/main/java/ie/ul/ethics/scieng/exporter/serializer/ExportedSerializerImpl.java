@@ -67,18 +67,20 @@ public class ExportedSerializerImpl implements ExportedSerializer {
      * @param storage the storage location of the exported application
      */
     private void exportAttachments(List<File> attachments, Path storage) {
-        storage = storage.resolve("attachments");
-        createDirectory(storage);
+        if (attachments.size() > 0) {
+            storage = storage.resolve("attachments");
+            createDirectory(storage);
 
-        try {
-            for (File attachment : attachments) {
-                Path source = attachment.toPath();
-                Path destination = storage.resolve(source.getFileName());
+            try {
+                for (File attachment : attachments) {
+                    Path source = attachment.toPath();
+                    Path destination = storage.resolve(source.getFileName());
 
-                Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                    Files.copy(source, destination, StandardCopyOption.REPLACE_EXISTING);
+                }
+            } catch (IOException ex) {
+                throw new FileException("Failed to export attachments", ex);
             }
-        } catch (IOException ex) {
-            throw new FileException("Failed to export attachments", ex);
         }
     }
 

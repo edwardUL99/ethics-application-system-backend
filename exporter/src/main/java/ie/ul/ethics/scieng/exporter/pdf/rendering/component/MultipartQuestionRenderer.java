@@ -33,8 +33,11 @@ public class MultipartQuestionRenderer extends QuestionComponentRenderer {
     @Override
     public Element renderToElement(Map<String, Object> renderOptions) {
         Paragraph paragraph = new Paragraph();
-        Chunk title = new Chunk(component.getTitle(), FontFactory.getFont(FontFactory.COURIER_BOLD, 16, BaseColor.BLACK));
+        String titleString = component.getTitle();
+        titleString = (titleString == null) ? "Multiple Part Question":titleString;
+        Chunk title = new Chunk(titleString, FontFactory.getFont(FontFactory.COURIER_BOLD, 16, BaseColor.BLACK));
         paragraph.add(title);
+        paragraph.add(Chunk.NEWLINE);
 
         MultipartQuestionComponent multipartQuestionComponent = (MultipartQuestionComponent) component;
 
@@ -48,7 +51,9 @@ public class MultipartQuestionRenderer extends QuestionComponentRenderer {
             MultipartQuestionComponent.QuestionPart part = e.getValue();
             Chunk partTitle = new Chunk(partNumber, FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.LIGHT_GRAY));
             paragraph.add(partTitle);
+            paragraph.add(Chunk.NEWLINE);
             paragraph.add(ComponentRenderers.getRenderer(application, part.getQuestion()).renderToElement(new HashMap<>()));
+            paragraph.add(Chunk.NEWLINE);
         }
 
         return paragraph;

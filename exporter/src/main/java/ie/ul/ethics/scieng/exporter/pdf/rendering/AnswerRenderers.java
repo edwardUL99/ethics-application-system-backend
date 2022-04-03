@@ -14,6 +14,13 @@ public final class AnswerRenderers {
      */
     private static final Map<Answer.ValueType, AnswerRenderer> renderers = new HashMap<>();
 
+    static {
+        register(Answer.ValueType.TEXT, new TextNumberAnswerRenderer());
+        register(Answer.ValueType.NUMBER, new TextNumberAnswerRenderer());
+        register(Answer.ValueType.OPTIONS, new OptionsAnswerRenderer());
+        register(Answer.ValueType.IMAGE, new ImageAnswerRenderer());
+    }
+
     /**
      * Register the renderer with the given value type
      * @param valueType the type of the answer value to render

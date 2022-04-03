@@ -5,6 +5,7 @@ import com.itextpdf.text.Chapter;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
@@ -34,7 +35,6 @@ public class SectionComponentRenderer extends DefaultComponentRenderer {
      * Renders the given section
      * @param chapter the chapter containing the sections
      * @param section the section to add child elements to
-     * @param parent the parent section
      * @param sectionComponent the section component being rendered
      */
     private void renderSection(Chapter chapter, Section section, SectionComponent sectionComponent) {
@@ -52,7 +52,8 @@ public class SectionComponentRenderer extends DefaultComponentRenderer {
                         "parent", section
                 )); // the render adds the section to the chapter/parent automatically
             } else {
-                section.add(ComponentRenderers.getRenderer(application, component).renderToElement(new HashMap<>()));
+                section.add(ComponentRenderers.getRenderer(application, sub).renderToElement(new HashMap<>()));
+                section.add(Chunk.NEWLINE);
             }
         }
     }
@@ -74,7 +75,9 @@ public class SectionComponentRenderer extends DefaultComponentRenderer {
                 throw new IllegalArgumentException("You must provide a Chapter object in the renderOptions map");
             } else {
                 Section parent = (Section) renderOptions.get("parent");
-                Section section = Objects.requireNonNullElse(parent, chapter).addSection(component.getTitle());
+                Paragraph title = new Paragraph();
+                title.add(new Chunk(component.getTitle(), FontFactory.getFont(FontFactory.COURIER_BOLD, 18, BaseColor.BLACK)));
+                Section section = Objects.requireNonNullElse(parent, chapter).addSection(title);
                 SectionComponent sectionComponent = (SectionComponent) component;
                 renderSection(chapter, section, sectionComponent);
 

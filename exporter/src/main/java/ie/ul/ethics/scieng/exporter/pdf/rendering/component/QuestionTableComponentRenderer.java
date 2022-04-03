@@ -1,6 +1,10 @@
 package ie.ul.ethics.scieng.exporter.pdf.rendering.component;
 
+import com.itextpdf.text.BaseColor;
+import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Element;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPHeaderCell;
 import com.itextpdf.text.pdf.PdfPTable;
@@ -34,7 +38,16 @@ public class QuestionTableComponentRenderer extends DefaultComponentRenderer {
      */
     @Override
     public Element renderToElement(Map<String, Object> renderOptions) {
+        Paragraph paragraph = new Paragraph();
         QuestionTableComponent tableComponent = (QuestionTableComponent) component;
+
+        String title = tableComponent.getTitle();
+
+        if (title != null) {
+            paragraph.add(new Chunk(title, FontFactory.getFont(FontFactory.COURIER_BOLD, 16, BaseColor.BLACK)));
+            paragraph.add(Chunk.NEWLINE);
+        }
+
         QuestionTableComponent.CellsMapping cellsMapping = tableComponent.getCells();
         Map<String, QuestionTableComponent.Cells> columns = cellsMapping.getColumns();
 
@@ -58,6 +71,8 @@ public class QuestionTableComponentRenderer extends DefaultComponentRenderer {
             }
         }
 
-        return table;
+        paragraph.add(table);
+
+        return paragraph;
     }
 }

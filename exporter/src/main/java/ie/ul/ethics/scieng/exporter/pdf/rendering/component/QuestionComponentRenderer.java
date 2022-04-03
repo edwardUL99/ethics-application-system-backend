@@ -49,14 +49,18 @@ public class QuestionComponentRenderer implements ComponentRenderer {
         Font font = FontFactory.getFont(FontFactory.COURIER_BOLD, 16, BaseColor.BLACK);
         Chunk title = new Chunk(component.getTitle(), font);
         paragraph.add(title);
+        paragraph.add(Chunk.NEWLINE);
 
         Element description = renderDescription();
 
-        if (description != null)
+        if (description != null) {
             paragraph.add(description);
+            paragraph.add(Chunk.NEWLINE);
+        }
 
         Answer answer = application.getAnswers().get(component.getComponentId());
         paragraph.add(renderAnswer(answer));
+        paragraph.add(Chunk.NEWLINE);
 
         return paragraph;
     }

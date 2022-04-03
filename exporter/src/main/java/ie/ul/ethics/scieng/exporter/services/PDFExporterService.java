@@ -207,7 +207,7 @@ public class PDFExporterService implements ExporterService {
     private void zipAttachments(Path exportedDirectory) throws IOException {
         Path attachments = exportedDirectory.resolve("attachments");
 
-        if (Files.exists(attachments)) {
+        if (Files.exists(attachments) && Files.list(attachments).findAny().isPresent()) {
             tempDir = getTempDir();
             Path moved = Files.move(attachments, tempDir, StandardCopyOption.REPLACE_EXISTING);
             Zip.zipFile(exportedDirectory.resolve("attachments.zip").toString(), moved.toFile());

@@ -48,9 +48,10 @@ public class SubmittedApplicationInfo extends DefaultApplicationInfo {
             if (submitted != null) {
                 Phrase submittedPhrase = new Phrase();
                 submittedPhrase.add(new Chunk("Submitted At: ", BOLD));
-                submittedPhrase.add(new Chunk(submitted.format(DATE_FORMAT)));
+                submittedPhrase.add(new Chunk(submitted.format(DATE_FORMAT), NORMAL));
 
                 chapter.add(submittedPhrase);
+                chapter.add(Chunk.NEWLINE);
             }
         } else {
             LocalDateTime approvedTime = application.getApprovalTime();
@@ -58,9 +59,10 @@ public class SubmittedApplicationInfo extends DefaultApplicationInfo {
             if (approvedTime != null) {
                 Phrase approvedPhrase = new Phrase();
                 approvedPhrase.add(new Chunk("Approved At: ", BOLD));
-                approvedPhrase.add(new Chunk(approvedTime.format(DATE_FORMAT)));
+                approvedPhrase.add(new Chunk(approvedTime.format(DATE_FORMAT), NORMAL));
 
                 chapter.add(approvedPhrase);
+                chapter.add(Chunk.NEWLINE);
             }
 
             renderFinalComment(application.getFinalComment(), chapter);

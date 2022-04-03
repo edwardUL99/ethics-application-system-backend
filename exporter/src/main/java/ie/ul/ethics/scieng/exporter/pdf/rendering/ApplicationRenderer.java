@@ -56,10 +56,9 @@ public class ApplicationRenderer {
             document.add(getApplicationInfo());
             document.add(parseTemplate());
 
-            InputStream stream = new ByteArrayInputStream(outputStream.toByteArray());
             document.close();
 
-            return stream;
+            return new ByteArrayInputStream(outputStream.toByteArray());
         } catch (DocumentException ex) {
             throw new ExportException("Failed to export to PDF", ex);
         }

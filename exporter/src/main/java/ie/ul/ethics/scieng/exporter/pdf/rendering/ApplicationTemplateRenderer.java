@@ -11,8 +11,10 @@ import com.itextpdf.text.Phrase;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
+import ie.ul.ethics.scieng.applications.templates.components.ComponentType;
 import ie.ul.ethics.scieng.exporter.pdf.rendering.component.ComponentRenderers;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -40,8 +42,13 @@ public class ApplicationTemplateRenderer {
     private void renderComponents(Chapter chapter, ApplicationTemplate template) {
         Map<String, Object> renderOptions = Map.of("chapter", chapter);
 
-        for (ApplicationComponent component : template.getComponents())
-            chapter.add(ComponentRenderers.getRenderer(application, component).renderToElement(renderOptions));
+        for (ApplicationComponent component : template.getComponents()) {
+            boolean add = component.getType() != ComponentType.SECTION; // a section adds itself to create the section
+            Element rendered = ComponentRenderers.getRenderer(application, component).renderToElement(renderOptions);
+
+            if (add)
+                chapter.add(rendered);
+        }
     }
 
     /**
@@ -50,14 +57,21 @@ public class ApplicationTemplateRenderer {
      */
     public Element render() {
         ApplicationTemplate template = application.getApplicationTemplate();
+        template.sort();
 
-        Chapter chapter = new ChapterAutoNumber(template.getName());
+        Paragraph title = new Paragraph();
+        title.add(new Chunk(template.getName(), FontFactory.getFont(FontFactory.COURIER_BOLD, 20, BaseColor.BLACK)));
+        Chapter chapter = new ChapterAutoNumber(title);
+
         Paragraph description = new Paragraph();
         description.add(new Chunk(template.getDescription(), FontFactory.getFont(FontFactory.COURIER, 14, BaseColor.LIGHT_GRAY)));
+        description.addAll(List.of(Chunk.NEWLINE, Chunk.NEWLINE));
+
         Phrase versionPhrase = new Phrase();
-        versionPhrase.add(new Chunk("Version: ", FontFactory.getFont(FontFactory.COURIER_BOLD, 12, BaseColor.BLACK)));
+        versionPhrase.add(new Chunk("Version: ", FontFactory.getFont(FontFactory.COURIER_BOLD, 14, BaseColor.BLACK)));
         versionPhrase.add(new Chunk(template.getVersion(), FontFactory.getFont(FontFactory.COURIER, 12, BaseColor.BLACK)));
         description.add(versionPhrase);
+        description.addAll(List.of(Chunk.NEWLINE, Chunk.NEWLINE));
         chapter.add(description);
 
         renderComponents(chapter, template);
