@@ -71,8 +71,8 @@ public class ApplicationTemplateRenderer {
         versionPhrase.add(new Chunk("Version: ", FontFactory.getFont(FontFactory.COURIER_BOLD, 14, BaseColor.BLACK)));
         versionPhrase.add(new Chunk(template.getVersion(), FontFactory.getFont(FontFactory.COURIER, 12, BaseColor.BLACK)));
         description.add(versionPhrase);
-        description.addAll(List.of(Chunk.NEWLINE, Chunk.NEWLINE));
         chapter.add(description);
+        description.addAll(List.of(Chunk.NEWLINE, Chunk.NEWLINE));
 
         renderComponents(chapter, template);
 

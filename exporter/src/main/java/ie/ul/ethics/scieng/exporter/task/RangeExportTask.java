@@ -69,6 +69,7 @@ public class RangeExportTask extends BaseExportTask {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         executor.submit(() -> {
+            onStarted();
             Path parent = storageLocation.resolve("exports").resolve(String.format("%s_to_%s", start, end));
 
             try {
@@ -78,7 +79,9 @@ public class RangeExportTask extends BaseExportTask {
 
                 File saved = exporterService.exportMultipleToZip(exported, parent.toString(), name);
                 emailService.sendExportLinkEmail(requester, saved.getName(), requestedAt);
+                onCompleted();
             } catch (IOException ex) {
+                onFail();
                 ex.printStackTrace();
                 emailService.sendExportFailedEmail(requester, requestedAt);
             }
@@ -94,6 +97,7 @@ public class RangeExportTask extends BaseExportTask {
      */
     @Override
     public boolean execute() throws IOException {
+        onPending();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate startDate = LocalDate.parse(start, formatter);
         LocalDate endDate = LocalDate.parse(end, formatter);

@@ -1,14 +1,6 @@
 package ie.ul.ethics.scieng.exporter.pdf.rendering.info;
 
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.Chapter;
-import com.itextpdf.text.ChapterAutoNumber;
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.Element;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.FontFactory;
-import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
+import com.itextpdf.text.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.users.models.User;
 
@@ -48,36 +40,49 @@ public class DefaultApplicationInfo implements ApplicationInfo {
     }
 
     /**
+     * Parse the title of the section
+     * @param text the title text
+     * @param size font size
+     * @return the element representing the title
+     */
+    private Paragraph createTitle(String text, int size) {
+        Paragraph title = new Paragraph();
+        title.add(new Chunk(text, FontFactory.getFont(FontFactory.COURIER_BOLD, size, BaseColor.BLACK)));
+        title.add(Chunk.NEWLINE);
+
+        return title;
+    }
+
+    /**
+     * Parse the title and content into an info section
+     * @param chapter the chapter containing the application info
+     * @param title info title
+     * @param content the content to display in the section
+     * @param font the content font
+     */
+    protected void addInfoSection(Chapter chapter, String title, String content, Font font) {
+        Section section = chapter.addSection(createTitle(title, 18));
+        section.add(new Chunk(content, font));
+    }
+
+    /**
      * Parses the default information into the chapter
      * @param application the application to render information for
      * @return the rendered chapter
      */
     private Chapter parseDefaultChapter(Application application) {
-        Paragraph title = new Paragraph();
-        title.add(new Chunk(application.getApplicationId(), FontFactory.getFont(FontFactory.COURIER_BOLD, 20, BaseColor.BLACK)));
-        title.add(Chunk.NEWLINE);
-        Chapter chapter = new ChapterAutoNumber(title);
+        Chapter chapter = new ChapterAutoNumber(createTitle("Application " + application.getApplicationId(), 20));
+        chapter.add(Chunk.NEWLINE);
+
         User applicant = application.getUser();
         LocalDateTime updated = application.getLastUpdated();
         String status = application.getStatus().label();
 
-        Phrase statusPhrase = new Phrase();
-        statusPhrase.add(new Chunk("Status: " , BOLD));
-        statusPhrase.add(new Chunk(status, NORMAL));
-
-        Phrase applicantPhrase = new Phrase();
-        applicantPhrase.add(new Chunk("Applicant: ", BOLD));
-        applicantPhrase.add(new Chunk(String.format("%s - %s", applicant.getName(), applicant.getUsername()), NORMAL));
-
-        Phrase updatedPhrase = new Phrase();
-        updatedPhrase.add(new Chunk("Last Updated: ", BOLD));
-        updatedPhrase.add(new Chunk((updated == null) ? "N/A":updated.format(DATE_FORMAT), NORMAL));
-
-        chapter.add(statusPhrase);
+        addInfoSection(chapter, "Application Status", status, NORMAL);
         chapter.add(Chunk.NEWLINE);
-        chapter.add(applicantPhrase);
+        addInfoSection(chapter, "Applicant", String.format("%s - %s", applicant.getName(), applicant.getUsername()), NORMAL);
         chapter.add(Chunk.NEWLINE);
-        chapter.add(updatedPhrase);
+        addInfoSection(chapter, "Last Updated", (updated == null) ? "N/A":updated.format(DATE_FORMAT), NORMAL);
         chapter.add(Chunk.NEWLINE);
 
         return chapter;

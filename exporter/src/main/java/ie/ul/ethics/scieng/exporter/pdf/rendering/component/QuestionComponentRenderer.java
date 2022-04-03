@@ -73,7 +73,7 @@ public class QuestionComponentRenderer implements ComponentRenderer {
         String descriptionValue = component.getDescription();
 
         if (descriptionValue != null && !descriptionValue.isEmpty()) {
-            Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.LIGHT_GRAY);
+            Font font = FontFactory.getFont(FontFactory.COURIER, 14, BaseColor.LIGHT_GRAY);
 
             return new Chunk(descriptionValue, font);
         }

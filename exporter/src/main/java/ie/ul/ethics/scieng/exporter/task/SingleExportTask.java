@@ -53,12 +53,16 @@ public class SingleExportTask extends BaseExportTask {
         ExecutorService executor = Executors.newSingleThreadExecutor();
 
         executor.submit(() -> {
+            onStarted();
+
             try {
                 File saved = exporterService.exportToZip(exported, getResult().getAbsolutePath());
                 emailService.sendExportLinkEmail(requester, saved.getName(), requestedAt);
+                onCompleted();
             } catch (IOException ex) {
                 ex.printStackTrace();
                 emailService.sendExportFailedEmail(requester, requestedAt);
+                onFail();
             }
         });
     }
@@ -71,6 +75,7 @@ public class SingleExportTask extends BaseExportTask {
      */
     @Override
     public boolean execute() throws IOException {
+        onPending();
         ExportedApplication exported = exporterService.exportApplication(id);
 
         if (exported == null) {

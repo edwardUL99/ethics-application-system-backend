@@ -3,6 +3,7 @@ package ie.ul.ethics.scieng.exporter.task;
 import ie.ul.ethics.scieng.exporter.email.ExporterEmailService;
 import ie.ul.ethics.scieng.exporter.services.ExporterService;
 import ie.ul.ethics.scieng.users.models.User;
+import lombok.extern.log4j.Log4j2;
 
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 /**
  * This class represents the base export task
  */
+@Log4j2
 public abstract class BaseExportTask implements ExportTask {
     /**
      * The user that requested the task
@@ -65,5 +67,77 @@ public abstract class BaseExportTask implements ExportTask {
     @Override
     public LocalDateTime getTimeRequested() {
         return requestedAt;
+    }
+
+    /**
+     * Log that the export task has transitioned state
+     * @param status the status of the task to log
+     */
+    protected void logTask(TaskStatus status) {
+        log.info("Export Task requested by {} at {} has transitioned to state: {}", requester.getUsername(),
+                requestedAt, status.label);
+    }
+
+    /**
+     * A pending hook that by default logs, but can be overridden
+     */
+    protected void onPending() {
+        logTask(TaskStatus.PENDING);
+    }
+
+    /**
+     * A started hook that by default logs, but can be overridden
+     */
+    protected void onStarted() {
+        logTask(TaskStatus.STARTED);
+    }
+
+    /**
+     * A completed hook that by default logs, but can be overridden
+     */
+    protected void onCompleted() {
+        logTask(TaskStatus.COMPLETED);
+    }
+
+    /**
+     * A failure hook that by default logs, but can be overridden
+     */
+    protected void onFail() {
+        logTask(TaskStatus.FAILED);
+    }
+
+    /**
+     * An enum for use in logging
+     */
+    protected enum TaskStatus {
+        /**
+         * Task is pending being run by a thread
+         */
+        PENDING("Pending"),
+        /**
+         * Task has started
+         */
+        STARTED("Started"),
+        /**
+         * Task has completed
+         */
+        COMPLETED("Completed"),
+        /**
+         * Task has failed
+         */
+        FAILED("Failed");
+
+        /**
+         * The task status label
+         */
+        private final String label;
+
+        /**
+         * Create the enum value
+         * @param label the label to display in logs
+         */
+        TaskStatus(String label) {
+            this.label = label;
+        }
     }
 }

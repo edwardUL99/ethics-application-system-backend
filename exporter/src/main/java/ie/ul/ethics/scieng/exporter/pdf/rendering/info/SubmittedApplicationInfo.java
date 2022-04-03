@@ -3,7 +3,6 @@ package ie.ul.ethics.scieng.exporter.pdf.rendering.info;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Paragraph;
-import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Section;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
@@ -46,22 +45,14 @@ public class SubmittedApplicationInfo extends DefaultApplicationInfo {
             LocalDateTime submitted = application.getSubmittedTime();
 
             if (submitted != null) {
-                Phrase submittedPhrase = new Phrase();
-                submittedPhrase.add(new Chunk("Submitted At: ", BOLD));
-                submittedPhrase.add(new Chunk(submitted.format(DATE_FORMAT), NORMAL));
-
-                chapter.add(submittedPhrase);
+                addInfoSection(chapter, "Submitted At", submitted.format(DATE_FORMAT), NORMAL);
                 chapter.add(Chunk.NEWLINE);
             }
         } else {
             LocalDateTime approvedTime = application.getApprovalTime();
 
             if (approvedTime != null) {
-                Phrase approvedPhrase = new Phrase();
-                approvedPhrase.add(new Chunk("Approved At: ", BOLD));
-                approvedPhrase.add(new Chunk(approvedTime.format(DATE_FORMAT), NORMAL));
-
-                chapter.add(approvedPhrase);
+                addInfoSection(chapter, "Approved At", approvedTime.format(DATE_FORMAT), NORMAL);
                 chapter.add(Chunk.NEWLINE);
             }
 

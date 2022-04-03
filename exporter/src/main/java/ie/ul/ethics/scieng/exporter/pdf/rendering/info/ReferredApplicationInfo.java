@@ -1,8 +1,6 @@
 package ie.ul.ethics.scieng.exporter.pdf.rendering.info;
 
 import com.itextpdf.text.Chapter;
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.Phrase;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.users.models.User;
 
@@ -22,11 +20,7 @@ public class ReferredApplicationInfo extends SubmittedApplicationInfo {
 
         User referrer = application.getReferredBy();
 
-        if (referrer != null) {
-            Phrase referrerPhrase = new Phrase();
-            referrerPhrase.add(new Chunk("Referred By: ", BOLD));
-            referrerPhrase.add(new Chunk(referrer.getName() + " - " + referrer.getUsername(), NORMAL));
-            chapter.add(referrerPhrase);
-        }
+        if (referrer != null)
+            addInfoSection(chapter, "Referred By", referrer.getName() + " - " + referrer.getUsername(), NORMAL);
     }
 }
