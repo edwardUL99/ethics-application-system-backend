@@ -146,9 +146,8 @@ public class UserServiceImpl implements UserService {
 
         user.setAccount(account);
         checkUserRole(user);
-        userRepository.save(user);
 
-        return user;
+        return userRepository.save(user);
     }
 
     /**

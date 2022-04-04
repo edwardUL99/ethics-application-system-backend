@@ -202,10 +202,10 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ApplicationTemplate template = application.getApplicationTemplate();
 
-        templateRepository.save(template);
+        application.setApplicationTemplate(templateRepository.save(template));
 
         application.setLastUpdated(LocalDateTime.now());
-        applicationRepository.save(application);
+        application = applicationRepository.save(application);
 
         return application;
     }
@@ -300,9 +300,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         submittedApplication.setSubmittedTime(LocalDateTime.now());
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
         entityManager.flush();
-        applicationRepository.save(submittedApplication);
 
-        return submittedApplication;
+        return applicationRepository.save(submittedApplication);
     }
 
     /**
@@ -331,9 +330,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
 
-        this.createApplication(application, true);
-
-        return application;
+        return this.createApplication(application, true);
     }
 
     /**
@@ -360,9 +357,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .collect(Collectors.toList());
 
         application.setAssignedCommitteeMembers(assigned);
-        createApplication(application, true);
 
-        return application;
+        return createApplication(application, true);
     }
 
     /**
@@ -390,9 +386,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         application.setLastUpdated(LocalDateTime.now());
 
-        applicationRepository.save(application);
-
-        return application;
+        return applicationRepository.save(application);
     }
 
     /**
@@ -422,9 +416,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             if (finishReview)
                 a.setFinishReview(true);
         });
-        createApplication(application, true);
 
-        return application;
+        return createApplication(application, true);
     }
 
     /**
@@ -452,9 +445,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .filter(u -> u.getUser().getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
                 .findFirst().ifPresent(assigned -> assigned.setFinishReview(true));
 
-        this.createApplication(application, true);
-
-        return application;
+        return this.createApplication(application, true);
     }
 
     /**
@@ -481,7 +472,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus(target);
         application.setFinalComment(finalComment);
         application.setApprovalTime((approve) ? LocalDateTime.now():null);
-        createApplication(application, true);
+        application = createApplication(application, true);
 
         emailService.sendApplicationApprovalEmail(application);
 
@@ -546,7 +537,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         applicationRepository.delete(application);
         entityManager.flush();
-        applicationRepository.save(referredApplication);
+        referredApplication = applicationRepository.save(referredApplication);
 
         emailService.sendApplicationReferredEmail(application, referrer);
 
