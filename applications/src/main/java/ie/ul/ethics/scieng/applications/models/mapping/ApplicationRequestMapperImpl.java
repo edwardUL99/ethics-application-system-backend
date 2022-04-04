@@ -180,9 +180,8 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
         if (mapped.getUser() == null)
             throw new MappingException("A comment cannot exist with a null user");
 
-        for (ReviewSubmittedApplicationRequest.Comment sub : comment.getSubComments()) {
+        for (ReviewSubmittedApplicationRequest.Comment sub : comment.getSubComments())
             mapped.addSubComment(mapComment(sub));
-        }
 
         return mapped;
     }

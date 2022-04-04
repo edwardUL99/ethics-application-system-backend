@@ -3,7 +3,6 @@ package ie.ul.ethics.scieng.exporter.pdf.rendering.info;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.Chunk;
-import com.itextpdf.text.Element;
 import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.List;
 import com.itextpdf.text.ListItem;
@@ -26,14 +25,18 @@ public class SubmittedApplicationInfo extends DefaultApplicationInfo {
      */
     private void renderFinalComment(Comment finalComment, Chapter chapter) {
         if (finalComment != null) {
-            Section section = chapter.addSection("Final Comment");
+            Section section = chapter.addSection(createTitle("Final Comment", 18));
             Paragraph paragraph = new Paragraph();
             section.add(paragraph);
 
             User user = finalComment.getUser();
             paragraph.add(new Chunk(user.getName() + " - " + user.getUsername(), BOLD));
+            paragraph.add(Chunk.NEWLINE);
             paragraph.add(new Chunk(finalComment.getCreatedAt().format(DATE_FORMAT), NORMAL));
+            paragraph.add(Chunk.NEWLINE);
             paragraph.add(new Chunk(finalComment.getComment(), NORMAL));
+            paragraph.add(Chunk.NEWLINE);
+            paragraph.add(Chunk.NEWLINE);
         }
     }
 
