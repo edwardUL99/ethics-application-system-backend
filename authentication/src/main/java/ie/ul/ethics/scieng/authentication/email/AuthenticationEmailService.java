@@ -89,7 +89,6 @@ public class AuthenticationEmailService extends AsyncEmailService {
                 + "<p>Thank You,<p>"
                 + "<p>The Team</p>";
 
-
         String urlBase = getFrontendURL();
         urlBase = urlBase + "/reset-password";
 

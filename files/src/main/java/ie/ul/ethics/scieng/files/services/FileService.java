@@ -4,6 +4,8 @@ import ie.ul.ethics.scieng.files.exceptions.FileException;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.nio.file.Path;
+
 /**
  * This interface represents a service for uploading and downloading files
  */
@@ -37,4 +39,10 @@ public interface FileService {
      * @throws FileException if an error occurs
      */
     void deleteFile(String filename, String directory, String username) throws FileException;
+
+    /**
+     * Get the path representing where files are stored on the server
+     * @return the storage location path
+     */
+    Path getStorageLocation();
 }

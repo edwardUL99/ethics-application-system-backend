@@ -7,6 +7,13 @@ function checkStatus() {
 	fi
 }
 
+function setEnv() {
+	export ETHICS_EMAIL_DISABLE="true"
+	export ETHICS_ANTIVIRUS_DISABLE="true"
+}
+
+setEnv
+
 args=$1
 
 mvn clean install $args
