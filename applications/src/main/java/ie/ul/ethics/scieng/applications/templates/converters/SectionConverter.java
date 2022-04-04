@@ -11,7 +11,7 @@ import java.util.*;
  * This converter converts a map to a Section component
  */
 @Converter(ComponentType.SECTION)
-public class SectionConverter implements ComponentConverter {
+public class SectionConverter extends BaseConverter {
     /**
      * Validates the map for conversion
      *
@@ -27,38 +27,28 @@ public class SectionConverter implements ComponentConverter {
     }
 
     /**
-     * Convert the provided map to the equivalent ApplicationComponent
+     * Create the base component to be converted. The convert method then does some additional field mapping
      *
-     * @param map the map to convert
-     * @return the equivalent application component
-     * @throws ApplicationParseException if the map isn't valid or an error occurs
+     * @param map the map to create the object from
+     * @return the converted component
+     * @throws ApplicationParseException if a parsing exception occurs
      */
     @Override
     @SuppressWarnings("unchecked")
-    public ApplicationComponent convert(Map<String, Object> map) throws ApplicationParseException {
-        validate(map);
+    protected ApplicationComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         List<ApplicationComponent> subComponents = new ArrayList<>();
 
         for (Map<String, Object> sub : (List<Map<String, Object>>)map.get("components")) {
             String type = (String) sub.get("type");
 
-            if (type.equals(ComponentType.TEXT.label())) {
+            if (type.equals(ComponentType.TEXT.label()))
                 sub.put("nested", true);
-            }
 
-            subComponents.add(Converters.getConverter((String) sub.get("type")).convert(sub));
+            subComponents.add(Converters.getConverter(type).convert(sub));
         }
 
-        SectionComponent component = new SectionComponent((String)map.get("title"),
+        return new SectionComponent((String)map.get("title"),
                 Converters.parseLongString(ComponentType.SECTION, "description", map.getOrDefault("description", null)), subComponents,
                 (boolean)map.getOrDefault("autoSave", true));
-
-        String componentId = (String) map.get("componentId");
-
-        if (componentId != null) {
-            component.setComponentId(componentId);
-        }
-
-        return component;
     }
 }

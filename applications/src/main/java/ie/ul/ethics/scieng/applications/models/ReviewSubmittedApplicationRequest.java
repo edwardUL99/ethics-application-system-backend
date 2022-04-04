@@ -57,8 +57,25 @@ public class ReviewSubmittedApplicationRequest {
          */
         private List<Comment> subComments;
         /**
+         * Determines if the comment is shared with applicants
+         */
+        private boolean sharedApplicant;
+        /**
          * The timestamp of when the application was created
          */
         private LocalDateTime createdAt;
+
+        /**
+         * Create a non-shared comment
+         * @param id the database ID
+         * @param username username of user creating the comment
+         * @param comment the comment content
+         * @param componentId the id of the component the comment is attached to
+         * @param subComments the list of sub-comments
+         * @param createdAt timestamp of when the application was created
+         */
+        public Comment(Long id, String username, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt) {
+            this(id, username, comment, componentId, subComments, false, createdAt);
+        }
     }
 }

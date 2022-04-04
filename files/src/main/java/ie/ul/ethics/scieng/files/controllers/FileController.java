@@ -22,6 +22,9 @@ import xyz.capybara.clamav.ClamavException;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
@@ -96,6 +99,20 @@ public class FileController {
     }
 
     /**
+     * Encode the value in URL encoding
+     * @param value the value to encode
+     * @return the encoded value
+     */
+    private String encodeValue(String value) {
+        try {
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
+        } catch (UnsupportedEncodingException ex) {
+            ex.printStackTrace();
+            return value;
+        }
+    }
+
+    /**
      * This is the endpoint for uploading files
      * @param request the request for uploading the file
      * @return the response body
@@ -118,9 +135,16 @@ public class FileController {
             fileName = resolved[1];
 
             String uri = "/api/files/download/" + fileName;
+            String queryParams = "";
 
             if (directory != null)
-                uri += "?directory=" + directory;
+                queryParams += "directory=" + encodeValue(directory);
+
+            if (!queryParams.isEmpty())
+                queryParams += "&";
+
+            queryParams += "username=" + encodeValue(username);
+            uri += "?" + queryParams;
 
             return ResponseEntity.ok(new UploadFileResponse(fileName, uri, file.getContentType(), file.getSize()));
         } catch (FileException | IOException | ClamavException ex) {
@@ -159,6 +183,34 @@ public class FileController {
                     .contentType(MediaType.parseMediaType(contentType))
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                     .body(resource);
+        } catch (PermissionDeniedException ex) {
+            ex.printStackTrace();
+            return respondError(FILE_PERMISSION_DENIED);
+        } catch (FileException ex) {
+            ex.printStackTrace();
+            return respondError(FILE_ERROR);
+        }
+    }
+
+    /**
+     * The endpoint for deleting a file
+     * @param filename the name of the file to download
+     * @param directory the directory to delete the file from
+     * @param username the username of the file to retrieve. Defaults to authentication information
+     * @return the response body
+     */
+    @DeleteMapping("/delete/{filename:.+}")
+    public ResponseEntity<?> deleteFile(@PathVariable String filename, @RequestParam(required = false) String directory,
+                                        @RequestParam(required = false) String username) {
+        try {
+            username = (username == null) ? authenticationInformation.getUsername():username;
+
+            if (fileService.loadFile(filename, directory, username) == null)
+                return ResponseEntity.notFound().build();
+
+            fileService.deleteFile(filename, directory, username);
+
+            return ResponseEntity.ok().build();
         } catch (PermissionDeniedException ex) {
             ex.printStackTrace();
             return respondError(FILE_PERMISSION_DENIED);

@@ -48,8 +48,18 @@ public class Comment {
     /**
      * The list of subComments of this comment
      */
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
     private List<Comment> subComments = new ArrayList<>();
+    /**
+     * A parent comment if this comment is a sub-comment
+     */
+    @ManyToOne
+    @JsonIgnore
+    private Comment parent;
+    /**
+     * Indicates if the comment is shared (visible) to the applicant (applied to parent and subsequently all sub-comments)
+     */
+    private boolean sharedApplicant;
     /**
      * The time when the comment was created
      */
@@ -86,11 +96,32 @@ public class Comment {
     }
 
     /**
+     * Create a Comment
+     * @param id the database ID for the comment
+     * @param user the user that made the comment
+     * @param comment the comment left
+     * @param componentId the ID of the component the comment is attached to
+     * @param subComments the sub-comments added to this comment
+     * @param createdAt the timestamp the comment was created at
+     * @param sharedApplicant indicates if comment can be viewed by applicant (applied to parent and subsequently all sub-comments)
+     */
+    public Comment(Long id, User user, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt, boolean sharedApplicant) {
+        this.id = id;
+        this.user = user;
+        this.comment = comment;
+        this.componentId = componentId;
+        this.sharedApplicant = sharedApplicant;
+        subComments.forEach(this::addSubComment);
+        this.createdAt = createdAt;
+    }
+
+    /**
      * Add a comment to this comment as a sub comment
      * @param comment the comment to add
      */
     public void addSubComment(Comment comment) {
         comment.setComponentId(componentId); // attaches to the same component
+        comment.parent = this;
         subComments.add(comment);
     }
 
@@ -112,7 +143,8 @@ public class Comment {
         if (o == null || Hibernate.getClass(this) != Hibernate.getClass(o)) return false;
         Comment comment = (Comment) o;
         return Objects.equals(id, comment.id) && Objects.equals(user, comment.user) && Objects.equals(this.comment, comment.comment)
-                && Objects.equals(componentId, comment.componentId) && Objects.equals(subComments, comment.subComments) && Objects.equals(createdAt, comment.createdAt);
+                && Objects.equals(componentId, comment.componentId) && Objects.equals(subComments, comment.subComments)
+                && Objects.equals(createdAt, comment.createdAt) && Objects.equals(sharedApplicant, comment.sharedApplicant);
     }
 
     /**
@@ -120,6 +152,6 @@ public class Comment {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, comment, componentId, subComments, createdAt);
+        return Objects.hash(id, user, comment, componentId, subComments, createdAt, sharedApplicant);
     }
 }

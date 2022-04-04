@@ -28,6 +28,10 @@
       "permissions": "ASSIGN_APPLICATIONS"
     },
     {
+      "path": "/api/applications/unassign/**",
+      "permissions": "ADMIN"
+    },
+    {
       "path": "/api/applications/review/",
       "permissions": "REVIEW_APPLICATIONS"
     },
@@ -46,6 +50,14 @@
     {
       "path": "/api/applications/resubmit/",
       "permissions": "ASSIGN_APPLICATIONS"
+    },
+    {
+      "path": "/api/export/single",
+      "permissions": "EXPORT_APPLICATIONS"
+    },
+    {
+      "path": "/api/export/range",
+      "permissions": "EXPORT_APPLICATIONS"
     }
   ]
 }

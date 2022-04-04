@@ -1,29 +1,26 @@
 package ie.ul.ethics.scieng.authentication.controllers;
 
 import ie.ul.ethics.scieng.authentication.config.AuthenticationConfiguration;
+import ie.ul.ethics.scieng.authentication.email.AuthenticationEmailService;
 import ie.ul.ethics.scieng.authentication.exceptions.EmailExistsException;
 import ie.ul.ethics.scieng.authentication.exceptions.IllegalUpdateException;
 import ie.ul.ethics.scieng.authentication.exceptions.UsernameExistsException;
 import ie.ul.ethics.scieng.authentication.jwt.AuthenticationInformation;
 import ie.ul.ethics.scieng.authentication.jwt.JWT;
 import ie.ul.ethics.scieng.authentication.services.AccountService;
-import ie.ul.ethics.scieng.common.email.EmailSender;
-import ie.ul.ethics.scieng.common.email.exceptions.EmailException;
 import ie.ul.ethics.scieng.authentication.models.*;
 import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static ie.ul.ethics.scieng.common.Constants.*;
@@ -53,20 +50,20 @@ public class AuthenticationController {
      */
     private final AuthenticationConfiguration authenticationConfiguration;
     /**
-     * The email sender implementation for sending emails
+     * The email service for the authentication module e-mail notifications
      */
-    private final EmailSender emailSender;
+    private final AuthenticationEmailService emailService;
 
     /**
      * Create an AuthenticationController
      * @param jwt utilities for JWT token authentication
      * @param accountService the service used for creating and retrieving accounts
      * @param authenticationConfiguration the configuration for the authentication module
-     * @param emailSender the email sender implementation for sending emails
+     * @param emailService the email service for sending emails
      */
     @Autowired
     public AuthenticationController(JWT jwt, AccountService accountService,
-                                    AuthenticationConfiguration authenticationConfiguration, EmailSender emailSender) {
+                                    AuthenticationConfiguration authenticationConfiguration, @Qualifier("authenticationEmail") AuthenticationEmailService emailService) {
         this.jwt = jwt;
         this.accountService = accountService;
         this.authenticationConfiguration = authenticationConfiguration;
@@ -74,7 +71,7 @@ public class AuthenticationController {
         if (authenticationConfiguration.isAlwaysConfirm())
             log.warn("The system is configured to automatically confirm any new account. This is dangerous and should only be used for testing");
 
-        this.emailSender = emailSender;
+        this.emailService = emailService;
     }
 
     /**
@@ -100,56 +97,6 @@ public class AuthenticationController {
     }
 
     /**
-     * Send the confirmation email to the email specified in the account
-     * @param account the account to send the email to
-     * @param confirmationToken the token for confirmation
-     */
-    private void sendConfirmationEmail(Account account, ConfirmationToken confirmationToken) {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        executorService.submit(() -> {
-            String content = "<h2>Confirm Account</h2>"
-                    + "<p>Hello %s,<br>We have received a registration request for an account. You will need to confirm" +
-                    " the email address before we can proceed with registration</p>"
-                    + "<br>"
-                    + "<p>Your username is: <b>%s</b></p>"
-                    + "<p>Follow this link to confirm your account: <a href=\"%s\">Confirm Account</a></p>"
-                    + "<br>"
-                    + "<p>If for some reason, the link doesn't work, go to the <a href=\"%s\">confirm account</a> page"
-                    + " and enter the following details in the first 2 fields:</p>"
-                    + "<ul>"
-                    + "<li><b>E-mail:</b> %s</li>"
-                    + "<li><b>Confirmation Token:</b> %s</li>"
-                    + "</ul>"
-                    + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
-                    + "<br>"
-                    + "<p>If you did not request an account, you can safely ignore this e-mail</p>"
-                    + "<p><b>Warning:</b> Unconfirmed accounts will be removed after %d days</p>"
-                    + "<br>"
-                    + "<p>Thank You,<p>"
-                    + "<p>The Team</p>";
-
-
-            String urlBase = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url"); // find either by system/config property or environment variable
-            urlBase = (urlBase == null) ? "http://localhost:4200" : urlBase;
-            urlBase = urlBase + "/confirm-account";
-
-            String username = account.getUsername();
-            String email = account.getEmail();
-            String token = confirmationToken.getToken();
-            content = String.format(content, username, username,
-                    String.format("%s?email=%s&token=%s", urlBase, email, token),
-                    urlBase, email, token, authenticationConfiguration.getUnconfirmedRemoval());
-
-            try {
-                emailSender.sendEmail(email, "Confirm Account Registration", content);
-            } catch (EmailException ex) {
-                ex.printStackTrace();
-            }
-        });
-    }
-
-    /**
      * This endpoint provides the registration endpoint
      * @param request the registration request
      * @return the JSON response
@@ -168,7 +115,7 @@ public class AuthenticationController {
             AccountResponse response;
             if (!confirmed) {
                 ConfirmationToken token = accountService.generateConfirmationToken(createdAccount);
-                sendConfirmationEmail(createdAccount, token);
+                emailService.sendConfirmationEmail(createdAccount, token, authenticationConfiguration);
             }
             response = new AccountResponse(username, email, confirmed);
 
@@ -180,49 +127,6 @@ public class AuthenticationController {
             log.error(ex);
             return respondError(EMAIL_EXISTS);
         }
-    }
-
-    /**
-     * Send the password reset email to the email specified in the account
-     * @param account the account to send the email to
-     * @param resetPasswordToken the token used for resetting the password
-     */
-    private void sendPasswordResetEmail(Account account, ResetPasswordToken resetPasswordToken) {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-        executorService.submit(() -> {
-            String content = "<h2>Reset Password</h2>"
-                    + "<p>Hello %s,<br>We have received a request to reset the password of your account"
-                    + "<br>"
-                    + "<p>Your username is: <b>%s</b></p>"
-                    + "<p>Follow this link to reset your password: <a href=\"%s\">Reset Password</a></p>"
-                    + "<br>"
-                    + "<p>If for some reason, the link does not work, paste the following link into your browser: %s</p>"
-                    + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
-                    + "<br>"
-                    + "<p>This request will expire at <b>%s</b>, after which you will need to request another password reset</p>"
-                    + "<p>If you did not request for your password to be changed, you can safely ignore this e-mail</p>"
-                    + "<br>"
-                    + "<p>Thank You,<p>"
-                    + "<p>The Team</p>";
-
-
-            String urlBase = PropertyFinder.findProperty("ETHICS_FRONTEND_URL", "frontend.url"); // find either by system/config property or environment variable
-            urlBase = (urlBase == null) ? "http://localhost:4200" : urlBase;
-            urlBase = urlBase + "/reset-password";
-
-            String username = account.getUsername();
-            String email = account.getEmail();
-            String resetLink = String.format("%s?username=%s&token=%s", urlBase, username, resetPasswordToken.getToken());
-            content = String.format(content, username, username,
-                    resetLink, resetLink, resetPasswordToken.getExpiry().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
-
-            try {
-                emailSender.sendEmail(email, "Reset Password", content);
-            } catch (EmailException ex) {
-                ex.printStackTrace();
-            }
-        });
     }
 
     /**
@@ -239,7 +143,7 @@ public class AuthenticationController {
             return ResponseEntity.notFound().build();
         } else {
             ResetPasswordToken resetPasswordToken = accountService.requestPasswordReset(account);
-            sendPasswordResetEmail(account, resetPasswordToken);
+            emailService.sendPasswordResetEmail(account, resetPasswordToken);
 
             return ResponseEntity.status(HttpStatus.CREATED).build();
         }
@@ -288,7 +192,7 @@ public class AuthenticationController {
             return ResponseEntity.badRequest().build();
         } else {
             ConfirmationToken token = accountService.generateConfirmationToken(account);
-            sendConfirmationEmail(account, token);
+            emailService.sendConfirmationEmail(account, token, authenticationConfiguration);
 
             return ResponseEntity.ok().build();
         }

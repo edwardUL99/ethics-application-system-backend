@@ -2,15 +2,13 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
+import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
-import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 
 /**
  * This interface represents a mapper that can map any requests to the applications module into mapped objects.
@@ -23,7 +21,7 @@ public interface ApplicationRequestMapper {
      * @param request the request to map
      * @return the mapped draft application
      */
-    DraftApplication createDraftRequestToDraft(CreateDraftApplicationRequest request);
+    Application createDraftRequestToDraft(CreateDraftApplicationRequest request);
 
     /**
      * Maps the update draft request to the draft application
@@ -31,7 +29,7 @@ public interface ApplicationRequestMapper {
      * @return the mapped draft application
      * @throws MappingException if the request ID does not match a DraftApplication
      */
-    DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException;
+    Application updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException;
 
     /**
      * Maps the update request to a referred application
@@ -39,7 +37,7 @@ public interface ApplicationRequestMapper {
      * @return the mapped referred application
      * @throws MappingException if the request ID does not match a DraftApplication
      */
-    ReferredApplication updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException;
+    Application updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException;
 
     /**
      * Maps submit application request to an application. The application that is returned should be either a draft
@@ -70,8 +68,15 @@ public interface ApplicationRequestMapper {
      * @param request the request to map
      * @return the submitted application
      * @throws MappingException if any user in the comments are null;
-     * @throws InvalidStatusException if the application is not in a review state
+     * @throws InvalidStatusException if the application is not in a review/reviewed state
      */
-    SubmittedApplication reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException,
+    Application reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException,
             InvalidStatusException;
+
+    /**
+     * Maps the approve application request
+     * @param request the request to map
+     * @return the mapped request
+     */
+    MappedApprovalRequest mapApprovalRequest(ApproveApplicationRequest request);
 }

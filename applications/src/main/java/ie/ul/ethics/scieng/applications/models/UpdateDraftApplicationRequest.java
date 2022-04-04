@@ -10,7 +10,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.validation.constraints.NotNull;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -35,7 +36,7 @@ public class UpdateDraftApplicationRequest {
     /**
      * The new file attachments being added
      */
-    private Map<String, AttachedFile> attachedFiles = new HashMap<>();
+    private List<AttachedFile> attachedFiles = new ArrayList<>();
     /**
      * The template being updated
      */
@@ -51,7 +52,7 @@ public class UpdateDraftApplicationRequest {
     public UpdateDraftApplicationRequest(String id, Map<String, Answer> answers, ApplicationTemplate template) {
         this.id = id;
         this.answers = answers;
-        this.attachedFiles = new HashMap<>();
+        this.attachedFiles = new ArrayList<>();
         this.template = template;
     }
 }

@@ -41,19 +41,26 @@ public class CheckboxGroupConverter extends BaseConverter {
 
         ComponentType type = ComponentType.of((String)branch.get("type"));
 
+        Branch parsed;
+
         if (ComponentType.ACTION_BRANCH.equals(type)) {
-            return new ActionBranch((String)branch.get("action"), (String)branch.getOrDefault("comment", null));
+            parsed = new ActionBranch((String)branch.get("action"), (String)branch.getOrDefault("comment", null));
         } else if (ComponentType.REPLACEMENT_BRANCH.equals(type)) {
             List<ReplacementBranch.Replacement> replacements = new ArrayList<>();
 
             for (Map<String, Object> replacement : (List<Map<String, Object>>)branch.get("replacements")) {
-                replacements.add(new ReplacementBranch.Replacement(null, (String)replacement.get("replace"), (String)replacement.get("target")));
+                replacements.add(new ReplacementBranch.Replacement(ComponentConverter.parseDatabaseId(replacement.getOrDefault("id", null)),
+                        (String)replacement.get("replace"), (String)replacement.get("target")));
             }
 
-            return new ReplacementBranch(replacements);
+            parsed = new ReplacementBranch(replacements);
         } else {
             throw new ApplicationParseException("Illegal branch type: " + type);
         }
+
+        parsed.setBranchId(ComponentConverter.parseDatabaseId(branch.getOrDefault("branchId", null)));
+
+        return parsed;
     }
 
     /**
@@ -73,7 +80,7 @@ public class CheckboxGroupConverter extends BaseConverter {
             String title = (String)checkbox.get("title");
             Branch branch = (checkbox.containsKey("branch")) ? parseBranch((Map<String, Object>) checkbox.get("branch")):null;
 
-            CheckboxGroupComponent.Checkbox box = new CheckboxGroupComponent.Checkbox(null, title, branch);
+            CheckboxGroupComponent.Checkbox box = new CheckboxGroupComponent.Checkbox(ComponentConverter.parseDatabaseId(checkbox.getOrDefault("id", null)), title, branch);
 
             String identifier = (String) checkbox.get("identifier");
 

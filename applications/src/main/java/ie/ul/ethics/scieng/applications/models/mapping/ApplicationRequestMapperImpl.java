@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.models.mapping;
 
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.exceptions.MappingException;
+import ie.ul.ethics.scieng.applications.models.ApproveApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.CreateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
@@ -12,11 +13,7 @@ import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
-import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
-import ie.ul.ethics.scieng.files.exceptions.FileException;
-import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import lombok.extern.log4j.Log4j2;
@@ -25,7 +22,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,22 +39,16 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * The application service to help with mapping
      */
     private final ApplicationService applicationService;
-    /**
-     * The file service used for deleting old files
-     */
-    private final FileService fileService;
 
     /**
      * Create an ApplicationRequestMapperImpl
      * @param userService the user service to help with mapping
      * @param applicationService the application service to help with mapping
-     * @param fileService the fileService to delete old files
      */
     @Autowired
-    public ApplicationRequestMapperImpl(UserService userService, ApplicationService applicationService, FileService fileService) {
+    public ApplicationRequestMapperImpl(UserService userService, ApplicationService applicationService) {
         this.userService = userService;
         this.applicationService = applicationService;
-        this.fileService = fileService;
     }
 
     /**
@@ -68,7 +58,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @return the mapped draft application
      */
     @Override
-    public DraftApplication createDraftRequestToDraft(CreateDraftApplicationRequest request) {
+    public Application createDraftRequestToDraft(CreateDraftApplicationRequest request) {
         return new DraftApplication(null, null, userService.loadUser(request.getUsername()), request.getApplicationTemplate(),
                 request.getAnswers());
     }
@@ -87,26 +77,9 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
 
             loaded.setAnswers(request.getAnswers());
 
-            Map<String, AttachedFile> currentFiles = loaded.getAttachedFiles();
-            Map<String, AttachedFile> newFiles = request.getAttachedFiles();
-
-            String username = loaded.getUser().getUsername();
-
-            for (Map.Entry<String, AttachedFile> e : newFiles.entrySet()) {
-                String key = e.getKey();
-                AttachedFile value = e.getValue();
-                AttachedFile current = currentFiles.get(key);
-
-                try {
-                    if (current != null && !current.equals(value))
-                        fileService.deleteFile(current.getFilename(), current.getDirectory(), username);
-                } catch (FileException ex) {
-                    ex.printStackTrace();
-                    log.error("Failed to delete an AttachedFile that was meant to exist, overwriting with new file");
-                }
-
-                currentFiles.put(key, value);
-            }
+            List<AttachedFile> attachedFiles = loaded.getAttachedFiles();
+            attachedFiles.clear();
+            request.getAttachedFiles().forEach(loaded::attachFile);
 
             return loaded;
         } else {
@@ -121,11 +94,11 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @return the mapped draft application
      */
     @Override
-    public DraftApplication updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
+    public Application updateDraftRequestToDraft(UpdateDraftApplicationRequest request) throws MappingException {
         String id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
-        return (DraftApplication) this.mapDraftOrReferred(request, loaded, ApplicationStatus.DRAFT);
+        return this.mapDraftOrReferred(request, loaded, ApplicationStatus.DRAFT);
     }
 
     /**
@@ -135,11 +108,11 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @throws MappingException if the request ID does not match a DraftApplication
      */
     @Override
-    public ReferredApplication updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException {
+    public Application updateRequestToReferred(UpdateDraftApplicationRequest request) throws MappingException {
         String id = request.getId();
         Application loaded = applicationService.getApplication(id);
 
-        return (ReferredApplication) this.mapDraftOrReferred(request, loaded, ApplicationStatus.REFERRED);
+        return this.mapDraftOrReferred(request, loaded, ApplicationStatus.REFERRED);
     }
 
     /**
@@ -202,14 +175,13 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      */
     private Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment) {
         Comment mapped = new Comment(comment.getId(), userService.loadUser(comment.getUsername()), comment.getComment(),
-                comment.getComponentId(), new ArrayList<>(), comment.getCreatedAt());
+                comment.getComponentId(), new ArrayList<>(), comment.getCreatedAt(), comment.isSharedApplicant());
 
         if (mapped.getUser() == null)
             throw new MappingException("A comment cannot exist with a null user");
 
-        for (ReviewSubmittedApplicationRequest.Comment sub : comment.getSubComments()) {
+        for (ReviewSubmittedApplicationRequest.Comment sub : comment.getSubComments())
             mapped.addSubComment(mapComment(sub));
-        }
 
         return mapped;
     }
@@ -234,18 +206,33 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @throws InvalidStatusException if the application is not in a review state
      */
     @Override
-    public SubmittedApplication reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException, InvalidStatusException {
+    public Application reviewSubmittedRequestToSubmitted(ReviewSubmittedApplicationRequest request) throws MappingException, InvalidStatusException {
         Application loaded = applicationService.getApplication(request.getId());
+        ApplicationStatus status = (loaded == null) ? null:loaded.getStatus();
 
         if (loaded == null) {
             return null;
-        } else if (loaded.getStatus() != ApplicationStatus.REVIEW) {
-            throw new InvalidStatusException("The application must be in a " + ApplicationStatus.REVIEW + " status");
+        } else if (status != ApplicationStatus.REVIEW && status != ApplicationStatus.REVIEWED) {
+            throw new InvalidStatusException("The application must be in a " + ApplicationStatus.REVIEW + " or " + ApplicationStatus.REVIEWED + " status");
         } else {
-            SubmittedApplication submitted = (SubmittedApplication) loaded;
-            mapComments(request.getComments()).forEach(submitted::addComment);
+            mapComments(request.getComments()).forEach(loaded::addComment);
 
-            return submitted;
+            return loaded;
         }
+    }
+
+    /**
+     * Maps the approve application request
+     *
+     * @param request the request to map
+     * @return the mapped request
+     */
+    @Override
+    public MappedApprovalRequest mapApprovalRequest(ApproveApplicationRequest request) {
+        Application application = applicationService.getApplication(request.getId());
+        ReviewSubmittedApplicationRequest.Comment finalComment = request.getFinalComment();
+        Comment mapped = new Comment(null, userService.loadUser(finalComment.getUsername()), finalComment.getComment(), null, new ArrayList<>());
+
+        return new MappedApprovalRequest(application, request.isApprove(), mapped);
     }
 }

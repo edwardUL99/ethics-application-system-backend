@@ -1401,7 +1401,7 @@
 									"pm.test(\"Response is as expected\", function() {",
 									"    let json = pm.response.json();",
 									"    pm.expect(json.fileName).to.eql(\"uploaded-file.png\");",
-									"    pm.expect(json.downloadUri).to.eql(\"/api/files/download/uploaded-file.png\");",
+									"    pm.expect(json.downloadUri).to.eql(\"/api/files/download/uploaded-file.png?username=test\");",
 									"    pm.expect(json).to.have.property(\"type\");",
 									"    pm.expect(json).to.have.property(\"size\");",
 									"})"
@@ -1429,13 +1429,14 @@
 							]
 						},
 						"url": {
-							"raw": "{{api.path}}/files/upload",
+							"raw": "{{api.path}}/files/upload/",
 							"host": [
 								"{{api.path}}"
 							],
 							"path": [
 								"files",
-								"upload"
+								"upload",
+								""
 							]
 						}
 					},
@@ -1455,7 +1456,7 @@
 									"pm.test(\"Response is as expected\", function() {",
 									"    let json = pm.response.json();",
 									"    pm.expect(json.fileName).to.eql(\"uploaded-file.png\");",
-									"    pm.expect(json.downloadUri).to.eql(\"/api/files/download/uploaded-file.png?directory=pictures\");",
+									"    pm.expect(json.downloadUri).to.eql(\"/api/files/download/uploaded-file.png?directory=pictures&username=test\");",
 									"    pm.expect(json).to.have.property(\"type\");",
 									"    pm.expect(json).to.have.property(\"size\");",
 									"})"

@@ -8,13 +8,12 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedApprovalRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
@@ -319,7 +318,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldGetAssignedApplicationsSuccessfully() throws Exception {
-        Application submittedApplication = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submittedApplication = createSubmittedApplication(createDraftApplication(templates[0]));
         User user = createTestUser();
         user.setUsername("committee");
         user.setRole(Roles.COMMITTEE_MEMBER);
@@ -405,7 +404,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInsufficientPermissionsOnGetAssignedApplications() throws Exception {
-        Application submittedApplication = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submittedApplication = createSubmittedApplication(createDraftApplication(templates[0]));
         User user = submittedApplication.getUser();
 
         Map<String, Object> response = new HashMap<>();
@@ -435,7 +434,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldCreateDraftApplication() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationResponse response = new CreateDraftApplicationResponse(draftApplication);
@@ -472,7 +471,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInsufficientPermissionsOnCreate() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
@@ -503,7 +502,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowErrorIfUserNotFoundCreateDraft() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
         templates[0].setDatabaseId(ApplicationServiceTest.TEMPLATE_DB_ID);
 
         CreateDraftApplicationRequest request =
@@ -539,13 +538,11 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldUpdateDraftApplication() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
 
         UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
-        Map<String, Object> response = new HashMap<>();
-        response.put(MESSAGE, APPLICATION_UPDATED);
-        response.put("lastUpdated", draftApplication.getLastUpdated());
-        response.put("answers", draftApplication.getAnswers());
+        UpdateDraftApplicationResponse response
+                = new UpdateDraftApplicationResponse(APPLICATION_UPDATED, draftApplication.getAnswers(), draftApplication.getLastUpdated(), draftApplication.getAttachedFiles());
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
@@ -574,7 +571,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInsufficientPermissionsOnUpdate() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
 
         UpdateDraftApplicationRequest request = new UpdateDraftApplicationRequest(ApplicationServiceTest.APPLICATION_ID, new HashMap<>(), templates[0]);
         Map<String, Object> response = new HashMap<>();
@@ -651,7 +648,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldUpdateReferredApplication() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) ApplicationServiceTest.createDraftApplication(templates[0]);
+        Application draftApplication = ApplicationServiceTest.createDraftApplication(templates[0]);
         User referrer = createTestUser();
         referrer.setUsername("referrer");
         referrer.setRole(Roles.CHAIR);
@@ -694,7 +691,7 @@ public class ApplicationControllerTest {
         SubmitApplicationRequest request = new SubmitApplicationRequest(APPLICATION_ID);
 
         String json = JSON.convertJSON(request);
-        Application submitted = createSubmittedApplication((DraftApplication) draft);
+        Application submitted = createSubmittedApplication(draft);
         String response = JSON.convertJSON(ApplicationResponseFactory.buildResponse(submitted));
 
         given(requestMapper.submitRequestToApplication(request))
@@ -795,8 +792,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldAssignCommitteeMember() throws Exception {
-        SubmittedApplication submitted =
-                (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submitted = createSubmittedApplication(createDraftApplication(templates[0]));
         submitted.setId(APPLICATION_DB_ID);
         User user = submitted.getUser();
         user.setRole(Roles.COMMITTEE_MEMBER);
@@ -857,7 +853,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowNotFoundIfUserNotFoundOnAssignReviewer() throws Exception {
-        Application application = createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application application = createSubmittedApplication(createDraftApplication(templates[0]));
 
         given(applicationService.getApplication(APPLICATION_ID))
                 .willReturn(application);
@@ -950,8 +946,8 @@ public class ApplicationControllerTest {
      * @return the test application instance
      */
     private Application createResubmitted() {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
-        SubmittedApplication submitted = (SubmittedApplication) createSubmittedApplication(draftApplication);
+        Application draftApplication = createDraftApplication(templates[0]);
+        Application submitted = createSubmittedApplication(draftApplication);
         User referrer = createTestUser();
         referrer.setUsername("referrer");
         referrer.setRole(Roles.CHAIR);
@@ -967,8 +963,8 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldAcceptResubmittedApplication() throws Exception {
-        SubmittedApplication resubmitted = (SubmittedApplication) createResubmitted();
-        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+        Application resubmitted = createResubmitted();
+        Application submitted = createResubmitted();
         submitted.setStatus(ApplicationStatus.REVIEW);
         resubmitted.getPreviousCommitteeMembers().forEach(submitted::assignCommitteeMember);
         submitted.clearPreviousCommitteeMembers();
@@ -1002,7 +998,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowIllegalStatusErrorOnAcceptResubmit() throws Exception {
-        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+        Application submitted = createResubmitted();
         submitted.setStatus(ApplicationStatus.SUBMITTED);
 
         AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
@@ -1034,7 +1030,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowApplicationExceptionOnAcceptResubmit() throws Exception {
-        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+        Application submitted = createResubmitted();
 
         AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
         Map<String, Object> response = new HashMap<>();
@@ -1065,7 +1061,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowNotFoundOnAcceptResubmitted() throws Exception {
-        SubmittedApplication submitted = (SubmittedApplication) createResubmitted();
+        Application submitted = createResubmitted();
 
         AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
         String json = JSON.convertJSON(request);
@@ -1105,7 +1101,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldReviewApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draft);
         Application review = createSubmittedApplication(draft);
         review.setStatus(ApplicationStatus.REVIEW);
@@ -1137,7 +1133,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldSetApplicationToReviewed() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application review = createSubmittedApplication(draft);
         review.setStatus(ApplicationStatus.REVIEW);
         Application reviewed = createSubmittedApplication(draft);
@@ -1189,7 +1185,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInvalidStatusOnReview() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application application = createSubmittedApplication(draft);
 
         given(applicationService.getApplication(APPLICATION_ID))
@@ -1219,8 +1215,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldFinishReview() throws Exception {
-        SubmittedApplication submittedApplication =
-                (SubmittedApplication) createSubmittedApplication((DraftApplication) createDraftApplication(templates[0]));
+        Application submittedApplication = createSubmittedApplication(createDraftApplication(templates[0]));
         User user = submittedApplication.getUser();
         user.setRole(Roles.COMMITTEE_MEMBER);
         submittedApplication.assignCommitteeMember(user);
@@ -1274,17 +1269,18 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldAddCommentsToApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application review = createSubmittedApplication(draft);
         review.setStatus(ApplicationStatus.REVIEW);
-        SubmittedApplication mapped = (SubmittedApplication) createSubmittedApplication(draft);
+        Application mapped = createSubmittedApplication(draft);
         mapped.setStatus(ApplicationStatus.REVIEW);
 
         Comment comment = new Comment(null, null, "comment", "component", new ArrayList<>());
         comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
         mapped.addComment(comment);
 
-        ReviewSubmittedApplicationRequest.Comment requestComment = new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
+        ReviewSubmittedApplicationRequest.Comment requestComment =
+                new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
         requestComment.getSubComments().add(new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment1", "component1", new ArrayList<>(), LocalDateTime.now()));
         ReviewSubmittedApplicationRequest request = new ReviewSubmittedApplicationRequest(APPLICATION_ID, List.of(requestComment));
 
@@ -1391,22 +1387,23 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldApproveApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application reviewed = createSubmittedApplication(draft);
         reviewed.setStatus(ApplicationStatus.REVIEWED);
         Application approved = createSubmittedApplication(draft);
         approved.setStatus(ApplicationStatus.APPROVED);
         Comment finalComment = new Comment();
-        ((SubmittedApplication)approved).setFinalComment(finalComment);
+        finalComment.setUser(createTestUser());
+        approved.setFinalComment(finalComment);
 
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, new ReviewSubmittedApplicationRequest.Comment());
         ApplicationResponse response = ApplicationResponseFactory.buildResponse(approved);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(reviewed);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(reviewed, true, finalComment));
         given(applicationService.approveApplication(reviewed, true, finalComment))
                 .willReturn(approved);
 
@@ -1417,7 +1414,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verify(applicationService).approveApplication(reviewed, true, finalComment);
     }
 
@@ -1426,22 +1423,23 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldRejectApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application reviewed = createSubmittedApplication(draft);
         reviewed.setStatus(ApplicationStatus.REVIEWED);
         Application rejected = createSubmittedApplication(draft);
         rejected.setStatus(ApplicationStatus.APPROVED);
         Comment finalComment = new Comment();
-        ((SubmittedApplication)rejected).setFinalComment(finalComment);
+        finalComment.setUser(createTestUser());
+        rejected.setFinalComment(finalComment);
 
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, false, finalComment);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, false, new ReviewSubmittedApplicationRequest.Comment());
         ApplicationResponse response = ApplicationResponseFactory.buildResponse(rejected);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(reviewed);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(reviewed, false, finalComment));
         given(applicationService.approveApplication(reviewed, false, finalComment))
                 .willReturn(rejected);
 
@@ -1452,7 +1450,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verify(applicationService).approveApplication(reviewed, false, finalComment);
     }
 
@@ -1461,12 +1459,10 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowIfApplicationNotFoundOnApprove() throws Exception {
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(null);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, new ReviewSubmittedApplicationRequest.Comment());
 
-        Comment finalComment = new Comment();
-
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(null, true, new Comment()));
 
         String json = JSON.convertJSON(request);
 
@@ -1475,7 +1471,7 @@ public class ApplicationControllerTest {
                         .content(json))
                 .andExpect(status().isNotFound());
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verifyNoMoreInteractions(applicationService);
     }
 
@@ -1484,19 +1480,20 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInvalidStatusErrorOnApproveApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draft);
         Comment finalComment = new Comment();
+        finalComment.setUser(createTestUser());
 
-        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, finalComment);
+        ApproveApplicationRequest request = new ApproveApplicationRequest(APPLICATION_ID, true, new ReviewSubmittedApplicationRequest.Comment());
         Map<String, Object> response = new HashMap<>();
         response.put(ERROR, INVALID_APPLICATION_STATUS);
 
         String json = JSON.convertJSON(request);
         String result = JSON.convertJSON(response);
 
-        given(applicationService.getApplication(APPLICATION_ID))
-                .willReturn(submitted);
+        given(requestMapper.mapApprovalRequest(request))
+                .willReturn(new MappedApprovalRequest(submitted, true, finalComment));
         doThrow(InvalidStatusException.class).when(applicationService).approveApplication(submitted, true, finalComment);
 
         mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "approve"))
@@ -1506,7 +1503,7 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(result));
 
-        verify(applicationService).getApplication(APPLICATION_ID);
+        verify(requestMapper).mapApprovalRequest(request);
         verify(applicationService).approveApplication(submitted, true, finalComment);
     }
 
@@ -1529,10 +1526,10 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldReferApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application reviewed = createSubmittedApplication(draft);
         reviewed.setStatus(ApplicationStatus.REVIEWED);
-        ReferredApplication referred = (ReferredApplication) createReferredApplication(reviewed);
+        Application referred = createReferredApplication(reviewed);
         User referrer = referred.getReferredBy();
 
         ReferApplicationRequest request = new ReferApplicationRequest(APPLICATION_ID, new ArrayList<>(), REFERRER_USERNAME);
@@ -1563,7 +1560,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowInvalidStatusOnRefer() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application reviewed = createSubmittedApplication(draft);
         User referrer = createTestUser();
         referrer.getAccount().setUsername(REFERRER_USERNAME);
@@ -1596,7 +1593,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowApplicationExceptionOnRefer() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application reviewed = createSubmittedApplication(draft);
         User referrer = createTestUser();
         referrer.getAccount().setUsername(REFERRER_USERNAME);
@@ -1629,7 +1626,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldThrowNotFoundOnReferApplication() throws Exception {
-        DraftApplication draft = (DraftApplication) createDraftApplication(templates[0]);
+        Application draft = createDraftApplication(templates[0]);
         Application reviewed = createSubmittedApplication(draft);
         User referrer = createTestUser();
         referrer.getAccount().setUsername(REFERRER_USERNAME);
@@ -1664,7 +1661,7 @@ public class ApplicationControllerTest {
      */
     @Test
     public void shouldGetTemplateSuccessfully() throws Exception {
-        DraftApplication draftApplication = (DraftApplication) createDraftApplication(templates[0]);
+        Application draftApplication = createDraftApplication(templates[0]);
         ApplicationTemplate template = draftApplication.getApplicationTemplate();
         template.setDatabaseId(TEMPLATE_DB_ID);
 

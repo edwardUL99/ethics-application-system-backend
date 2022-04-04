@@ -123,6 +123,11 @@ public final class Constants {
     public static final String SEARCH_FAILED = "search_failed";
 
     /**
+     * The exportation failed
+     */
+    public static final String EXPORT_FAILED = "export_failed";
+
+    /**
      * This enum provides endpoint constants identifying the endpoints.
      * The endpoint name as seen in the /api/<endpoint> URL can be gotten by Endpoints.endpoint()
      */

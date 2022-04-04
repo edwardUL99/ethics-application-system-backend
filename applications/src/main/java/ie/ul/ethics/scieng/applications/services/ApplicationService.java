@@ -2,6 +2,7 @@ package ie.ul.ethics.scieng.applications.services;
 
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
+import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
@@ -10,6 +11,7 @@ import ie.ul.ethics.scieng.users.models.User;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This interface represents a service for interacting with applications
@@ -102,10 +104,18 @@ public interface ApplicationService {
      * @param application the application to assign the committee members to
      * @param committeeMembers the list of committee members to assign
      * @return the application after updating it
-     * @throws ApplicationException if the status is incorrect or an exception with message
      * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
      */
     Application assignCommitteeMembers(Application application, List<User> committeeMembers) throws ApplicationException;
+
+    /**
+     * Unassign the user from the committee member
+     * @param application the application to remove the member from
+     * @param username the username of the committee member to remove
+     * @return the modified application
+     * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
+     */
+    Application unassignCommitteeMember(Application application, String username) throws ApplicationException;
 
     /**
      * Accept an application that has been re-submitted and assign the list of committee members to the application.
@@ -169,4 +179,13 @@ public interface ApplicationService {
      * @return the list of found applications
      */
     List<Application> search(Specification<Application> specification);
+
+    /**
+     * Patch the answers of the application. If an answer with the same component ID exists, it is replaced, else it is
+     * added
+     * @param application the application to patch
+     * @param answers the answers to patch
+     * @return the patched application
+     */
+    Application patchAnswers(Application application, Map<String, Answer> answers);
 }

@@ -6,12 +6,12 @@ import ie.ul.ethics.scieng.applications.exceptions.MappingException;
 import ie.ul.ethics.scieng.applications.models.*;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ids.ApplicationIDPolicy;
 import ie.ul.ethics.scieng.applications.models.mapping.AcceptResubmittedRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.ApplicationRequestMapper;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedAcceptResubmittedRequest;
+import ie.ul.ethics.scieng.applications.models.mapping.MappedApprovalRequest;
 import ie.ul.ethics.scieng.applications.models.mapping.MappedReferApplicationRequest;
 import ie.ul.ethics.scieng.applications.search.ApplicationSpecification;
 import ie.ul.ethics.scieng.applications.search.DraftApplicationSpecification;
@@ -201,14 +201,14 @@ public class ApplicationController implements SearchController<ApplicationRespon
      * @return the response body
      */
     private ResponseEntity<?> createDraftApplicationInternal(CreateDraftApplicationRequest request) {
-        DraftApplication draftApplication = requestMapper.createDraftRequestToDraft(request);
+        Application draftApplication = requestMapper.createDraftRequestToDraft(request);
         draftApplication.setApplicationId(this.applicationIDPolicy.generate());
 
         if (draftApplication.getUser() == null) {
             return respondError(USER_NOT_FOUND);
         } else {
             Application application = applicationService.createApplication(draftApplication, false);
-            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse((DraftApplication) application));
+            return ResponseEntity.status(HttpStatus.CREATED).body(new CreateDraftApplicationResponse(application));
         }
     }
 
@@ -234,11 +234,10 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     private ResponseEntity<?> updateInternal(Application application) {
         try {
-            Map<String, Object> response = new HashMap<>();
             applicationService.createApplication(application, true);
-            response.put(MESSAGE, APPLICATION_UPDATED);
-            response.put("answers", application.getAnswers());
-            response.put("lastUpdated", application.getLastUpdated());
+
+            UpdateDraftApplicationResponse response =
+                    new UpdateDraftApplicationResponse(APPLICATION_UPDATED, application.getAnswers(), application.getLastUpdated(), application.getAttachedFiles());
 
             return ResponseEntity.ok(response);
         } catch (IllegalStateException ex) {
@@ -273,6 +272,24 @@ public class ApplicationController implements SearchController<ApplicationRespon
         } catch (MappingException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * A means to patch the answers provided on an application
+     * @param request the request to patch the answers
+     * @return the response body
+     */
+    @PatchMapping("/answers")
+    public ResponseEntity<?> patchAnswers(@RequestBody PatchAnswersRequest request) {
+        Application application = applicationService.getApplication(request.getId());
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            application = applicationService.patchAnswers(application, request.getAnswers());
+
+            return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
         }
     }
 
@@ -325,7 +342,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
             } else {
                 try {
                     Application assigned = this.applicationService.assignCommitteeMembers(application, members);
-                    return ResponseEntity.ok(new AssignMembersResponse((SubmittedApplication) assigned));
+                    return ResponseEntity.ok(new AssignMembersResponse(assigned));
                 } catch (InvalidStatusException ex) {
                     ex.printStackTrace();
                     return respondError(INVALID_APPLICATION_STATUS);
@@ -338,6 +355,29 @@ public class ApplicationController implements SearchController<ApplicationRespon
                         return respondError(ex.getMessage());
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * The endpoint for unassigning a committee member from the application
+     * @param username the username of the committee member to remove
+     * @param id the ID of the application
+     * @return the response body
+     */
+    @PostMapping("/unassign/{username}")
+    public ResponseEntity<?> unassignCommitteeMember(@PathVariable String username, @RequestParam String id) {
+        Application application = this.applicationService.getApplication(id);
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            try {
+                application = this.applicationService.unassignCommitteeMember(application, username);
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+            } catch (InvalidStatusException ex) {
+                return respondError(INVALID_APPLICATION_STATUS);
             }
         }
     }
@@ -399,7 +439,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PutMapping("/review")
     public ResponseEntity<?> reviewApplication(@RequestBody @Valid ReviewSubmittedApplicationRequest request) {
         try {
-            SubmittedApplication mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
+            Application mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
 
             if (mapped == null) {
                 return ResponseEntity.notFound().build();
@@ -447,12 +487,14 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/approve")
     public ResponseEntity<?> approveApplication(@RequestBody @Valid ApproveApplicationRequest request) {
         try {
-            Application application = applicationService.getApplication(request.getId());
+            MappedApprovalRequest mapped = requestMapper.mapApprovalRequest(request);
+            Application application = mapped.getApplication();
+            Comment finalComment;
 
-            if (application == null) {
+            if (application == null || ((finalComment = mapped.getFinalComment()) != null && finalComment.getUser() == null)) {
                 return ResponseEntity.notFound().build();
             } else {
-                application = applicationService.approveApplication(application, request.isApprove(), request.getFinalComment());
+                application = applicationService.approveApplication(application, mapped.isApprove(), finalComment);
 
                 return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
             }

@@ -1,10 +1,14 @@
 package ie.ul.ethics.scieng.applications.services;
 
+import ie.ul.ethics.scieng.applications.email.ApplicationsEmailService;
 import ie.ul.ethics.scieng.applications.exceptions.ApplicationException;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
+import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
@@ -12,16 +16,23 @@ import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
 import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTemplateRepository;
+import ie.ul.ethics.scieng.files.exceptions.FileException;
+import ie.ul.ethics.scieng.files.services.FileService;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,6 +46,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @CacheConfig(cacheNames = "applications")
+@Log4j2
 public class ApplicationServiceImpl implements ApplicationService {
     /**
      * The template repository for saving application templates
@@ -48,19 +60,37 @@ public class ApplicationServiceImpl implements ApplicationService {
      * The loader for loading application templates
      */
     private final ApplicationTemplateLoader templateLoader;
+    /**
+     * The email service to use for sending notification e-mails
+     */
+    private final ApplicationsEmailService emailService;
+    /**
+     * The service for interacting with files
+     */
+    private final FileService fileService;
+    /**
+     * The entity manager for interacting with entity API
+     */
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * Create an ApplicationServiceImpl
      * @param templateRepository the template repository for saving application templates
      * @param applicationRepository the repository for saving and loading applications
      * @param templateLoader the loader for application template loading
+     * @param emailService the service for sending applications notifications
+     * @param fileService the service for interacting with files
      */
     @Autowired
     public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository,
-                                  ApplicationTemplateLoader templateLoader) {
+                                  ApplicationTemplateLoader templateLoader, @Qualifier("applicationsEmail") ApplicationsEmailService emailService,
+                                  FileService fileService) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
         this.templateLoader = templateLoader;
+        this.emailService = emailService;
+        this.fileService = fileService;
     }
 
     /**
@@ -129,7 +159,6 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         return applications.stream()
                 .filter(a -> a instanceof SubmittedApplication)
-                .map(a -> (SubmittedApplication)a)
                 .filter(a -> a.getAssignedCommitteeMembers()
                         .stream()
                         .map(m -> m.getUser().getUsername())
@@ -166,11 +195,14 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true),
             @CacheEvict(value = "template", allEntries = true)
     })
+    @Transactional
     public Application createApplication(Application application, boolean update) {
         if (update && application.getId() == null)
             throw new ApplicationException("You cannot update an Application that has no ID");
 
-        templateRepository.save(application.getApplicationTemplate());
+        ApplicationTemplate template = application.getApplicationTemplate();
+
+        templateRepository.save(template);
 
         application.setLastUpdated(LocalDateTime.now());
         applicationRepository.save(application);
@@ -218,6 +250,18 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
+     * Get the attached files from the application to attach to a new application
+     * @param application the application to map attachments from
+     * @return the list of attachments
+     */
+    private List<AttachedFile> getAttachedFiles(Application application) {
+        return application.getAttachedFiles()
+                .stream()
+                .peek(file -> file.setId(null))
+                .collect(Collectors.toList());
+    }
+
+    /**
      * Submit an application from the applicant to the committee and convert the application to a submitted state.
      * The draft instance of the application will be removed and replaced with the submitted instance. The database IDs
      * will differ but the applicationId field will remain the same.
@@ -232,6 +276,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "user_applications", allEntries = true),
             @CacheEvict(value = "status_applications", allEntries = true)
     })
+    @Transactional
     public Application submitApplication(Application application) throws InvalidStatusException {
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
         ApplicationStatus status = application.getStatus();
@@ -240,22 +285,21 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (status == null || !permissible.contains(status))
             throw new InvalidStatusException("The status of an application being submitted must belong to the set: " + permissible);
 
-        SubmittedApplication submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
+        Application submittedApplication = new SubmittedApplication(null, application.getApplicationId(), application.getUser(),
                 ApplicationStatus.SUBMITTED, application.getApplicationTemplate(), answers,
-                new ArrayList<>(), new ArrayList<>(), null);
+                getAttachedFiles(application), new ArrayList<>(), new ArrayList<>(), null);
 
         if (status == ApplicationStatus.REFERRED) {
-            ReferredApplication referred = (ReferredApplication) application;
-            submittedApplication.assignCommitteeMember(referred.getReferredBy());
-            referred.getAssignedCommitteeMembers().forEach(u -> referred.assignCommitteeMember(u.getUser()));
+            application.getAssignedCommitteeMembers().forEach(u -> submittedApplication.assignCommitteeMember(u.getUser()));
             submittedApplication.setStatus(ApplicationStatus.RESUBMITTED);
             submittedApplication.assignCommitteeMembersToPrevious();
+            submittedApplication.setComments(mapComments(application.getComments()));
         }
-
-        applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
 
         submittedApplication.setLastUpdated(LocalDateTime.now());
         submittedApplication.setSubmittedTime(LocalDateTime.now());
+        applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
+        entityManager.flush();
         applicationRepository.save(submittedApplication);
 
         return submittedApplication;
@@ -279,19 +323,46 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
             throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-
         for (User user : committeeMembers) {
             try {
-                submitted.assignCommitteeMember(user);
+                application.assignCommitteeMember(user);
             } catch (ApplicationException ex) {
                 throw new ApplicationException(CANT_REVIEW, ex);
             }
         }
 
-        this.createApplication(submitted, true);
+        this.createApplication(application, true);
 
-        return submitted;
+        return application;
+    }
+
+    /**
+     * Unassign the user from the committee member
+     *
+     * @param application the application to remove the member from
+     * @param username    the username of the committee member to remove
+     * @return the modified application
+     * @throws ApplicationException if the status is incorrect or no committee member with username is assigned
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application unassignCommitteeMember(Application application, String username) throws ApplicationException {
+        if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
+            throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
+
+        List<AssignedCommitteeMember> assigned = application.getAssignedCommitteeMembers()
+                .stream()
+                .filter(a -> !a.getUser().getUsername().equals(username))
+                .collect(Collectors.toList());
+
+        application.setAssignedCommitteeMembers(assigned);
+        createApplication(application, true);
+
+        return application;
     }
 
     /**
@@ -313,16 +384,15 @@ public class ApplicationServiceImpl implements ApplicationService {
         if (application.getStatus() != ApplicationStatus.RESUBMITTED)
             throw new InvalidStatusException("The application status must be " + ApplicationStatus.RESUBMITTED + " to use this method");
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
         application.setStatus(ApplicationStatus.REVIEW);
-        committeeMembers.forEach(submitted::assignCommitteeMember);
-        submitted.clearPreviousCommitteeMembers();
+        committeeMembers.forEach(application::assignCommitteeMember);
+        application.clearPreviousCommitteeMembers();
 
-        submitted.setLastUpdated(LocalDateTime.now());
+        application.setLastUpdated(LocalDateTime.now());
 
-        applicationRepository.save(submitted);
+        applicationRepository.save(application);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -341,13 +411,17 @@ public class ApplicationServiceImpl implements ApplicationService {
     public Application reviewApplication(Application application, boolean finishReview) throws InvalidStatusException {
         ApplicationStatus status = application.getStatus();
 
-        if (!finishReview && status != ApplicationStatus.SUBMITTED)
+        if (!finishReview && status != ApplicationStatus.SUBMITTED && status != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("You can only set an application to " + ApplicationStatus.REVIEW + " if it is in the "
-                + ApplicationStatus.SUBMITTED + " status");
+                + ApplicationStatus.SUBMITTED + " or " + ApplicationStatus.REVIEWED + " status");
         else if (finishReview && status != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("To finish a review, the application must be in the status " + ApplicationStatus.REVIEW);
 
         application.setStatus((finishReview) ? ApplicationStatus.REVIEWED:ApplicationStatus.REVIEW);
+        application.getAssignedCommitteeMembers().forEach(a -> {
+            if (finishReview)
+                a.setFinishReview(true);
+        });
         createApplication(application, true);
 
         return application;
@@ -368,20 +442,19 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "status_applications", allEntries = true)
     })
     public Application markMemberReviewComplete(Application application, String member) throws InvalidStatusException {
-        if (application.getStatus() != ApplicationStatus.SUBMITTED)
+        if (application.getStatus() != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("You can only mark a committee member as having finished their review on an application in " +
-                    "the status " + ApplicationStatus.SUBMITTED);
+                    "the status " + ApplicationStatus.REVIEW);
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
-        submitted.getAssignedCommitteeMembers()
+        application.getAssignedCommitteeMembers()
                 .stream()
                 .filter(u -> u.getUser().getUsername().equals(member))
                 .filter(u -> u.getUser().getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
                 .findFirst().ifPresent(assigned -> assigned.setFinishReview(true));
 
-        this.createApplication(submitted, true);
+        this.createApplication(application, true);
 
-        return submitted;
+        return application;
     }
 
     /**
@@ -406,10 +479,11 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         ApplicationStatus target = (approve) ? ApplicationStatus.APPROVED:ApplicationStatus.REJECTED;
         application.setStatus(target);
-        SubmittedApplication submittedApplication = (SubmittedApplication) application;
-        submittedApplication.setFinalComment(finalComment);
-        submittedApplication.setApprovalTime((approve) ? LocalDateTime.now():null);
+        application.setFinalComment(finalComment);
+        application.setApprovalTime((approve) ? LocalDateTime.now():null);
         createApplication(application, true);
+
+        emailService.sendApplicationApprovalEmail(application);
 
         return application;
     }
@@ -418,9 +492,12 @@ public class ApplicationServiceImpl implements ApplicationService {
      * Map comments to a way where they're able to be saved without detached instance exceptions
      * @param comments the comments to map
      */
-    private Map<String, Comment> mapComments(Map<String, Comment> comments) {
-        Map<String, Comment> mapped = new HashMap<>(comments);
-        mapped.forEach((k, v) -> v.setId(null));
+    private Map<String, ApplicationComments> mapComments(Map<String, ApplicationComments> comments) {
+        Map<String, ApplicationComments> mapped = new HashMap<>(comments);
+        mapped.forEach((k, v) -> {
+            v.setId(null);
+            v.getComments().forEach(c -> c.setId(null));
+        });
 
         return mapped;
     }
@@ -441,31 +518,37 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "user_applications", allEntries = true),
             @CacheEvict(value = "status_applications", allEntries = true)
     })
+    @Transactional
     public Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException {
-        // TODO here, you will trigger the email notification that the application has been referred to the user
-
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To refer an application, its status must be " + ApplicationStatus.REVIEWED);
 
-        SubmittedApplication submitted = (SubmittedApplication) application;
+        Map<String, ApplicationComments> comments = mapComments(application.getComments());
+        Comment finalComment = application.getFinalComment();
 
-        Map<String, Comment> comments = mapComments(submitted.getComments());
-        Comment finalComment = submitted.getFinalComment();
-
-        if (finalComment != null) {
+        if (finalComment != null)
             finalComment.setId(null);
-        }
 
-        Map<String, Answer> answers = mapAnswers(submitted.getAnswers());
+        Map<String, Answer> answers = mapAnswers(application.getAnswers());
 
-        ReferredApplication referredApplication =
+        List<AssignedCommitteeMember> assigned = application.getAssignedCommitteeMembers()
+                .stream()
+                .peek(a -> a.setId(null))
+                .collect(Collectors.toList());
+
+        Application referredApplication =
                 new ReferredApplication(null, application.getApplicationId(), application.getUser(), application.getApplicationTemplate(),
-                        answers, new ArrayList<>(comments.values()), submitted.getAssignedCommitteeMembers(), finalComment,
+                        answers, getAttachedFiles(application), new ArrayList<>(comments.values()), assigned, finalComment,
                         editableFields, referrer);
 
-        applicationRepository.delete(application);
-        applicationRepository.save(referredApplication);
         referredApplication.setLastUpdated(LocalDateTime.now());
+        referredApplication.setSubmittedTime(application.getSubmittedTime());
+
+        applicationRepository.delete(application);
+        entityManager.flush();
+        applicationRepository.save(referredApplication);
+
+        emailService.sendApplicationReferredEmail(application, referrer);
 
         return referredApplication;
     }
@@ -484,6 +567,14 @@ public class ApplicationServiceImpl implements ApplicationService {
     public void deleteApplication(Application application) {
         this.applicationRepository.delete(application);
         this.templateRepository.delete(application.getApplicationTemplate());
+
+        for (AttachedFile attachedFile : application.getAttachedFiles()) {
+            try {
+                this.fileService.deleteFile(attachedFile.getFilename(), attachedFile.getDirectory(), attachedFile.getUsername());
+            } catch (FileException ex) {
+                log.error(ex);
+            }
+        }
     }
 
     /**
@@ -495,5 +586,38 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public List<Application> search(Specification<Application> specification) {
         return this.applicationRepository.findAll(specification);
+    }
+
+    /**
+     * Patch the answers of the application. If an answer with the same component ID exists, it is replaced, else it is
+     * added
+     *
+     * @param application the application to patch
+     * @param answers     the answers to patch
+     * @return the patched application
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application patchAnswers(Application application, Map<String, Answer> answers) {
+        Map<String, Answer> applicationAnswers = application.getAnswers();
+
+        for (Map.Entry<String, Answer> e : answers.entrySet()) {
+            String key = e.getKey();
+
+            if (!applicationAnswers.containsKey(key)) {
+                applicationAnswers.put(key, e.getValue());
+            } else {
+                Answer saved = applicationAnswers.get(key);
+                Answer newAnswer = e.getValue();
+                newAnswer.setId(saved.getId());
+                applicationAnswers.put(key, newAnswer);
+            }
+        }
+
+        return createApplication(application, true);
     }
 }

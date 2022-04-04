@@ -1,8 +1,8 @@
 package ie.ul.ethics.scieng.applications.models;
 
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
+import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
-import ie.ul.ethics.scieng.applications.models.applications.DraftApplication;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -54,7 +54,7 @@ public class CreateDraftApplicationResponse {
      * Create the response from the provided draft application
      * @param draftApplication the application to make the response from
      */
-    public CreateDraftApplicationResponse(DraftApplication draftApplication) {
+    public CreateDraftApplicationResponse(Application draftApplication) {
         this.dbId = draftApplication.getId();
         this.id = draftApplication.getApplicationId();
         this.username = draftApplication.getUser().getUsername();

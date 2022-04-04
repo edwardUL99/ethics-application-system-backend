@@ -69,7 +69,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     /**
      * Expose the authentication manager as a bean
      * @return auth manager
-     * @throws Exception
      */
     @Override
     @Bean
@@ -90,6 +89,7 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedOrigins(Collections.singletonList(frontendURL));
         corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
+        corsConfiguration.setExposedHeaders(Collections.singletonList("*"));
         List<String> allowedMethods= List.of("GET", "POST", "PUT", "HEAD", "PATCH", "DELETE");
         corsConfiguration.setAllowedMethods(allowedMethods);
 
@@ -101,7 +101,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                         createApiPath(Endpoint.AUTHENTICATION, "account", "confirm"),
                         createApiPath(Endpoint.AUTHENTICATION, true, "account", "confirm", "resend"),
                         createApiPath(Endpoint.AUTHENTICATION, true, "forgot-password"),
-                        createApiPath(Endpoint.AUTHENTICATION, "reset-password")
+                        createApiPath(Endpoint.AUTHENTICATION, "reset-password"),
+                        createApiPath(Endpoint.EXPORT, true, "download")
                 ).permitAll()
                 .anyRequest().authenticated()
                 .and()

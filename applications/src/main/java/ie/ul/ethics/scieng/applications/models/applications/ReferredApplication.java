@@ -5,7 +5,6 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
-import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -58,7 +57,7 @@ public class ReferredApplication extends SubmittedApplication {
      * @param referredBy               the user that referred the application (must have ADMIN permission)
      */
     public ReferredApplication(Long id, String applicationId, User user,
-                               ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<Comment> comments,
+                               ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<ApplicationComments> comments,
                                List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
         this(id, applicationId, user, applicationTemplate, answers, new ArrayList<>(), comments, assignedCommitteeMembers,
                 finalComment, editableFields, referredBy);
@@ -80,7 +79,7 @@ public class ReferredApplication extends SubmittedApplication {
      * @param referredBy               the user that referred the application (must have ADMIN permission)
      */
     public ReferredApplication(Long id, String applicationId, User user,
-                               ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles, List<Comment> comments,
+                               ApplicationTemplate applicationTemplate, Map<String, Answer> answers, List<AttachedFile> attachedFiles, List<ApplicationComments> comments,
                                List<AssignedCommitteeMember> assignedCommitteeMembers, Comment finalComment, List<String> editableFields, User referredBy) {
         super(id, applicationId, user, ApplicationStatus.REFERRED, applicationTemplate, answers, attachedFiles, comments, assignedCommitteeMembers, finalComment);
         this.editableFields = editableFields;
@@ -126,12 +125,7 @@ public class ReferredApplication extends SubmittedApplication {
     @Override
     public ReferredApplication clean(User user) {
         ReferredApplication application = copy();
-        Collection<Permission> permissions = user.getRole().getPermissions();
-
-        if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
-            application.comments.clear();
-            application.finalComment = null;
-        }
+        application.comments = filterComments(application.comments, user.getRole().getPermissions());
 
         return application;
     }
@@ -144,9 +138,14 @@ public class ReferredApplication extends SubmittedApplication {
      */
     @Override
     public ReferredApplication copy() {
-        return new ReferredApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(attachedFiles.values()), new ArrayList<>(comments.values()),
+        ReferredApplication referred = new ReferredApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers),
+                new ArrayList<>(attachedFiles), new ArrayList<>(comments.values()),
                 new ArrayList<>(assignedCommitteeMembers), finalComment, new ArrayList<>(editableFields), referredBy);
+        referred.setLastUpdated(lastUpdated);
+        referred.setApprovalTime(approvalTime);
+        referred.setSubmittedTime(submittedTime);
+
+        return referred;
     }
 
     /**

@@ -3,15 +3,16 @@ package ie.ul.ethics.scieng.applications.models;
 import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.annotations.ApplicationResponseRegistration;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.ApplicationComments;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
-import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,12 +27,12 @@ import java.util.stream.Collectors;
 @ApplicationResponseRegistration(status = {
         ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
         ApplicationStatus.APPROVED, ApplicationStatus.REJECTED
-}, applicationClass = SubmittedApplication.class)
+})
 public class SubmittedApplicationResponse extends ApplicationResponse {
     /**
      * The comments left on the submitted application
      */
-    private Map<String, Comment> comments;
+    private Map<String, ApplicationComments> comments;
     /**
      * The list of usernames of the assigned committee members
      */
@@ -40,21 +41,31 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
      * The final comment left on the application if it is approved/rejected
      */
     private Comment finalComment;
+    /**
+     * The timestamp of when the application was submitted
+     */
+    private LocalDateTime submittedTime;
+    /**
+     * The timestamp of when the application was approved/rejected
+     */
+    private LocalDateTime approvalTime;
 
     /**
      * Create a response from the application
      *
      * @param application the application to create the response from
      */
-    public SubmittedApplicationResponse(SubmittedApplication application) {
+    public SubmittedApplicationResponse(Application application) {
         super(application);
 
         this.comments = application.getComments();
         this.assignedCommitteeMembers = application.getAssignedCommitteeMembers()
                 .stream()
-                .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getUser().getUsername(), u.isFinishReview()))
+                .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getApplicationId(), u.getUser().getUsername(), u.isFinishReview()))
                 .collect(Collectors.toList());
         this.finalComment = application.getFinalComment();
+        this.submittedTime = application.getSubmittedTime();
+        this.approvalTime = application.getApprovalTime();
     }
 
     /**
@@ -86,6 +97,10 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
          * The database ID
          */
         private Long id;
+        /**
+         * The ID of the application the member is assigned to
+         */
+        private String applicationId;
         /**
          * The username of the committee member
          */

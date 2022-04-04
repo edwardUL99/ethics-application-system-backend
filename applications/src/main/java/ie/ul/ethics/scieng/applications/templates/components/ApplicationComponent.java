@@ -4,7 +4,6 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
-import org.jetbrains.annotations.NotNull;
 
 import javax.persistence.*;
 import java.util.UUID;
@@ -69,7 +68,7 @@ public abstract class ApplicationComponent implements Comparable<ApplicationComp
      * Compares based on databaseId
      */
     @Override
-    public int compareTo(@NotNull ApplicationComponent o) {
+    public int compareTo(ApplicationComponent o) {
         if (databaseId == null && o.databaseId == null) {
             return 0;
         } else if (databaseId != null && o.databaseId != null) {
