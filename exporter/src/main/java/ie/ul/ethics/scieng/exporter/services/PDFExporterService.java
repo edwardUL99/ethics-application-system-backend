@@ -90,7 +90,6 @@ public class PDFExporterService implements ExporterService {
      * @return the input stream representing the rendered PDF
      */
     private InputStream renderApplication(Application application) {
-        // TODO comments on questions will have to be rendered too, and assigned committee members in application info
         ApplicationRenderer renderer = new ApplicationRenderer(application);
         return renderer.render();
     }
@@ -208,7 +207,11 @@ public class PDFExporterService implements ExporterService {
         Path attachments = exportedDirectory.resolve("attachments");
 
         if (Files.exists(attachments) && Files.list(attachments).findAny().isPresent()) {
-            tempDir = getTempDir();
+            tempDir = getTempDir().resolve("attachments");
+
+            if (Files.exists(tempDir) && Files.list(tempDir).findAny().isPresent())
+                Files.delete(tempDir);
+
             Path moved = Files.move(attachments, tempDir, StandardCopyOption.REPLACE_EXISTING);
             Zip.zipFile(exportedDirectory.resolve("attachments.zip").toString(), moved.toFile());
         }

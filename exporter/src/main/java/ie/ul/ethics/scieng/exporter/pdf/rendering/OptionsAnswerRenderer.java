@@ -23,6 +23,7 @@ public class OptionsAnswerRenderer implements AnswerRenderer {
             throw new IllegalArgumentException("Invalid answer type " + valueType);
         } else {
             List list = new List(false, 10);
+            list.setListSymbol("•");
             String[] split = answer.getValue().split(",");
 
             for (String value : split) {

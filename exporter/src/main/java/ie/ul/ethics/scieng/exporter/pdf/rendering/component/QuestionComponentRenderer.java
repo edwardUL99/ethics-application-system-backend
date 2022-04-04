@@ -62,6 +62,11 @@ public class QuestionComponentRenderer implements ComponentRenderer {
         paragraph.add(renderAnswer(answer));
         paragraph.add(Chunk.NEWLINE);
 
+        Element comments = CommentsRenderer.renderComments(application, component);
+
+        if (comments != null)
+            paragraph.add(comments);
+
         return paragraph;
     }
 

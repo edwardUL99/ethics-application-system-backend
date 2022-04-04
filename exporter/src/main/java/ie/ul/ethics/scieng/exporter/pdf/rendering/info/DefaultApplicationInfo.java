@@ -45,7 +45,7 @@ public class DefaultApplicationInfo implements ApplicationInfo {
      * @param size font size
      * @return the element representing the title
      */
-    private Paragraph createTitle(String text, int size) {
+    protected Paragraph createTitle(String text, int size) {
         Paragraph title = new Paragraph();
         title.add(new Chunk(text, FontFactory.getFont(FontFactory.COURIER_BOLD, size, BaseColor.BLACK)));
         title.add(Chunk.NEWLINE);

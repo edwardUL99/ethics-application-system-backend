@@ -1,15 +1,22 @@
 package ie.ul.ethics.scieng.exporter.pdf.rendering.info;
 
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chapter;
 import com.itextpdf.text.Chunk;
+import com.itextpdf.text.Element;
+import com.itextpdf.text.FontFactory;
+import com.itextpdf.text.List;
+import com.itextpdf.text.ListItem;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Section;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
+import ie.ul.ethics.scieng.applications.models.applications.AssignedCommitteeMember;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.users.models.User;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 
 public class SubmittedApplicationInfo extends DefaultApplicationInfo {
     /**
@@ -27,6 +34,30 @@ public class SubmittedApplicationInfo extends DefaultApplicationInfo {
             paragraph.add(new Chunk(user.getName() + " - " + user.getUsername(), BOLD));
             paragraph.add(new Chunk(finalComment.getCreatedAt().format(DATE_FORMAT), NORMAL));
             paragraph.add(new Chunk(finalComment.getComment(), NORMAL));
+        }
+    }
+
+    /**
+     * Render the list of assigned committee members
+     * @param chapter the chapter to add the section to
+     * @param assigned the list of assigned committee members
+     */
+    private void renderAssignedCommitteeMembers(Chapter chapter, Collection<AssignedCommitteeMember> assigned) {
+        if (assigned.size() > 0) {
+            Paragraph title = createTitle("Assigned Committee Members", 18);
+            Section section = chapter.addSection(title);
+
+            List assignedList = new List();
+            assignedList.setListSymbol("•");
+
+            for (AssignedCommitteeMember member : assigned) {
+                User user = member.getUser();
+                Chunk chunk = new Chunk(String.format("%s - %s - %s", user.getName(), user.getUsername(), (member.isFinishReview()) ? "Finished Review" : "Reviewing"),
+                        FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK));
+                assignedList.add(new ListItem(chunk));
+            }
+
+            section.add(assignedList);
         }
     }
 
@@ -58,5 +89,7 @@ public class SubmittedApplicationInfo extends DefaultApplicationInfo {
 
             renderFinalComment(application.getFinalComment(), chapter);
         }
+
+        renderAssignedCommitteeMembers(chapter, application.getAssignedCommitteeMembers());
     }
 }
