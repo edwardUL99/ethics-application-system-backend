@@ -276,6 +276,24 @@ public class ApplicationController implements SearchController<ApplicationRespon
     }
 
     /**
+     * A means to patch the answers provided on an application
+     * @param request the request to patch the answers
+     * @return the response body
+     */
+    @PatchMapping("/answers")
+    public ResponseEntity<?> patchAnswers(@RequestBody PatchAnswersRequest request) {
+        Application application = applicationService.getApplication(request.getId());
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            application = applicationService.patchAnswers(application, request.getAnswers());
+
+            return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+        }
+    }
+
+    /**
      * This endpoint represents the submission point for a draft or referred application
      * @param request the submission request
      * @return the response body

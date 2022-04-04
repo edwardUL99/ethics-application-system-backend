@@ -24,4 +24,26 @@ public class NoopEmailSender implements EmailSender {
     public void sendEmail(String to, String subject, String email, File... attachments) throws EmailException {
         log.info("No-op implementation of EmailSender. Not sending email");
     }
+
+    /**
+     * Send the advanced email by building it and sending it
+     *
+     * @param advancedEmail the email to build and send
+     * @throws EmailException if an error occurs sending the email
+     */
+    @Override
+    public void sendEmail(AdvancedEmail advancedEmail) throws EmailException {
+        log.info("No-op implementation of EmailSender. Not sending email");
+    }
+
+    /**
+     * Instantiate an instance of AdvancedEmail by passing in an instance of Session
+     *
+     * @return the advanced email instance
+     */
+    @Override
+    public AdvancedEmail createAdvancedEmail() {
+        log.info("No-op implementation of EmailSender. Not sending email");
+        return null;
+    }
 }
