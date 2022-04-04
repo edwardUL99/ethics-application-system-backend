@@ -409,6 +409,9 @@ public class ApplicationServiceTest {
     public void shouldCreateApplication() {
         Application application = createDraftApplication(getTemplate());
 
+        given(applicationRepository.save(application))
+                .willReturn(application);
+
         Application created = applicationService.createApplication(application, false);
 
         assertEquals(application, created);
@@ -426,6 +429,9 @@ public class ApplicationServiceTest {
         draftApplication.setApplicationId(APPLICATION_ID);
         LocalDateTime now = LocalDateTime.now();
         draftApplication.setLastUpdated(now);
+
+        given(applicationRepository.save(draftApplication))
+                .willReturn(draftApplication);
 
         Application created = applicationService.createApplication(draftApplication, true);
 
@@ -522,16 +528,16 @@ public class ApplicationServiceTest {
         Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
 
+        given(applicationRepository.save(any()))
+                .willReturn(submitted);
+
         Application returned = applicationService.submitApplication(draftApplication);
-        submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
         assertEquals(ApplicationStatus.SUBMITTED, returned.getStatus());
-        assertNotNull(returned.getLastUpdated());
-        assertNotNull(returned.getSubmittedTime());
         assertEquals(draftApplication.getApplicationId(), returned.getApplicationId());
         verify(applicationRepository).delete(draftApplication);
-        verify(applicationRepository).save(submitted);
+        verify(applicationRepository).save(any());
     }
 
     /**
@@ -551,14 +557,15 @@ public class ApplicationServiceTest {
         submitted.setStatus(ApplicationStatus.RESUBMITTED);
         submitted.assignCommitteeMembersToPrevious();
 
+        given(applicationRepository.save(any()))
+                .willReturn(submitted);
+
         Application returned = applicationService.submitApplication(referred);
-        submitted.setSubmittedTime(returned.getSubmittedTime());
 
         assertEquals(submitted, returned);
         assertEquals(ApplicationStatus.RESUBMITTED, returned.getStatus());
-        assertNotNull(returned.getSubmittedTime());
         verify(applicationRepository).delete(referred);
-        verify(applicationRepository).save(submitted);
+        verify(applicationRepository).save(any());
     }
 
     /**
@@ -584,6 +591,9 @@ public class ApplicationServiceTest {
         user.setRole(Roles.COMMITTEE_MEMBER);
 
         List<User> users = List.of(user);
+
+        given(applicationRepository.save(submitted))
+                .willReturn(submitted);
 
         Application returned = applicationService.assignCommitteeMembers(submitted, users);
 
@@ -636,6 +646,9 @@ public class ApplicationServiceTest {
 
         assertTrue(submitted.getPreviousCommitteeMembers().contains(referrer));
 
+        given(applicationRepository.save(any()))
+                .willReturn(submitted);
+
         Application returned = applicationService.acceptResubmitted(submitted, List.of(referrer));
 
         boolean containsReferrer = returned.getAssignedCommitteeMembers().stream()
@@ -666,17 +679,16 @@ public class ApplicationServiceTest {
         Application draftApplication = createDraftApplication(templates[0]);
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setId(APPLICATION_DB_ID);
-        Application inReview = createSubmittedApplication(draftApplication);
-        inReview.setId(APPLICATION_DB_ID);
-        inReview.setStatus(ApplicationStatus.REVIEW);
+
+        given(applicationRepository.save(submitted))
+                .willReturn(submitted);
 
         assertEquals(ApplicationStatus.SUBMITTED, submitted.getStatus());
 
         Application returned = applicationService.reviewApplication(submitted, false);
 
-        assertSame(submitted, returned);
         assertEquals(ApplicationStatus.REVIEW, returned.getStatus());
-        verify(applicationRepository).save(inReview);
+        verify(applicationRepository).save(submitted);
     }
 
     /**
@@ -688,9 +700,9 @@ public class ApplicationServiceTest {
         Application submitted = createSubmittedApplication(draftApplication);
         submitted.setId(APPLICATION_DB_ID);
         submitted.setStatus(ApplicationStatus.REVIEW);
-        Application inReview = createSubmittedApplication(draftApplication);
-        inReview.setId(APPLICATION_DB_ID);
-        inReview.setStatus(ApplicationStatus.REVIEWED);
+
+        given(applicationRepository.save(submitted))
+                .willReturn(submitted);
 
         assertEquals(ApplicationStatus.REVIEW, submitted.getStatus());
 
@@ -698,7 +710,7 @@ public class ApplicationServiceTest {
 
         assertSame(submitted, returned);
         assertEquals(ApplicationStatus.REVIEWED, returned.getStatus());
-        verify(applicationRepository).save(inReview);
+        verify(applicationRepository).save(submitted);
     }
 
     /**
@@ -739,6 +751,9 @@ public class ApplicationServiceTest {
 
         assertFalse(assigned.isFinishReview());
 
+        given(applicationRepository.save(submittedApplication))
+                .willReturn(submittedApplication);
+
         Application returned = applicationService.markMemberReviewComplete(submittedApplication, USERNAME);
 
         assertSame(returned, submittedApplication);
@@ -763,26 +778,25 @@ public class ApplicationServiceTest {
         Comment finalComment = new Comment();
         saved.setFinalComment(finalComment);
 
-        Application returned = applicationService.approveApplication(submitted, true, finalComment);
-        LocalDateTime approvalTime = returned.getApprovalTime();
+        given(applicationRepository.save(any()))
+                .willReturn(saved);
 
-        assertSame(returned, submitted);
+        Application returned = applicationService.approveApplication(submitted, true, finalComment);
+
         assertEquals(ApplicationStatus.APPROVED, returned.getStatus());
-        assertNotNull(approvalTime);
-        saved.setApprovalTime(approvalTime);
-        verify(applicationRepository).save(saved);
+        verify(applicationRepository).save(any());
 
         saved.setStatus(ApplicationStatus.REJECTED);
-
         submitted.setStatus(ApplicationStatus.REVIEWED);
         assertEquals(ApplicationStatus.REVIEWED, submitted.getStatus());
-        returned = applicationService.approveApplication(submitted, false, finalComment);
-        saved.setApprovalTime(null);
 
-        assertSame(returned, submitted);
+        given(applicationRepository.save(any()))
+                .willReturn(saved);
+
+        returned = applicationService.approveApplication(submitted, false, finalComment);
+
         assertEquals(ApplicationStatus.REJECTED, returned.getStatus());
-        assertNull(returned.getApprovalTime());
-        verify(applicationRepository, times(2)).save(saved);
+        verify(applicationRepository, times(2)).save(any());
     }
 
     /**
@@ -816,12 +830,15 @@ public class ApplicationServiceTest {
 
         List<String> editable = new ArrayList<>();
 
+        given(applicationRepository.save(any()))
+                .willReturn(new ReferredApplication());
+
         Application returned = applicationService.referApplication(submitted, editable, referrer);
 
         assertTrue(returned instanceof ReferredApplication);
         assertEquals(ApplicationStatus.REFERRED, returned.getStatus());
         verify(applicationRepository).delete(submitted);
-        verify(applicationRepository).save(returned);
+        verify(applicationRepository).save(any());
     }
 
     /**

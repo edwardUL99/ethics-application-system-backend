@@ -227,6 +227,8 @@ public class UserServiceTest {
 
         given(accountService.getAccount(USERNAME))
                 .willReturn(account);
+        given(userRepository.save(createdUser))
+                .willReturn(createdUser);
 
         User returned = userService.createUser(newUser);
 
@@ -250,6 +252,8 @@ public class UserServiceTest {
                 .willReturn(createdUser.getAccount());
         given(userRepository.findByRole_Name(Roles.CHAIR.getName()))
                 .willReturn(Collections.emptyList());
+        given(userRepository.save(createdUser))
+                .willReturn(createdUser);
 
         User returned = userService.createUser(newUser);
 
@@ -276,6 +280,8 @@ public class UserServiceTest {
                 .willReturn(createdUser.getAccount());
         given(userRepository.findByRole_Name(name))
                 .willReturn(Collections.singletonList(createdUser));
+        given(userRepository.save(createdUser))
+                .willReturn(createdUser);
 
         User returned = userService.createUser(newUser);
 
