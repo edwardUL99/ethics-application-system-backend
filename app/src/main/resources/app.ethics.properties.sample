@@ -1,0 +1,6 @@
+spring.jpa.hibernate.ddl-auto=update
+spring.datasource.url=<jdbc-db-url>
+spring.datasource.username=<username>
+spring.datasource.password=<password>
+
+app.cache.ttl=${ETHICS_CACHE_TTL:#{300000}}

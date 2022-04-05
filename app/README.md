@@ -7,4 +7,8 @@ This module does not provide any of its own endpoints. It's sole purpose is to s
 for endpoints defined in the modules.
 
 ## Configuration
-This module does not require any specific configuration properties to be set
+The file [app.ethics.properties.sample](src/main/resources/app.ethics.properties.sample) **needs* to be renamed to
+`app.ethics.properties` and the database details changed to match the database configured for the application.
+
+You may also need to change the postgres dependency in the [Parent POM](../pom.xml)
+to a different driver (e.g. MySQL) if using a different database

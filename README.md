@@ -13,7 +13,7 @@ be disabled should the deployment not support it (not recommended).
 
 ## Modules
 The backend is defined as a set of Maven modules, each providing their own functionality and endpoints. See the
-appropriate module's README for the defined endpoints. 
+appropriate module's README for the defined endpoints.
 
 The modules are outlined as follows:
 
@@ -29,6 +29,8 @@ The modules are outlined as follows:
 | [files](files)                   | Provides a means of uploading and downloading files to and from the backend server                                                                                            |
 
 ## Build
+**Important**: You must configure the app module properties as described in [app README](app/README.md) file before build
+
 To build the backend, from the project root, simply run the following command:
 ```bash
 tools/build.sh
