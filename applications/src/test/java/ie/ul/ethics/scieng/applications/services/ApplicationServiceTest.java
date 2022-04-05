@@ -811,7 +811,6 @@ public class ApplicationServiceTest {
         Comment finalComment = new Comment();
 
         assertThrows(InvalidStatusException.class, () -> applicationService.approveApplication(submitted, true, finalComment));
-        assertThrows(InvalidStatusException.class, () -> applicationService.approveApplication(submitted, true, finalComment));
 
         verifyNoInteractions(applicationRepository);
     }
