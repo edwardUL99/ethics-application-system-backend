@@ -624,6 +624,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             comment.setCreatedAt(updated.getCreatedAt());
             comment.setSharedApplicant(updated.isSharedApplicant());
             comment.setComment(updated.getComment());
+            comment.setEdited(updated.getEdited());
 
             List<Comment> updatedSub = updated.getSubComments();
             Map<Long, Comment> updatedSubsMap = updatedSub
