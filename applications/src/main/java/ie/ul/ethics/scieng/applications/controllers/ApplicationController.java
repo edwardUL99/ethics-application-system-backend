@@ -458,6 +458,32 @@ public class ApplicationController implements SearchController<ApplicationRespon
     }
 
     /**
+     * Update the comments of the request
+     * @param request the request to update comments with
+     * @return the response body
+     */
+    @PatchMapping("/comment")
+    public ResponseEntity<?> patchComment(@RequestBody @Valid UpdateCommentRequest request) {
+        Application loaded = applicationService.getApplication(request.getId());
+
+        if (loaded == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            try {
+                Application updated = applicationService.patchComment(loaded, requestMapper.mapComment(request.getUpdated()), request.isDeleteComment());
+
+                if (updated == null)
+                    return ResponseEntity.notFound().build();
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(updated));
+            } catch (ApplicationException ex) {
+                ex.printStackTrace();
+                return ResponseEntity.badRequest().build();
+            }
+        }
+    }
+
+    /**
      * Finish the review for a particular assigned committee member
      * @param request the request to mark the committee member as finished reviewing
      * @return the response body

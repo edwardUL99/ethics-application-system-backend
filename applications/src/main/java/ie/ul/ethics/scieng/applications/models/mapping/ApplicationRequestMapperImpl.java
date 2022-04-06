@@ -173,9 +173,10 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      * @param comment the request comment
      * @return the mapped comment entity
      */
-    private Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment) {
+    public Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment) {
         Comment mapped = new Comment(comment.getId(), userService.loadUser(comment.getUsername()), comment.getComment(),
                 comment.getComponentId(), new ArrayList<>(), comment.getCreatedAt(), comment.isSharedApplicant());
+        mapped.setEdited(comment.isEdited());
 
         if (mapped.getUser() == null)
             throw new MappingException("A comment cannot exist with a null user");

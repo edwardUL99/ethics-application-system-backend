@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -201,13 +202,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new ApplicationException("You cannot update an Application that has no ID");
 
         ApplicationTemplate template = application.getApplicationTemplate();
-
         application.setApplicationTemplate(templateRepository.save(template));
-
         application.setLastUpdated(LocalDateTime.now());
-        application = applicationRepository.save(application);
 
-        return application;
+        return applicationRepository.save(application);
     }
 
     /**
@@ -610,5 +608,119 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         return createApplication(application, true);
+    }
+
+    /**
+     * Merge the updated comment into the existing comment
+     * @param comment the comment to update
+     * @param updated the comment to merge
+     */
+    private void mergeUpdate(Comment comment, Comment updated) {
+        if (!Objects.equals(comment.getId(), updated.getId())) {
+            throw new IllegalStateException("To merge an updated comment into an existing one, they must have the same ID");
+        } else {
+            comment.setComponentId(updated.getComponentId());
+            comment.setUser(updated.getUser());
+            comment.setCreatedAt(updated.getCreatedAt());
+            comment.setSharedApplicant(updated.isSharedApplicant());
+            comment.setComment(updated.getComment());
+            comment.setEdited(updated.getEdited());
+
+            List<Comment> updatedSub = updated.getSubComments();
+            Map<Long, Comment> updatedSubsMap = updatedSub
+                    .stream()
+                    .collect(Collectors.toMap(Comment::getId, c -> c));
+            List<Comment> toRemove = new ArrayList<>();
+
+            for (Comment subComment : comment.getSubComments()) {
+                Comment updatedSubComment = updatedSubsMap.get(subComment.getId());
+
+                if (updatedSubComment == null)
+                    toRemove.add(subComment);
+                else
+                    mergeUpdate(subComment, updatedSubComment);
+            }
+
+            toRemove.forEach(comment::removeSubComment);
+        }
+    }
+
+    /**
+     * Do the patch on the comments
+     * @param applicationComments the comments omn the application
+     * @param componentId the ID of the component the comment is on
+     * @param comments the comments being updated
+     * @param updated the modified comment
+     * @param delete the comment to delete
+     * @return true if patched, false if not
+     */
+    private boolean doPatch(Map<String, ApplicationComments> applicationComments, String componentId,
+                            ApplicationComments comments, Comment updated, boolean delete) {
+        List<Comment> list = comments.getComments();
+        Comment found = null;
+        Long updateId = updated.getId();
+
+        if (updateId == null)
+            throw new ApplicationException("Cannot update a non-saved comment");
+
+        for (int i = 0; i < list.size() && found == null; i++) {
+            Comment comment = list.get(i);
+            Long id = comment.getId();
+
+            if (id == null)
+                throw new ApplicationException("Cannot update a non-saved comment");
+            else if (id.equals(updateId))
+                found = list.get(i);
+        }
+
+        if (found != null) {
+            if (delete) {
+                list.remove(found);
+
+                if (list.size() == 0)
+                    applicationComments.remove(componentId);
+            } else {
+                mergeUpdate(found, updated);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Patch the comments on the application. Only updates from top-level comments and not sub-comments
+     *
+     * @param application the application to patch the comment on
+     * @param updated     the comment to update
+     * @param delete      true to delete the comment, false to update
+     * @return the patched application
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    @Transactional
+    public Application patchComment(Application application, Comment updated, boolean delete) {
+        if (updated.getParent() != null)
+            throw new ApplicationException("The comment must be a top-level comment and not a sub-comment. To edit a sub-comment, " +
+                    "update the sub-comment and then send the parent comment with the edited sub-comment in the request");
+
+        String componentId = updated.getComponentId();
+        Map<String, ApplicationComments> applicationComments = application.getComments();
+        ApplicationComments comments;
+
+        if (componentId != null && (comments = applicationComments.get(componentId)) != null) {
+            if (doPatch(applicationComments, componentId, comments, updated, delete)) {
+                application = createApplication(application, true);
+            }
+
+            return application;
+        } else {
+            return null;
+        }
     }
 }

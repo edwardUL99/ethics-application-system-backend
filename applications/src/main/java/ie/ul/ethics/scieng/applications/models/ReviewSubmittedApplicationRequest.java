@@ -64,6 +64,10 @@ public class ReviewSubmittedApplicationRequest {
          * The timestamp of when the application was created
          */
         private LocalDateTime createdAt;
+        /**
+         * Determines if the comment has been edited or not
+         */
+        private boolean edited;
 
         /**
          * Create a non-shared comment
@@ -74,8 +78,9 @@ public class ReviewSubmittedApplicationRequest {
          * @param subComments the list of sub-comments
          * @param createdAt timestamp of when the application was created
          */
-        public Comment(Long id, String username, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt) {
-            this(id, username, comment, componentId, subComments, false, createdAt);
+        public Comment(Long id, String username, String comment, String componentId, List<Comment> subComments,
+                       LocalDateTime createdAt) {
+            this(id, username, comment, componentId, subComments, false, createdAt, false);
         }
     }
 }

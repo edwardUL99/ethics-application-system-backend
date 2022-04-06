@@ -188,4 +188,13 @@ public interface ApplicationService {
      * @return the patched application
      */
     Application patchAnswers(Application application, Map<String, Answer> answers);
+
+    /**
+     * Patch the comments on the application
+     * @param application the application to patch the comment on
+     * @param updated the comment to update
+     * @param delete true to delete the comment, false to update
+     * @return the patched application
+     */
+    Application patchComment(Application application, Comment updated, boolean delete);
 }
