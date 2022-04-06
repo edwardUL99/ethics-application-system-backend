@@ -21,11 +21,12 @@ is no extra path elements after the prefix
 | /unassign/{username} | POST | Allows the committee member with username to be unassigned from the application  |
 | /review    | POST   | Set a submitted application to in review or an application in review to reviewed                                             |
 |            | PUT    | Allows a reviewer to add comments to an application in review |
+| /comment  | PATCH    | Allows a comment to be updated/deleted (a top-level comment, not a sub-comment) on an application
 | /review/finish | POST | Allows an individual committee member mark that their review has completed |
 | /approve   | POST   | Approve/Reject an application that has been reviewed by committee members                                                    |
 | /refer     | POST   | Refer a reviewed application back to the applicant for more information                                                      |
 | /referred | PUT    | Allows the update of the answers given on the referred application   |
-| /search   | GET    | Allows the searchng of application using a query language in the URL query string |
+| /search   | GET    | Allows the searching of application using a query language in the URL query string |
 | /answers | PATCH | Allows the patching/updating of specific answers on the application |
 
 ## Configuration
