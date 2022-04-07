@@ -62,7 +62,7 @@ public class RangeExportTask extends BaseExportTask {
     }
 
     /**
-     * Asynchronously perform the list of applications
+     * Asynchronously perform the export
      * @param exported the list of applications to export
      */
     private void doExport(List<ExportedApplication> exported) {
@@ -70,9 +70,10 @@ public class RangeExportTask extends BaseExportTask {
 
         executor.submit(() -> {
             onStarted();
-            Path parent = storageLocation.resolve("exports").resolve(String.format("%s_to_%s", start, end));
 
             try {
+                Path parent = storageLocation.resolve("exports").resolve(String.format("%s_to_%s", start, end));
+
                 Files.createDirectories(parent);
                 String name = parent + ".zip";
                 name = storageLocation.resolve("exports").resolve(name).toString();
@@ -92,24 +93,31 @@ public class RangeExportTask extends BaseExportTask {
      * Execute the export task
      *
      * @return true if successful, false if not
-     * @throws IOException if an error occurs
      * @throws DateTimeParseException if the dates fail to be parsed
      */
     @Override
-    public boolean execute() throws IOException {
+    public boolean execute() {
         onPending();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         LocalDate startDate = LocalDate.parse(start, formatter);
         LocalDate endDate = LocalDate.parse(end, formatter);
 
-        List<ExportedApplication> exportedApplications = exporterService.exportApplications(startDate, endDate);
+        try {
+            List<ExportedApplication> exported = exporterService.exportApplications(startDate, endDate);
 
-        if (exportedApplications.size() == 0) {
+            if (exported.size() == 0) {
+                return false;
+            } else {
+                doExport(exported);
+
+                return true;
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            onFail();
+            emailService.sendExportFailedEmail(requester, requestedAt);
+
             return false;
-        } else {
-            doExport(exportedApplications);
-
-            return true;
         }
     }
 }
