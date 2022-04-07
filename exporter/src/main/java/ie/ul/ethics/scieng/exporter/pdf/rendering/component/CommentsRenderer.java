@@ -29,9 +29,13 @@ public final class CommentsRenderer {
         paragraph.setIndentationLeft(indentation);
         User user = comment.getUser();
         String created = comment.getCreatedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-        paragraph.add(new Chunk(String.format("%s - %s", user.getName(), user.getUsername()),
-                FontFactory.getFont(FontFactory.COURIER_BOLD, 14, BaseColor.BLACK)));
-        paragraph.add(Chunk.NEWLINE);
+
+        if (user != null) {
+            paragraph.add(new Chunk(String.format("%s - %s", user.getName(), user.getUsername()),
+                    FontFactory.getFont(FontFactory.COURIER_BOLD, 14, BaseColor.BLACK)));
+            paragraph.add(Chunk.NEWLINE);
+        }
+
         paragraph.add(new Chunk(created, FontFactory.getFont(FontFactory.COURIER, 11, BaseColor.GRAY)));
         paragraph.add(Chunk.NEWLINE);
         paragraph.add(Chunk.NEWLINE);
