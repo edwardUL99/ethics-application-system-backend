@@ -48,7 +48,7 @@ public class Comment {
     /**
      * The list of subComments of this comment
      */
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "parent", orphanRemoval = true)
     private List<Comment> subComments = new ArrayList<>();
     /**
      * A parent comment if this comment is a sub-comment
@@ -64,6 +64,10 @@ public class Comment {
      * The time when the comment was created
      */
     private LocalDateTime createdAt;
+    /**
+     * Determines if the comment has been edited before
+     */
+    private Boolean edited;
 
     /**
      * Create a Comment
@@ -123,6 +127,15 @@ public class Comment {
         comment.setComponentId(componentId); // attaches to the same component
         comment.parent = this;
         subComments.add(comment);
+    }
+
+    /**
+     * Remove the sub comment at the given index
+     * @param subComment the sub comment to remove
+     */
+    public void removeSubComment(Comment subComment) {
+        this.subComments.remove(subComment);
+        subComment.setParent(null);
     }
 
     /**

@@ -59,6 +59,18 @@ public class SubmittedApplicationResponse extends ApplicationResponse {
         super(application);
 
         this.comments = application.getComments();
+
+        this.comments.values().forEach(v -> {
+            if (v.getId() == null) {
+                System.out.println("Null ID: " + v);
+            }
+
+            v.getComments().forEach(c -> {
+                if (c.getId() == null)
+                    System.out.println("Null comment ID: " + c);
+            });
+        });
+
         this.assignedCommitteeMembers = application.getAssignedCommitteeMembers()
                 .stream()
                 .map(u -> new AssignedCommitteeMemberResponse(u.getId(), u.getApplicationId(), u.getUser().getUsername(), u.isFinishReview()))

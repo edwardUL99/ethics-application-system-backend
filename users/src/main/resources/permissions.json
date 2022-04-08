@@ -50,6 +50,14 @@
     {
       "path": "/api/applications/resubmit/",
       "permissions": "ASSIGN_APPLICATIONS"
+    },
+    {
+      "path": "/api/export/single",
+      "permissions": "EXPORT_APPLICATIONS"
+    },
+    {
+      "path": "/api/export/range",
+      "permissions": "EXPORT_APPLICATIONS"
     }
   ]
 }

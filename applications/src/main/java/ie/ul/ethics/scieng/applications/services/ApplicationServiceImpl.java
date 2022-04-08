@@ -38,6 +38,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -201,13 +202,10 @@ public class ApplicationServiceImpl implements ApplicationService {
             throw new ApplicationException("You cannot update an Application that has no ID");
 
         ApplicationTemplate template = application.getApplicationTemplate();
-
-        templateRepository.save(template);
-
+        application.setApplicationTemplate(templateRepository.save(template));
         application.setLastUpdated(LocalDateTime.now());
-        applicationRepository.save(application);
 
-        return application;
+        return applicationRepository.save(application);
     }
 
     /**
@@ -300,9 +298,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         submittedApplication.setSubmittedTime(LocalDateTime.now());
         applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
         entityManager.flush();
-        applicationRepository.save(submittedApplication);
 
-        return submittedApplication;
+        return applicationRepository.save(submittedApplication);
     }
 
     /**
@@ -331,9 +328,7 @@ public class ApplicationServiceImpl implements ApplicationService {
             }
         }
 
-        this.createApplication(application, true);
-
-        return application;
+        return this.createApplication(application, true);
     }
 
     /**
@@ -360,9 +355,8 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .collect(Collectors.toList());
 
         application.setAssignedCommitteeMembers(assigned);
-        createApplication(application, true);
 
-        return application;
+        return createApplication(application, true);
     }
 
     /**
@@ -390,9 +384,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         application.setLastUpdated(LocalDateTime.now());
 
-        applicationRepository.save(application);
-
-        return application;
+        return applicationRepository.save(application);
     }
 
     /**
@@ -422,9 +414,8 @@ public class ApplicationServiceImpl implements ApplicationService {
             if (finishReview)
                 a.setFinishReview(true);
         });
-        createApplication(application, true);
 
-        return application;
+        return createApplication(application, true);
     }
 
     /**
@@ -452,9 +443,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 .filter(u -> u.getUser().getRole().getPermissions().contains(Permissions.REVIEW_APPLICATIONS))
                 .findFirst().ifPresent(assigned -> assigned.setFinishReview(true));
 
-        this.createApplication(application, true);
-
-        return application;
+        return this.createApplication(application, true);
     }
 
     /**
@@ -481,7 +470,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         application.setStatus(target);
         application.setFinalComment(finalComment);
         application.setApprovalTime((approve) ? LocalDateTime.now():null);
-        createApplication(application, true);
+        application = createApplication(application, true);
 
         emailService.sendApplicationApprovalEmail(application);
 
@@ -546,7 +535,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         applicationRepository.delete(application);
         entityManager.flush();
-        applicationRepository.save(referredApplication);
+        referredApplication = applicationRepository.save(referredApplication);
 
         emailService.sendApplicationReferredEmail(application, referrer);
 
@@ -586,5 +575,152 @@ public class ApplicationServiceImpl implements ApplicationService {
     @Override
     public List<Application> search(Specification<Application> specification) {
         return this.applicationRepository.findAll(specification);
+    }
+
+    /**
+     * Patch the answers of the application. If an answer with the same component ID exists, it is replaced, else it is
+     * added
+     *
+     * @param application the application to patch
+     * @param answers     the answers to patch
+     * @return the patched application
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    public Application patchAnswers(Application application, Map<String, Answer> answers) {
+        Map<String, Answer> applicationAnswers = application.getAnswers();
+
+        for (Map.Entry<String, Answer> e : answers.entrySet()) {
+            String key = e.getKey();
+
+            if (!applicationAnswers.containsKey(key)) {
+                applicationAnswers.put(key, e.getValue());
+            } else {
+                Answer saved = applicationAnswers.get(key);
+                Answer newAnswer = e.getValue();
+                newAnswer.setId(saved.getId());
+                applicationAnswers.put(key, newAnswer);
+            }
+        }
+
+        return createApplication(application, true);
+    }
+
+    /**
+     * Merge the updated comment into the existing comment
+     * @param comment the comment to update
+     * @param updated the comment to merge
+     */
+    private void mergeUpdate(Comment comment, Comment updated) {
+        if (!Objects.equals(comment.getId(), updated.getId())) {
+            throw new IllegalStateException("To merge an updated comment into an existing one, they must have the same ID");
+        } else {
+            comment.setComponentId(updated.getComponentId());
+            comment.setUser(updated.getUser());
+            comment.setCreatedAt(updated.getCreatedAt());
+            comment.setSharedApplicant(updated.isSharedApplicant());
+            comment.setComment(updated.getComment());
+            comment.setEdited(updated.getEdited());
+
+            List<Comment> updatedSub = updated.getSubComments();
+            Map<Long, Comment> updatedSubsMap = updatedSub
+                    .stream()
+                    .collect(Collectors.toMap(Comment::getId, c -> c));
+            List<Comment> toRemove = new ArrayList<>();
+
+            for (Comment subComment : comment.getSubComments()) {
+                Comment updatedSubComment = updatedSubsMap.get(subComment.getId());
+
+                if (updatedSubComment == null)
+                    toRemove.add(subComment);
+                else
+                    mergeUpdate(subComment, updatedSubComment);
+            }
+
+            toRemove.forEach(comment::removeSubComment);
+        }
+    }
+
+    /**
+     * Do the patch on the comments
+     * @param applicationComments the comments omn the application
+     * @param componentId the ID of the component the comment is on
+     * @param comments the comments being updated
+     * @param updated the modified comment
+     * @param delete the comment to delete
+     * @return true if patched, false if not
+     */
+    private boolean doPatch(Map<String, ApplicationComments> applicationComments, String componentId,
+                            ApplicationComments comments, Comment updated, boolean delete) {
+        List<Comment> list = comments.getComments();
+        Comment found = null;
+        Long updateId = updated.getId();
+
+        if (updateId == null)
+            throw new ApplicationException("Cannot update a non-saved comment");
+
+        for (int i = 0; i < list.size() && found == null; i++) {
+            Comment comment = list.get(i);
+            Long id = comment.getId();
+
+            if (id == null)
+                throw new ApplicationException("Cannot update a non-saved comment");
+            else if (id.equals(updateId))
+                found = list.get(i);
+        }
+
+        if (found != null) {
+            if (delete) {
+                list.remove(found);
+
+                if (list.size() == 0)
+                    applicationComments.remove(componentId);
+            } else {
+                mergeUpdate(found, updated);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Patch the comments on the application. Only updates from top-level comments and not sub-comments
+     *
+     * @param application the application to patch the comment on
+     * @param updated     the comment to update
+     * @param delete      true to delete the comment, false to update
+     * @return the patched application
+     */
+    @Override
+    @Caching(evict = {
+            @CacheEvict(value = "application", allEntries = true),
+            @CacheEvict(value = "user_applications", allEntries = true),
+            @CacheEvict(value = "status_applications", allEntries = true)
+    })
+    @Transactional
+    public Application patchComment(Application application, Comment updated, boolean delete) {
+        if (updated.getParent() != null)
+            throw new ApplicationException("The comment must be a top-level comment and not a sub-comment. To edit a sub-comment, " +
+                    "update the sub-comment and then send the parent comment with the edited sub-comment in the request");
+
+        String componentId = updated.getComponentId();
+        Map<String, ApplicationComments> applicationComments = application.getComments();
+        ApplicationComments comments;
+
+        if (componentId != null && (comments = applicationComments.get(componentId)) != null) {
+            if (doPatch(applicationComments, componentId, comments, updated, delete)) {
+                application = createApplication(application, true);
+            }
+
+            return application;
+        } else {
+            return null;
+        }
     }
 }

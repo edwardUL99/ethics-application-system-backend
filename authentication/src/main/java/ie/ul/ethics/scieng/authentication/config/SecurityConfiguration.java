@@ -69,7 +69,6 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     /**
      * Expose the authentication manager as a bean
      * @return auth manager
-     * @throws Exception
      */
     @Override
     @Bean
@@ -102,7 +101,8 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                         createApiPath(Endpoint.AUTHENTICATION, "account", "confirm"),
                         createApiPath(Endpoint.AUTHENTICATION, true, "account", "confirm", "resend"),
                         createApiPath(Endpoint.AUTHENTICATION, true, "forgot-password"),
-                        createApiPath(Endpoint.AUTHENTICATION, "reset-password")
+                        createApiPath(Endpoint.AUTHENTICATION, "reset-password"),
+                        createApiPath(Endpoint.EXPORT, true, "download")
                 ).permitAll()
                 .anyRequest().authenticated()
                 .and()

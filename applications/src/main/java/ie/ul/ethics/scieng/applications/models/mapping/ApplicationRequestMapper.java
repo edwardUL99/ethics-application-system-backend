@@ -9,6 +9,7 @@ import ie.ul.ethics.scieng.applications.models.SubmitApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.UpdateDraftApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.ReviewSubmittedApplicationRequest;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
+import ie.ul.ethics.scieng.applications.models.applications.Comment;
 
 /**
  * This interface represents a mapper that can map any requests to the applications module into mapped objects.
@@ -79,4 +80,11 @@ public interface ApplicationRequestMapper {
      * @return the mapped request
      */
     MappedApprovalRequest mapApprovalRequest(ApproveApplicationRequest request);
+
+    /**
+     * Map the request comment to a comment entity
+     * @param comment the comment to map
+     * @return the mapped comment or null if any comment user does not exist
+     */
+    Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment);
 }

@@ -46,6 +46,34 @@ public abstract class AsyncEmailService implements EmailService {
     }
 
     /**
+     * Get the sender being used to send the emails
+     *
+     * @return the sender used for sending emails
+     */
+    @Override
+    public EmailSender getSender() {
+        return sender;
+    }
+
+    /**
+     * Send an advanced email using the email service The default implementation is to use the sender and just send it
+     *
+     * @param advancedEmail the advanced email to send.
+     */
+    @Override
+    public void sendEmail(AdvancedEmail advancedEmail) {
+        ExecutorService executorService = Executors.newSingleThreadExecutor();
+
+        executorService.submit(() -> {
+            try {
+                EmailService.super.sendEmail(advancedEmail);
+            } catch (EmailException ex) {
+                ex.printStackTrace();
+            }
+        });
+    }
+
+    /**
      * This method gets the URL front-end base
      * @return the URL front-end base
      */

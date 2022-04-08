@@ -1,0 +1,8 @@
+spring.jpa.hibernate.ddl-auto=update
+spring.datasource.url=<jdbc-db-url>
+spring.datasource.username=<username>
+spring.datasource.password=<password>
+# Not ideal but required. An ant-pattern but time constraints did not allow for a fix
+spring.jpa.properties.hibernate.enable_lazy_load_no_trans=true
+
+app.cache.ttl=${ETHICS_CACHE_TTL:#{300000}}

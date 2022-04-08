@@ -51,7 +51,7 @@ public class FileServiceImpl implements FileService {
     private void createStorageLocation() {
         try {
             Files.createDirectories(this.storageLocation);
-        } catch (Exception ex) {
+        } catch (IOException ex) {
             throw new FileException("Could not create the upload directory", ex);
         }
     }
@@ -142,5 +142,16 @@ public class FileServiceImpl implements FileService {
         } catch (IOException ex) {
             throw new FileException("Failed to delete file " + file, ex);
         }
+    }
+
+    /**
+     * Get the path representing where files are stored on the server
+     *
+     * @return the storage location path
+     */
+    @Override
+    public Path getStorageLocation() {
+        createStorageLocation();
+        return storageLocation;
     }
 }

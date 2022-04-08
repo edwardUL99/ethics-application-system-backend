@@ -111,9 +111,8 @@ public class AccountServiceImpl implements AccountService {
         password = passwordEncoder.encode(password);
 
         Account account = new Account(username, email, password, confirm);
-        accountRepository.save(account);
 
-        return account;
+        return accountRepository.save(account);
     }
 
     /**

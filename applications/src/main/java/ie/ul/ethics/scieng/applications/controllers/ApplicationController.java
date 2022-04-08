@@ -276,6 +276,24 @@ public class ApplicationController implements SearchController<ApplicationRespon
     }
 
     /**
+     * A means to patch the answers provided on an application
+     * @param request the request to patch the answers
+     * @return the response body
+     */
+    @PatchMapping("/answers")
+    public ResponseEntity<?> patchAnswers(@RequestBody PatchAnswersRequest request) {
+        Application application = applicationService.getApplication(request.getId());
+
+        if (application == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            application = applicationService.patchAnswers(application, request.getAnswers());
+
+            return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
+        }
+    }
+
+    /**
      * This endpoint represents the submission point for a draft or referred application
      * @param request the submission request
      * @return the response body
@@ -436,6 +454,32 @@ public class ApplicationController implements SearchController<ApplicationRespon
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
+        }
+    }
+
+    /**
+     * Update the comments of the request
+     * @param request the request to update comments with
+     * @return the response body
+     */
+    @PatchMapping("/comment")
+    public ResponseEntity<?> patchComment(@RequestBody @Valid UpdateCommentRequest request) {
+        Application loaded = applicationService.getApplication(request.getId());
+
+        if (loaded == null) {
+            return ResponseEntity.notFound().build();
+        } else {
+            try {
+                Application updated = applicationService.patchComment(loaded, requestMapper.mapComment(request.getUpdated()), request.isDeleteComment());
+
+                if (updated == null)
+                    return ResponseEntity.notFound().build();
+
+                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(updated));
+            } catch (ApplicationException ex) {
+                ex.printStackTrace();
+                return ResponseEntity.badRequest().build();
+            }
         }
     }
 

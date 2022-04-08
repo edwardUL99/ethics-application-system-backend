@@ -93,12 +93,17 @@ public class AccountServiceTest {
      */
     @Test
     public void shouldCreateAccount() {
+        Account test = createTestAccount();
+        test.setPassword(ENCRYPTED_PASSWORD);
+
         given(passwordEncoder.encode(PASSWORD))
                 .willReturn(ENCRYPTED_PASSWORD);
         given(accountRepository.findByUsername(USERNAME))
                 .willReturn(Optional.empty());
         given(accountRepository.findByEmail(EMAIL))
                 .willReturn(Optional.empty());
+        given(accountRepository.save(test))
+                .willReturn(test);
 
         Account account = accountService.createAccount(USERNAME, EMAIL, PASSWORD, false);
 
@@ -117,12 +122,18 @@ public class AccountServiceTest {
      */
     @Test
     public void shouldCreateAccountConfirmed() {
+        Account test = createTestAccount();
+        test.setConfirmed(true);
+        test.setPassword(ENCRYPTED_PASSWORD);
+
         given(passwordEncoder.encode(PASSWORD))
                 .willReturn(ENCRYPTED_PASSWORD);
         given(accountRepository.findByUsername(USERNAME))
                 .willReturn(Optional.empty());
         given(accountRepository.findByEmail(EMAIL))
                 .willReturn(Optional.empty());
+        given(accountRepository.save(test))
+                .willReturn(test);
 
         Account account = accountService.createAccount(USERNAME, EMAIL, PASSWORD, true);
 
