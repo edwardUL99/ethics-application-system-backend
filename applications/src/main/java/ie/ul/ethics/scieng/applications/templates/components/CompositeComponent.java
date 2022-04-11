@@ -35,4 +35,15 @@ public abstract class CompositeComponent extends ApplicationComponent {
      * Sort the list of child components
      */
     public abstract void sortComponents();
+
+    /**
+     * Clear the database ID of this component and also any child components
+     */
+    @Override
+    public void clearDatabaseIDs() {
+        this.databaseId = null;
+
+        for (ApplicationComponent component : getComponents())
+            component.clearDatabaseIDs();
+    }
 }

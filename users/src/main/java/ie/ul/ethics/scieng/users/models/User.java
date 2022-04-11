@@ -102,7 +102,10 @@ public class User {
      */
     public void setUsername(String username) {
         this.username = username;
-        this.account.setUsername(username);
+
+        if (this.account != null) {
+            this.account.setUsername(username);
+        }
     }
 
     /**

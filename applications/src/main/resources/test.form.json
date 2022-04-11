@@ -20,7 +20,8 @@
           "type": "text-question",
           "title": "Principal Investigator E-mail",
           "name": "principal_investigator_email",
-          "questionType": "email"
+          "questionType": "email",
+          "requestInput": true
         },
         {
           "type": "checkbox-question",
@@ -28,7 +29,8 @@
           "name": "supervisor_review_confirmation",
           "options": [
             {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "Agreed"}
-          ]
+          ],
+          "requestInput": true
         },
         {
           "type": "text-question",

@@ -18,7 +18,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-public class CheckboxGroupComponent extends SimpleComponent {
+public class CheckboxGroupComponent extends QuestionComponent {
     /**
      * The default branch to execute
      */
@@ -54,11 +54,10 @@ public class CheckboxGroupComponent extends SimpleComponent {
      * @param required determines if the component is required or not
      */
     public CheckboxGroupComponent(String title, Branch defaultBranch, List<Checkbox> checkboxes, boolean multiple, boolean required) {
-        super(ComponentType.CHECKBOX_GROUP, title);
+        super(ComponentType.CHECKBOX_GROUP, title, null, null, required);
         this.defaultBranch  = defaultBranch;
         this.checkboxes = checkboxes;
         this.multiple = multiple;
-        this.required = required;
     }
 
     /**

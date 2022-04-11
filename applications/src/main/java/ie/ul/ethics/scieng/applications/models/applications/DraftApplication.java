@@ -75,7 +75,7 @@ public class DraftApplication extends Application {
      */
     @Override
     public boolean canBeViewedBy(User user) {
-        return this.user.getUsername().equals(user.getUsername()) &&
+        return accessList.contains(new UserAccess(null, user)) || this.user.getUsername().equals(user.getUsername()) &&
                 user.getRole().getPermissions().contains(Permissions.VIEW_OWN_APPLICATIONS);
     }
 
@@ -103,6 +103,7 @@ public class DraftApplication extends Application {
     public DraftApplication copy() {
         DraftApplication draft = new DraftApplication(id, applicationId, user, applicationTemplate, new HashMap<>(answers), new ArrayList<>(attachedFiles));
         draft.setLastUpdated(lastUpdated);
+        draft.accessList = new ArrayList<>(accessList);
 
         return draft;
     }

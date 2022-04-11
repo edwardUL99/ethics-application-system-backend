@@ -28,7 +28,8 @@
           "name": "supervisor_review_confirmation",
           "options": [
             {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "Agreed"}
-          ]
+          ],
+          "requestInput": true
         },
         {
           "type": "text-question",
@@ -189,7 +190,8 @@
                   "Signature": {
                     "type": "signature",
                     "name": "hod_signature",
-                    "label": null
+                    "label": null,
+                    "requestInput": true
                   }
                 }
               },
@@ -719,7 +721,8 @@
                 "Please indicate by way of signature that the research project is covered by UL's insurance policies"
               ],
               "name": "insurance_signature",
-              "label": "PI/Supervisor signature"
+              "label": "PI/Supervisor signature",
+              "requestInput": true
             }
           ]
         },
@@ -736,7 +739,8 @@
                 "Please indicate by way of signature that the Research Privacy Notice form has been completed:"
               ],
               "name": "research_privacy_notice_signature",
-              "label": "PI/Supervisor signature"
+              "label": "PI/Supervisor signature",
+              "requestInput": true
             }
           ]
         },
@@ -819,13 +823,15 @@
               "type": "text-question",
               "title": "Principal Investigator Name*",
               "description": "*In the case where the principal investigator is not a permanent employee of the University, the relevant head of department must sign this declaration in their place",
-              "name": "pi_declaration_name"
+              "name": "pi_declaration_name",
+              "requestInput": true
             },
             {
               "type": "signature",
               "title": "Principal Investigator Signature",
               "name": "pi_declaration_signature",
-              "label": "Principal Investigator"
+              "label": "Principal Investigator",
+              "requestInput": true
             }
           ]
         }

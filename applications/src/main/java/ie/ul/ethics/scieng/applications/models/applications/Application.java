@@ -73,6 +73,11 @@ public abstract class Application {
      * The timestamp of when the application was last updated
      */
     protected LocalDateTime lastUpdated;
+    /**
+     * A list of users with access to the application if they need to provide input to it
+     */
+    @OneToMany(cascade = CascadeType.ALL)
+    protected List<UserAccess> accessList;
 
     /**
      * Create a default Application
@@ -114,6 +119,7 @@ public abstract class Application {
         this.answers = answers;
         this.attachedFiles = new ArrayList<>();
         attachedFiles.forEach(this::attachFile);
+        this.accessList = new ArrayList<>();
     }
 
     /**
@@ -127,6 +133,26 @@ public abstract class Application {
                 return;
 
         this.attachedFiles.add(file);
+    }
+
+    /**
+     * Grants the given user access to the application
+     * @param user the user to allow access
+     */
+    public void grantUserAccess(User user) {
+        UserAccess access = new UserAccess(null, user);
+
+        if (!this.accessList.contains(access)) {
+            this.accessList.add(access);
+        }
+    }
+
+    /**
+     * Remove the user from the access list
+     * @param user the user to remove
+     */
+    public void removeUserAccess(User user) {
+        this.accessList.remove(new UserAccess(null, user));
     }
 
     /**

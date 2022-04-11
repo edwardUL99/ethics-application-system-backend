@@ -23,4 +23,12 @@ public abstract class SimpleComponent extends ApplicationComponent {
     public SimpleComponent(ComponentType type, String title) {
         super(type, title,false);
     }
+
+    /**
+     * Clear the database ID of this component and also any child components
+     */
+    @Override
+    public void clearDatabaseIDs() {
+        this.databaseId = null;
+    }
 }

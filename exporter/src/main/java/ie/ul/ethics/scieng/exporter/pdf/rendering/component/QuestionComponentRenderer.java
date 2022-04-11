@@ -59,8 +59,11 @@ public class QuestionComponentRenderer implements ComponentRenderer {
         }
 
         Answer answer = application.getAnswers().get(component.getComponentId());
-        paragraph.add(renderAnswer(answer));
-        paragraph.add(Chunk.NEWLINE);
+
+        if (answer != null) {
+            paragraph.add(renderAnswer(answer));
+            paragraph.add(Chunk.NEWLINE);
+        }
 
         Element comments = CommentsRenderer.renderComments(application, component);
 

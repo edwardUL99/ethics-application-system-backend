@@ -65,6 +65,11 @@ public abstract class ApplicationComponent implements Comparable<ApplicationComp
     }
 
     /**
+     * Clear the database ID of this component and also any child components
+     */
+    public abstract void clearDatabaseIDs();
+
+    /**
      * Compares based on databaseId
      */
     @Override
