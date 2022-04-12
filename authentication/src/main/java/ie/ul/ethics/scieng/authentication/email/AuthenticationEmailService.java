@@ -49,11 +49,7 @@ public class AuthenticationEmailService extends AsyncEmailService {
                 + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
                 + "<br>"
                 + "<p>If you did not request an account, you can safely ignore this e-mail</p>"
-                + "<p><b>Warning:</b> Unconfirmed accounts will be removed after %d days</p>"
-                + "<br>"
-                + "<p>Thank You,<p>"
-                + "<p>The Committee</p>";
-
+                + "<p><b>Warning:</b> Unconfirmed accounts will be removed after %d days</p>";
 
         String urlBase = getFrontendURL();
         urlBase = urlBase + "/confirm-account";
@@ -84,10 +80,7 @@ public class AuthenticationEmailService extends AsyncEmailService {
                 + "<p><b>Do not</b> give this token (or above link) to anybody else</p>"
                 + "<br>"
                 + "<p>This request will expire at <b>%s</b>, after which you will need to request another password reset</p>"
-                + "<p>If you did not request for your password to be changed, you can safely ignore this e-mail</p>"
-                + "<br>"
-                + "<p>Thank You,<p>"
-                + "<p>The Committee</p>";
+                + "<p>If you did not request for your password to be changed, you can safely ignore this e-mail</p>";
 
         String urlBase = getFrontendURL();
         urlBase = urlBase + "/reset-password";

@@ -46,10 +46,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>You can go to your application to review the actions required of you by clicking: <a href=\"%s\">%s</a></p>"
                 + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
                 + "<br>"
-                + "<p>Once you have reviewed the changes required from you, you can re-submit the application to the committee</p>"
-                + "<br>"
-                + "<p>Thank You,</p>"
-                + "<p>The Committee</p>";
+                + "<p>Once you have reviewed the changes required from you, you can re-submit the application to the committee</p>";
 
         User applicant = application.getUser();
         String applicationId = application.getApplicationId();
@@ -119,10 +116,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>You can view your application by clicking: <a href=\"%s\">%s</a></p>"
                 + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
                 + "<br>"
-                + "<p>%s</p>"
-                + "<br>"
-                + "<p>Thank You,</p>"
-                + "<p>The Committee</p>";
+                + "<p>%s</p>";
 
         User applicant = application.getUser();
         String applicationId = application.getApplicationId();
@@ -167,10 +161,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<br>"
                 + "<h4>What do I need to do?</h4>"
                 + "<p>You can answer the requested fields by following this link: <a href=\"%s\">%s</a></p>"
-                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
-                + "<br>"
-                + "<p>Thank You,</p>"
-                + "<p>The Committee</p>";
+                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>";
 
         String requestedAt = request.getRequestedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         User supervisor = request.getUser();
@@ -203,10 +194,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<h4>What do I need to do?</h4>"
                 + "<p>You can view your application by following this link: <a href=\"%s\">%s</a> and decide if it is" +
                 " now ready to submit</p>"
-                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
-                + "<br>"
-                + "<p>Thank You,</p>"
-                + "<p>The Committee</p>";
+                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>";
 
         String requestedAt = request.getRequestedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         String supervisor = request.getUser().getName();

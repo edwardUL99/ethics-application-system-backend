@@ -73,6 +73,8 @@ removed
 * **ETHICS_RESET_TOKEN_EXPIRY**: Specified the number of hours after which reset password tokens should be considered expired
 * **ETHICS_CACHE_TTL**: The number of milliseconds after which cache should be cleared (time to live)
 * **ETHICS_CHAIR_EMAIL**: On initial setup of the system, if a user is created with this e-mail address, they are automatically assigned the Chair role
+* **ETHICS_EMAIL_CONTACT**: Specify the e-mail of the committee member to contact (specified also by a property in the [common](common/src/main/resources/common.ethics.properties)
+configuration). Displayed in e-mail footers
 
 ## Testing
 
