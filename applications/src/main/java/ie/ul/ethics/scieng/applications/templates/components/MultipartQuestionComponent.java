@@ -58,8 +58,14 @@ public class MultipartQuestionComponent extends QuestionComponent {
     public void clearDatabaseIDs() {
         this.databaseId = null;
 
-        for (QuestionPart part : parts.values())
+        for (QuestionPart part : parts.values()) {
             part.question.clearDatabaseIDs();
+            part.setId(null);
+            part.branches.forEach(p -> {
+                if (p != null)
+                    p.setBranchId(null);
+            });
+        }
     }
 
     /**

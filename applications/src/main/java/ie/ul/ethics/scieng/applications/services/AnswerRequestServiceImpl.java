@@ -155,12 +155,12 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
             return false;
         } else {
             Application application = answerRequest.getApplication();
-            User supervisor = answerRequest.getUser();
+            User user = answerRequest.getUser();
             Map<String, Answer> answers = request.getAnswers();
             Map<String, Answer> applicationAnswers = application.getAnswers();
 
             answers.forEach((k, v) -> {
-                v.setUser(supervisor);
+                v.setUser(user);
                 Answer answer = applicationAnswers.get((k));
 
                 if (answer == null || answer.getValue().isEmpty())
@@ -169,6 +169,7 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
             });
 
             repository.delete(answerRequest);
+            application.removeUserAccess(user);
             applicationService.createApplication(application, true);
             emailService.sendAnsweredResponse(answerRequest);
 

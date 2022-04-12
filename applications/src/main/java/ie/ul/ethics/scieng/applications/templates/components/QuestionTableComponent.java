@@ -61,8 +61,12 @@ public class QuestionTableComponent extends QuestionComponent {
     public void clearDatabaseIDs() {
         this.databaseId = null;
 
-        for (Cells cells : cells.columns.values())
+        for (Cells cells : cells.columns.values()) {
             cells.components.forEach(SimpleComponent::clearDatabaseIDs);
+            cells.setDatabaseId(null);
+        }
+
+        cells.setDatabaseId(null);
     }
 
     /**

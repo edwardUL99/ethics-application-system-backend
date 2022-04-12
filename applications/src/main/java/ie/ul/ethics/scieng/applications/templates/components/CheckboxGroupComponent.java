@@ -61,6 +61,24 @@ public class CheckboxGroupComponent extends QuestionComponent {
     }
 
     /**
+     * Clear the database ID of this component and also any child components
+     */
+    @Override
+    public void clearDatabaseIDs() {
+        this.databaseId = null;
+
+        if (this.defaultBranch != null)
+            this.defaultBranch.setBranchId(null);
+
+        this.checkboxes.forEach(checkbox -> {
+            checkbox.setId(null);
+
+            if (checkbox.branch != null)
+                checkbox.branch.setBranchId(null);
+        });
+    }
+
+    /**
      * This class represents a checkbox in the group
      */
     @Getter
