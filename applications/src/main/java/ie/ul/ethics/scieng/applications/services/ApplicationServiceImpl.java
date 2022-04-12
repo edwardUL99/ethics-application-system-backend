@@ -12,6 +12,7 @@ import ie.ul.ethics.scieng.applications.models.applications.AttachedFile;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
 import ie.ul.ethics.scieng.applications.models.applications.ReferredApplication;
 import ie.ul.ethics.scieng.applications.models.applications.SubmittedApplication;
+import ie.ul.ethics.scieng.applications.repositories.AnswerRequestRepository;
 import ie.ul.ethics.scieng.applications.repositories.ApplicationRepository;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplateLoader;
@@ -74,6 +75,10 @@ public class ApplicationServiceImpl implements ApplicationService {
      */
     @PersistenceContext
     private EntityManager entityManager;
+    /**
+     * The repository for storing answer requests
+     */
+    private final AnswerRequestRepository requestRepository;
 
     /**
      * Create an ApplicationServiceImpl
@@ -82,16 +87,18 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param templateLoader the loader for application template loading
      * @param emailService the service for sending applications notifications
      * @param fileService the service for interacting with files
+     * @param requestRepository the repository for storing answer requests
      */
     @Autowired
     public ApplicationServiceImpl(ApplicationTemplateRepository templateRepository, ApplicationRepository applicationRepository,
                                   ApplicationTemplateLoader templateLoader, @Qualifier("applicationsEmail") ApplicationsEmailService emailService,
-                                  FileService fileService) {
+                                  FileService fileService, AnswerRequestRepository requestRepository) {
         this.templateRepository = templateRepository;
         this.applicationRepository = applicationRepository;
         this.templateLoader = templateLoader;
         this.emailService = emailService;
         this.fileService = fileService;
+        this.requestRepository = requestRepository;
     }
 
     /**
@@ -241,8 +248,9 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return tha map of answers
      */
     private Map<String, Answer> mapAnswers(Map<String, Answer> answers) {
-        Map<String, Answer> mapped = new HashMap<>(answers);
-        mapped.forEach((k, v) -> v.setId(null)); // FIXME this may not be ideal
+        Map<String, Answer> mapped = new HashMap<>();
+        answers.forEach((k, v) ->
+            mapped.put(k, new Answer(null, v.getComponentId(), v.getValue(), v.getValueType(), v.getUser()))); // FIXME this may not be ideal
 
         return mapped;
     }
@@ -296,7 +304,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         submittedApplication.setLastUpdated(LocalDateTime.now());
         submittedApplication.setSubmittedTime(LocalDateTime.now());
-        applicationRepository.delete(application); // delete the draft application with the same applicationId and replace it with the submitted application
+        deleteApplicationInstance(application); // delete the draft application with the same applicationId and replace it with the submitted application
         entityManager.flush();
 
         return applicationRepository.save(submittedApplication);
@@ -478,14 +486,30 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
+     * Copy the given comment
+     * @param comment the comment to copy
+     * @return the copied comment
+     */
+    private Comment copyComment(Comment comment) {
+        Comment copied = new Comment(null, comment.getUser(), comment.getComment(), comment.getComponentId(), new ArrayList<>());
+
+        for (Comment sub : comment.getSubComments())
+            copied.addSubComment(copyComment(sub));
+
+        return copied;
+    }
+
+    /**
      * Map comments to a way where they're able to be saved without detached instance exceptions
      * @param comments the comments to map
      */
     private Map<String, ApplicationComments> mapComments(Map<String, ApplicationComments> comments) {
-        Map<String, ApplicationComments> mapped = new HashMap<>(comments);
-        mapped.forEach((k, v) -> {
-            v.setId(null);
-            v.getComments().forEach(c -> c.setId(null));
+        Map<String, ApplicationComments> mapped = new HashMap<>();
+        comments.forEach((k, v) -> {
+            List<Comment> commentList = new ArrayList<>();
+            ApplicationComments comments1 = new ApplicationComments(null, v.getComponentId(), commentList);
+            comments1.setComponentId(v.getComponentId());
+            v.getComments().forEach(c -> commentList.add(copyComment(c)));
         });
 
         return mapped;
@@ -533,13 +557,23 @@ public class ApplicationServiceImpl implements ApplicationService {
         referredApplication.setLastUpdated(LocalDateTime.now());
         referredApplication.setSubmittedTime(application.getSubmittedTime());
 
-        applicationRepository.delete(application);
+        deleteApplicationInstance(application);
         entityManager.flush();
         referredApplication = applicationRepository.save(referredApplication);
 
         emailService.sendApplicationReferredEmail(application, referrer);
 
         return referredApplication;
+    }
+
+    /**
+     * Deletes the application instance from the repository if it is to be replaced by another application instance,
+     * i.e. save a submitted application after deleting draft
+     * @param application the application to delete
+     */
+    private void deleteApplicationInstance(Application application) {
+        this.requestRepository.deleteByApplication_id(application.getId());
+        this.applicationRepository.delete(application);
     }
 
     /**
@@ -553,8 +587,9 @@ public class ApplicationServiceImpl implements ApplicationService {
             @CacheEvict(value = "user_applications", allEntries = true),
             @CacheEvict(value = "status_applications", allEntries = true)
     })
+    @Transactional
     public void deleteApplication(Application application) {
-        this.applicationRepository.delete(application);
+        deleteApplicationInstance(application);
         this.templateRepository.delete(application.getApplicationTemplate());
 
         for (AttachedFile attachedFile : application.getAttachedFiles()) {

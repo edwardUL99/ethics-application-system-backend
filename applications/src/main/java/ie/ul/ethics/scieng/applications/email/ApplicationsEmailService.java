@@ -4,6 +4,7 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.models.applications.ApplicationStatus;
 import ie.ul.ethics.scieng.applications.models.applications.Comment;
+import ie.ul.ethics.scieng.applications.models.applications.answerrequest.AnswerRequest;
 import ie.ul.ethics.scieng.common.email.AsyncEmailService;
 import ie.ul.ethics.scieng.common.email.EmailSender;
 import ie.ul.ethics.scieng.users.models.User;
@@ -48,7 +49,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>Once you have reviewed the changes required from you, you can re-submit the application to the committee</p>"
                 + "<br>"
                 + "<p>Thank You,</p>"
-                + "<p>The Team</p>";
+                + "<p>The Committee</p>";
 
         User applicant = application.getUser();
         String applicationId = application.getApplicationId();
@@ -121,7 +122,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>%s</p>"
                 + "<br>"
                 + "<p>Thank You,</p>"
-                + "<p>The Team</p>";
+                + "<p>The Committee</p>";
 
         User applicant = application.getUser();
         String applicationId = application.getApplicationId();
@@ -149,5 +150,76 @@ public class ApplicationsEmailService extends AsyncEmailService {
 
         sendEmail(email, String.format("Application " + applicationId + " Review Outcome - %s",
                 LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"))), content);
+    }
+
+    /**
+     * Notifies a supervisor that they have been requested to answer some inputs on an application
+     * @param request the created request
+     */
+    public void addAnswerInputRequested(AnswerRequest request) {
+        String content = "<h2>Application Input Requested - %s</h2>"
+                + "<p>Hello %s,<br>This e-mail is a quick notification that the applicant %s has "
+                + "requested that you give input to some answers on their research ethics application form.</p>"
+                + "<br>"
+                + "<p>Application ID: <b>%s</b></p>"
+                + "<p>Applicant: <b>%s</b></p>"
+                + "<p>Requested At: <b>%s</b>"
+                + "<br>"
+                + "<h4>What do I need to do?</h4>"
+                + "<p>You can answer the requested fields by following this link: <a href=\"%s\">%s</a></p>"
+                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
+                + "<br>"
+                + "<p>Thank You,</p>"
+                + "<p>The Committee</p>";
+
+        String requestedAt = request.getRequestedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+        User supervisor = request.getUser();
+        Application application = request.getApplication();
+        String requester = application.getUser().getName();
+
+        String urlBase = getFrontendURL();
+        urlBase = urlBase + (String.format("/answer-request?id=%d", request.getId()));
+
+        content = String.format(content, requestedAt, supervisor.getName(), requester, application.getApplicationId(),
+                requester, requestedAt, urlBase, "Give Answers", urlBase);
+
+        sendEmail(supervisor.getAccount().getEmail(), String.format("Input Requested on Application %s at %s", application.getApplicationId(), requestedAt), content);
+    }
+
+    /**
+     * Notifies an applicant that the supervisor has answered the requested questions that they have been requested to
+     * answer some inputs on an application
+     * @param request the resolved request
+     */
+    public void sendAnsweredResponse(AnswerRequest request) {
+        String content = "<h2>Application Input Provided</h2>"
+                + "<p>Hello %s,<br>This e-mail is a quick notification that %s has provided the"
+                + " input to some answers you requested on your research ethics application form.</p>"
+                + "<br>"
+                + "<p>Application ID: <b>%s</b></p>"
+                + "<p>User: <b>%s</b></p>"
+                + "<p>Requested At: <b>%s</b>"
+                + "<br>"
+                + "<h4>What do I need to do?</h4>"
+                + "<p>You can view your application by following this link: <a href=\"%s\">%s</a> and decide if it is" +
+                " now ready to submit</p>"
+                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
+                + "<br>"
+                + "<p>Thank You,</p>"
+                + "<p>The Committee</p>";
+
+        String requestedAt = request.getRequestedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+        String supervisor = request.getUser().getName();
+        Application application = request.getApplication();
+        String id = application.getApplicationId();
+        User requester = application.getUser();
+
+        String urlBase = getFrontendURL();
+        urlBase = urlBase + (String.format("/application?id=%s", id));
+
+        content = String.format(content, requestedAt, requester.getName(), supervisor, id,
+                supervisor, requestedAt, urlBase, id, urlBase);
+
+        sendEmail(requester.getAccount().getEmail(), String.format("Input on Application %s requested at %s provided", application.getApplicationId(), requestedAt), content);
     }
 }

@@ -9,15 +9,15 @@ import ie.ul.ethics.scieng.applications.models.applications.Answer;
 /**
  * Renders a text/number value answer
  */
-public class TextNumberAnswerRenderer implements AnswerRenderer {
+public class TextNumberAnswerRenderer extends BaseAnswerRenderer {
     /**
-     * Renders the given answer to a PDF element
+     * Parse the value of the answer
      *
-     * @param answer the answer to render
-     * @return the rendered element
+     * @param answer the answer to parse
+     * @return the element representing the value
      */
     @Override
-    public Element renderAnswer(Answer answer) {
+    protected Element parseAnswerValue(Answer answer) {
         Answer.ValueType valueType = answer.getValueType();
 
         if (valueType != Answer.ValueType.TEXT && valueType != Answer.ValueType.NUMBER) {
