@@ -63,7 +63,7 @@ public class DefaultEmailSender implements EmailSender {
                 .setSubject(subject)
                 .setFrom(configurationProperties.getFrom())
                 .setTo(to)
-                .setContent(email, true);
+                .setContent(email, true, true);
 
         for (File attachment : attachments)
             advancedEmail = advancedEmail.attachFile(attachment);

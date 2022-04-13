@@ -1,7 +1,11 @@
 {
   "id": "expedited",
   "name": "Expedited Ethics Application Form",
-  "description": "This form provides the questions for the expedited application to the ethics committee",
+  "description": [
+    "This application is what most studies should use.",
+    " If your study involves any participants under 18 and/or vulnerable participants,",
+    " choose the full application"
+  ],
   "version": "1.0",
   "components": [
     {
@@ -28,7 +32,9 @@
           "name": "supervisor_review_confirmation",
           "options": [
             {"label": "I, the supervisor, confirm that I have reviewed this application and agree to its submission for review", "value": "Agreed"}
-          ]
+          ],
+          "requestInput": true,
+          "_comment": "This is a question for a supervisor, so the system should prompt the user to request the supervisor to answer it"
         },
         {
           "type": "text-question",
@@ -485,7 +491,8 @@
                 "Please indicate by way of signature that the research project is covered by UL's insurance policies"
               ],
               "name": "insurance_signature",
-              "label": "PI/Supervisor signature"
+              "label": "PI/Supervisor signature",
+              "requestInput": true
             },
             {
               "type": "signature",
@@ -496,7 +503,8 @@
                 "Please indicate by way of signature that the Research Privacy Notice form has been completed:"
               ],
               "name": "research_privacy_notice_signature",
-              "label": "PI/Supervisor signature"
+              "label": "PI/Supervisor signature",
+              "requestInput": true
             },
             {
               "type": "checkbox-group",
@@ -575,13 +583,15 @@
               "type": "text-question",
               "title": "Principal Investigator Name*",
               "description": "*In the case where the principal investigator is not a permanent employee of the University, the relevant head of department must sign this declaration in their place",
-              "name": "pi_declaration_name"
+              "name": "pi_declaration_name",
+              "requestInput": true
             },
             {
               "type": "signature",
               "title": "Principal Investigator Signature",
               "name": "pi_declaration_signature",
-              "label": "Principal Investigator"
+              "label": "Principal Investigator",
+              "requestInput": true
             }
           ]
         }

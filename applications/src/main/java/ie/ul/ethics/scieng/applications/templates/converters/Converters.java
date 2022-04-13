@@ -104,8 +104,12 @@ public final class Converters {
 
             text = builder.toString();
         } else {
-            throw new ApplicationParseException("Illegal value of the " + field + " field in the " + componentType.label() + " element. The only allowed types is" +
+            if (componentType != null)
+                throw new ApplicationParseException("Illegal value of the " + field + " field in the " + componentType.label() + " element. The only allowed types is" +
                     " a single string or an array of strings");
+            else
+                throw new ApplicationParseException("Illegal value of the " + field + ". The only allowed types is" +
+                        " a single string or an array of strings");
         }
 
         return text;

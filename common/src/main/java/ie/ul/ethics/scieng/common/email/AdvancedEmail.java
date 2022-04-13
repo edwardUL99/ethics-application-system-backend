@@ -1,6 +1,7 @@
 package ie.ul.ethics.scieng.common.email;
 
 import ie.ul.ethics.scieng.common.email.exceptions.EmailException;
+import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 
@@ -33,7 +34,7 @@ public class AdvancedEmail {
     /**
      * The list of body parts in the e-mail message that aren't the e-mail body part
      */
-    private List<BodyPart> bodyParts;
+    private final List<BodyPart> bodyParts;
     /**
      * The HTML content
      */
@@ -42,6 +43,10 @@ public class AdvancedEmail {
      * If true, the header with ethics committee title and UL logo will be added to e-mail content
      */
     private boolean addULHeader;
+    /**
+     * Determine if a generic footer should be added
+     */
+    private boolean addFooter;
 
     /**
      * Initialise the email with the given mail session
@@ -115,11 +120,13 @@ public class AdvancedEmail {
      * Set the HTML content for the e-mail
      * @param html HTML content
      * @param addULHeader true to add header with committee title and UL logo
+     * @param addFooter determine if the footer should be added
      * @return instance of this for chaining
      */
-    public AdvancedEmail setContent(String html, boolean addULHeader) {
+    public AdvancedEmail setContent(String html, boolean addULHeader, boolean addFooter) {
         this.htmlContent = html;
         this.addULHeader = addULHeader;
+        this.addFooter = addFooter;
 
         return this;
     }
@@ -184,6 +191,30 @@ public class AdvancedEmail {
     }
 
     /**
+     * Get the HTML for the footer
+     * @return the footer HTML
+     */
+    private String getFooterHTML() {
+        String footer = "<br>" +
+                "<p>Thank You,<p>" +
+                "<p>The Committee</p>" +
+                "<br><hr>" +
+                "<table width=\"100%%\" border=\"0\" cellspacing=\"0\" cellpadding=\"0\">" +
+                "<tr>" +
+                "<td align=\"center\" style=\"color: gray;\">" +
+                "%s" +
+                "</td>" +
+                "</tr>" +
+                "</table>";
+
+        String contactEmail = PropertyFinder.findProperty("ETHICS_EMAIL_CONTACT", "email.contact");
+        String footerContent = String.format("<p>Please do not reply to this e-mail. Should you have the need to contact" +
+                " the committee, please contact <a href=\"mailto:%s\">%s</a></p>", contactEmail, contactEmail);
+
+        return String.format(footer, footerContent);
+    }
+
+    /**
      * Parse the HTML content into a BodyPart
      * @return parsed body part
      * @throws EmailException if the part fails to be parsed
@@ -202,6 +233,9 @@ public class AdvancedEmail {
                 throw new EmailException("Failed to construct HTML content", ex);
             }
         }
+
+        if (this.addFooter)
+            content += getFooterHTML();
 
         try {
             MimeBodyPart mimeBodyPart = new MimeBodyPart();

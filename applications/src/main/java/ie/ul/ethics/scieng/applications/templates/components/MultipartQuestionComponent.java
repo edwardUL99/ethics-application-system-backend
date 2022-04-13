@@ -52,6 +52,23 @@ public class MultipartQuestionComponent extends QuestionComponent {
     }
 
     /**
+     * Clear the database ID of this component and also any child components
+     */
+    @Override
+    public void clearDatabaseIDs() {
+        this.databaseId = null;
+
+        for (QuestionPart part : parts.values()) {
+            part.question.clearDatabaseIDs();
+            part.setId(null);
+            part.branches.forEach(p -> {
+                if (p != null)
+                    p.setBranchId(null);
+            });
+        }
+    }
+
+    /**
      * This class represents a question part
      */
     @NoArgsConstructor

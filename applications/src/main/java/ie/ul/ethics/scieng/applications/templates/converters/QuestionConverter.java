@@ -24,12 +24,12 @@ public abstract class QuestionConverter implements ComponentConverter {
         QuestionComponent component = this.createBase(map);
         component.setEditable((boolean)map.getOrDefault("editable", true));
         component.setAutofill((String)map.getOrDefault("autofill", null));
+        component.setRequestInput((boolean)map.getOrDefault("requestInput", false));
 
         String componentId = (String) map.get("componentId");
 
-        if (componentId != null) {
+        if (componentId != null)
             component.setComponentId(componentId);
-        }
 
         component.setDatabaseId(ComponentConverter.parseDatabaseId(map.getOrDefault("databaseId", null)));
 

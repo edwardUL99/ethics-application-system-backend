@@ -42,10 +42,7 @@ public class ExporterEmailService extends AsyncEmailService {
                 + "<p>The file is a ZIP archive of the application(s) that you have requested to be exported, with each "
                 + "application in PDF format and that application's attachments in another zip called <i>attachments.zip</i><p>"
                 + "<p>Follow this link to download the archive: <a href=\"%s\">Download Archive</a></p>"
-                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>"
-                + "<br>"
-                + "<p>Thank You,<p>"
-                + "<p>The Team</p>";
+                + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>";
 
         String urlBase = getFrontendURL();
         urlBase = urlBase + "/export-downloader?filename=";
@@ -72,10 +69,7 @@ public class ExporterEmailService extends AsyncEmailService {
                 + "<br>"
                 + "<h3>What do I need to do?</h3>"
                 + "<p>You can try exporting the application(s) again. If the error persists, please try again later<p>"
-                + "<p>Sorry for any inconvenience caused</p>"
-                + "<br>"
-                + "<p>Thank You,<p>"
-                + "<p>The Team</p>";
+                + "<p>Sorry for any inconvenience caused</p>";
 
         String userName = user.getName();
         String email = user.getAccount().getEmail();

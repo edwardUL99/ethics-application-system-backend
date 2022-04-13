@@ -51,6 +51,15 @@ public class SelectQuestionComponent extends QuestionComponent {
     }
 
     /**
+     * Clear the database ID of this component and also any child components
+     */
+    @Override
+    public void clearDatabaseIDs() {
+        this.databaseId = null;
+        this.options.forEach(option -> option.setId(null));
+    }
+
+    /**
      * This class represents an option for the select question
      */
     @NoArgsConstructor

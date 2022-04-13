@@ -54,7 +54,7 @@ public class JSONApplicationParser implements ApplicationParser {
                 null,
                 (String)map.get("id"),
                 (String)map.get("name"),
-                (String)map.get("description"),
+                Converters.parseLongString(null, "description", map.get("description")),
                 (String)map.get("version"),
                 components
         );

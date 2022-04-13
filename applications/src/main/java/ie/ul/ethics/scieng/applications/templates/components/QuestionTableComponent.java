@@ -16,7 +16,7 @@ import java.util.*;
 @Getter
 @Setter
 @Entity
-public class QuestionTableComponent extends SimpleComponent {
+public class QuestionTableComponent extends QuestionComponent {
     /**
      * This map provides the mapping of the column names to the question components
      */
@@ -49,9 +49,24 @@ public class QuestionTableComponent extends SimpleComponent {
      * @param numRows the number of rows
      */
     public QuestionTableComponent(CellsMapping cells, int numRows) {
-        super(ComponentType.QUESTION_TABLE, null);
+        super(ComponentType.QUESTION_TABLE, null, null, null, false);
         this.cells = cells;
         this.numRows = numRows;
+    }
+
+    /**
+     * Clear the database ID of this component and also any child components
+     */
+    @Override
+    public void clearDatabaseIDs() {
+        this.databaseId = null;
+
+        for (Cells cells : cells.columns.values()) {
+            cells.components.forEach(SimpleComponent::clearDatabaseIDs);
+            cells.setDatabaseId(null);
+        }
+
+        cells.setDatabaseId(null);
     }
 
     /**

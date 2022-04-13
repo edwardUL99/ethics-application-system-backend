@@ -246,15 +246,19 @@ public class SubmittedApplication extends Application {
      */
     @Override
     public boolean canBeViewedBy(User user) {
-        Collection<Permission> permissions = user.getRole().getPermissions();
+        if (this.accessList.contains(new UserAccess(null, user))) {
+            return true;
+        } else {
+            Collection<Permission> permissions = user.getRole().getPermissions();
 
-        String username = user.getUsername();
-        boolean isAssigned = assignedCommitteeMembers.stream().map(AssignedCommitteeMember::getUser)
-                .anyMatch(u -> u.getUsername().equals(username));
+            String username = user.getUsername();
+            boolean isAssigned = assignedCommitteeMembers.stream().map(AssignedCommitteeMember::getUser)
+                    .anyMatch(u -> u.getUsername().equals(username));
 
-        return (this.user.getUsername().equals(user.getUsername()) && permissions.contains(Permissions.VIEW_OWN_APPLICATIONS))
-                || (permissions.contains(Permissions.REVIEW_APPLICATIONS) && isAssigned)
-                || permissions.contains(Permissions.VIEW_ALL_APPLICATIONS);
+            return (this.user.getUsername().equals(user.getUsername()) && permissions.contains(Permissions.VIEW_OWN_APPLICATIONS))
+                    || (permissions.contains(Permissions.REVIEW_APPLICATIONS) && isAssigned)
+                    || permissions.contains(Permissions.VIEW_ALL_APPLICATIONS);
+        }
     }
 
     /**
@@ -347,6 +351,7 @@ public class SubmittedApplication extends Application {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
                 new ArrayList<>(attachedFiles), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, submittedTime, approvalTime);
         submitted.comments = comments;
+        submitted.accessList = new ArrayList<>(accessList);
         submitted.previousCommitteeMembers = new ArrayList<>(previousCommitteeMembers);
         submitted.setLastUpdated(lastUpdated);
 

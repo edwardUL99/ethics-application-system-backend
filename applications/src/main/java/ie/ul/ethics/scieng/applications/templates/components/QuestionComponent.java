@@ -38,6 +38,10 @@ public abstract class QuestionComponent extends SimpleComponent {
      * The specified string to autofill the field from
      */
     protected String autofill;
+    /**
+     * Determines if this field is a candidate for input from a supervisor and prompt the applicant to request that
+     */
+    protected Boolean requestInput;
 
     /**
      * The default value for required

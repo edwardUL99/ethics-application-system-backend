@@ -1,7 +1,6 @@
 package ie.ul.ethics.scieng.common.properties;
 
 import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.core.io.support.PropertiesLoaderUtils;
 
 import java.io.IOException;
@@ -27,13 +26,21 @@ public final class PropertyFinder {
     }
 
     /**
+     * Set the loaded properties to use for resolution from property files
+     * @param loadedProperties the loaded property file resources
+     */
+    public static void configure(LoadedProperties loadedProperties) {
+        PropertyFileResolver.loadedProperties = loadedProperties;
+    }
+
+    /**
      * Find the property in the registered sources, in the order they were registered by {@link #registerSource(PropertySource)},
      * with the first property being found being the one returned
      * @param propertyNames a single property name (or array of the multiple variants the property can be set as)
      * @return the property if found, null if not
      */
     public static String findProperty(String...propertyNames) {
-        String property = null;
+        String property;
 
         for (String propertyName : propertyNames) {
             for (PropertySource source : sources) {
@@ -44,7 +51,7 @@ public final class PropertyFinder {
             }
         }
 
-        return property;
+        return null;
     }
 
     /**
@@ -67,7 +74,7 @@ public final class PropertyFinder {
         /**
          * The property resolver interface for this enum value
          */
-        private PropertyResolver propertyResolver;
+        private final PropertyResolver propertyResolver;
 
         /**
          * Create a property source enum value
@@ -127,6 +134,11 @@ public final class PropertyFinder {
      */
     private static class PropertyFileResolver implements PropertyResolver {
         /**
+         * The loaded properties. Needs to be configured by {@link PropertyFinder#configure(LoadedProperties)}
+         */
+        private static LoadedProperties loadedProperties;
+
+        /**
          * Resolve the property by propertyName
          *
          * @param propertyName the name of the property
@@ -134,18 +146,18 @@ public final class PropertyFinder {
          */
         @Override
         public String resolve(String propertyName) {
-            try {
-                Resource[] resources = new PathMatchingResourcePatternResolver().getResources("classpath*:*.ethics.properties");
+            if (loadedProperties != null) {
+                try {
+                    for (Resource resource : loadedProperties.getResources()) {
+                        Properties properties = PropertiesLoaderUtils.loadProperties(resource);
+                        String property = properties.getProperty(propertyName);
 
-                for (Resource resource : resources) {
-                    Properties properties = PropertiesLoaderUtils.loadProperties(resource);
-                    String property = properties.getProperty(propertyName);
-
-                    if (property != null)
-                        return property;
+                        if (property != null)
+                            return property;
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
                 }
-            } catch (IOException ex) {
-                ex.printStackTrace();
             }
 
             return null;
