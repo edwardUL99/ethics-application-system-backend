@@ -3,7 +3,7 @@
 arg="$1"
 
 if [ "$arg" != "start" ] && [ "$arg" != "stop" ] && [ "$arg" != "restart" ] && [ "$arg" != "status" ]; then
-	echo "Usage: ./clamav-daemon.sh start/stop/restart/status"
+	echo "Usage: ./clamav-daemon.sh start|stop|restart|status"
 	exit 1
 fi
 
