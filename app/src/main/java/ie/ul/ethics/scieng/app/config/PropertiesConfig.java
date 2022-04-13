@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
@@ -17,24 +18,38 @@ import java.io.IOException;
  */
 @Configuration
 @Log4j2
+@Order(-1000)
 public class PropertiesConfig {
+    /**
+     * The loaded resources to add to the loaded properties
+     */
+    private static Resource[] resources;
+
+    /**
+     * Instantiate the config
+     * @param loadedProperties the class  to hold the loaded properties resources
+     */
+    @Autowired
+    public PropertiesConfig(LoadedProperties loadedProperties) {
+        loadedProperties.setResources(resources);
+        PropertyFinder.configure(loadedProperties);
+    }
+
     /**
      * Create the configurer for property sources and return it as a bean
      * @return the configurer bean
      * @throws IOException if an error occurs reading resources
      */
     @Bean
-    @Autowired
-    public PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer(LoadedProperties loadedProperties) throws IOException {
+    public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() throws IOException {
         PropertySourcesPlaceholderConfigurer configurer = new PropertySourcesPlaceholderConfigurer();
         Resource[] resources = new PathMatchingResourcePatternResolver().getResources("classpath*:*.ethics.properties");
 
         log.info("Configured application property sources (*.ethics.properties) using files found on the classpath. The " +
                 "files found are: {}", (Object)resources);
 
-        loadedProperties.setResources(resources);
+        PropertiesConfig.resources = resources;
         configurer.setLocations(resources);
-        PropertyFinder.configure(loadedProperties);
 
         return configurer;
     }
