@@ -70,6 +70,16 @@ public abstract class ApplicationComponent implements Comparable<ApplicationComp
     public abstract void clearDatabaseIDs();
 
     /**
+     * Determines if the given component ID matches the ID of this component. (If multiple components are nested
+     * inside the same component, this should be overridden and first check if this component matches, then check children)
+     * @param componentId the ID to match
+     * @return true if matched, false if not
+     */
+    public boolean matchesComponentId(String componentId) {
+        return this.componentId.equals(componentId);
+    }
+
+    /**
      * Compares based on databaseId
      */
     @Override

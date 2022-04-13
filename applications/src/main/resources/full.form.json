@@ -145,16 +145,19 @@
                     "columns": {
                       "Name": {
                         "type": "text-question",
-                        "name": "other_investigator_name"
+                        "name": "other_investigator_name",
+                        "required": false
                       },
                       "Qualifications & Affiliation": {
                         "type": "text-question",
-                        "name": "other_investigator_qualifications"
+                        "name": "other_investigator_qualifications",
+                        "required": false
                       },
                       "Signature": {
                         "type": "signature",
                         "name": "other_investigator_signature",
-                        "label": null
+                        "label": null,
+                        "required": false
                       }
                     }
                   },
@@ -607,11 +610,6 @@
             },
             {
               "type": "text-question",
-              "title": "Where will data be stored, i.e. Room Number?",
-              "name": "data_storage_location"
-            },
-            {
-              "type": "text-question",
               "title": "Who will have custody and access to the data?",
               "name": "data_custody_access",
               "singleLine": false
@@ -826,8 +824,7 @@
               "type": "text-question",
               "title": "Principal Investigator Name*",
               "description": "*In the case where the principal investigator is not a permanent employee of the University, the relevant head of department must sign this declaration in their place",
-              "name": "pi_declaration_name",
-              "requestInput": true
+              "name": "pi_declaration_name"
             },
             {
               "type": "signature",

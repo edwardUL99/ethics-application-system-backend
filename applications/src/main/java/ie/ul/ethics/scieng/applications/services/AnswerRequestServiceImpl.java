@@ -10,18 +10,22 @@ import ie.ul.ethics.scieng.applications.models.applications.answerrequest.AddAns
 import ie.ul.ethics.scieng.applications.models.applications.answerrequest.RespondAnswerRequest;
 import ie.ul.ethics.scieng.applications.models.applications.answerrequest.AnswerRequest;
 import ie.ul.ethics.scieng.applications.repositories.AnswerRequestRepository;
+import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class represents the default implementation of the AnswerRequestService
@@ -178,14 +182,56 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
     }
 
     /**
+     * Verify that all the components in the request exist in the application template and remove any that no longer exist
+     * @param request the request to verify
+     * @return the same request if least one component still exists, false if none exist
+     */
+    private AnswerRequest verifyComponentsExist(AnswerRequest request) {
+        if (request != null) {
+            ApplicationTemplate template = request.getApplication().getApplicationTemplate();
+            List<ApplicationComponent> components = request.getComponents();
+            List<ApplicationComponent> modified = components
+                    .stream()
+                    .filter(component -> template.hasComponent(component.getComponentId()))
+                    .collect(Collectors.toList());
+
+            int modifiedSize = modified.size();
+            int originalSize = components.size();
+
+            if (modified.size() == 0) {
+                repository.delete(request);
+
+                return null;
+            } else if (modifiedSize != originalSize) {
+                request.setComponents(modified);
+                repository.save(request);
+            }
+
+            return request;
+        } else {
+            return null;
+        }
+    }
+
+    /**
      * Get the request identified by the ID. If the application is no longer editable, this will return null
      *
      * @param id the ID of the request
      * @return the request if found, or null if no longer valid or not found
      */
     @Override
+    @Transactional
     public AnswerRequest getRequest(Long id) {
-        return repository.findById(id).orElse(null);
+        AnswerRequest request = repository.findById(id).orElse(null);
+
+        if (request != null) {
+            if (!validStates.contains(request.getApplication().getStatus()))
+                repository.delete(request);
+            else
+                return verifyComponentsExist(request);
+        }
+
+        return null;
     }
 
     /**
@@ -195,6 +241,7 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
      * @return the list of answer requests from the supervisor
      */
     @Override
+    @Transactional
     public List<AnswerRequest> getRequests(String supervisor) {
         List<AnswerRequest> requests = repository.findByUser_username(supervisor);
         List<AnswerRequest> returned = new ArrayList<>(requests);
@@ -206,6 +253,9 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
             }
         });
 
-        return returned;
+        return returned.stream()
+            .map(this::verifyComponentsExist)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 }

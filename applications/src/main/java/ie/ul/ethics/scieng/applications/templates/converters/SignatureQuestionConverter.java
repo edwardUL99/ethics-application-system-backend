@@ -34,6 +34,6 @@ public class SignatureQuestionConverter extends QuestionConverter {
     protected QuestionComponent createBase(Map<String, Object> map) throws ApplicationParseException {
         return new SignatureQuestionComponent((String)map.get("title"), (String)map.get("name"),
                 Converters.parseLongString(ComponentType.SIGNATURE, "description", map.getOrDefault("description", null)),
-                (String)map.get("label"));
+                (String)map.get("label"), (boolean)map.getOrDefault("required", true));
     }
 }

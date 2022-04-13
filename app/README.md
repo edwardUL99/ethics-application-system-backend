@@ -7,8 +7,10 @@ This module does not provide any of its own endpoints. It's sole purpose is to s
 for endpoints defined in the modules.
 
 ## Configuration
-The file [app.ethics.properties.sample](src/main/resources/app.ethics.properties.sample) **needs* to be renamed to
-`app.ethics.properties` and the database details changed to match the database configured for the application.
+The file [app.ethics.properties](src/main/resources/app.ethics.properties) reads the following environment variables to configure the database:
+* DATABASE_URL: jdbc url for the database
+* DATABASE_USER: username of the database user to login with
+* DATABASE_PASS: password of the database to login with
 
 You may also need to change the postgres dependency in the [Parent POM](../pom.xml)
 to a different driver (e.g. MySQL) if using a different database

@@ -46,4 +46,24 @@ public abstract class CompositeComponent extends ApplicationComponent {
         for (ApplicationComponent component : getComponents())
             component.clearDatabaseIDs();
     }
+
+    /**
+     * Determines if the given component ID matches the ID of this component. (If multiple components are nested
+     * inside the same component, this should be overridden and first check if this component matches, then check children)
+     *
+     * @param componentId the ID to match
+     * @return true if matched, false if not
+     */
+    @Override
+    public boolean matchesComponentId(String componentId) {
+        if (super.matchesComponentId(componentId)) {
+            return true;
+        } else {
+            for (ApplicationComponent component : getComponents())
+                if (component.matchesComponentId(componentId))
+                    return true;
+
+            return false;
+        }
+    }
 }

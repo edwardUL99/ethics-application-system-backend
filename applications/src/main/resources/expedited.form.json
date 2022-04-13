@@ -583,8 +583,7 @@
               "type": "text-question",
               "title": "Principal Investigator Name*",
               "description": "*In the case where the principal investigator is not a permanent employee of the University, the relevant head of department must sign this declaration in their place",
-              "name": "pi_declaration_name",
-              "requestInput": true
+              "name": "pi_declaration_name"
             },
             {
               "type": "signature",

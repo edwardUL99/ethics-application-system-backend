@@ -67,6 +67,19 @@ public class ApplicationTemplate {
     }
 
     /**
+     * Determines if the template has a component with the given ID
+     * @param componentId the ID to search for
+     * @return true if it has an ID, false if not
+     */
+    public boolean hasComponent(String componentId) {
+        for (ApplicationComponent component : components)
+            if (component.matchesComponentId(componentId))
+                return true;
+
+        return false;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
