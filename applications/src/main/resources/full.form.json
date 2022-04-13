@@ -1,7 +1,10 @@
 {
   "id": "full",
   "name": "Full Ethics Application Form",
-  "description": "This form provides the question for the full application to the ethics committee. This form is filled in when the expedited application form is not sufficient",
+  "description": [
+    "This application provides the question for the full application to the ethics committee. ",
+    "This application should be filled in when the study involves participants under 18 and/or vulnerable participants"
+  ],
   "version": "1.0",
   "components": [
     {

@@ -25,6 +25,11 @@ sudo tools/clamav-update.sh
 sudo tools/clamav-start.sh
 ```
 
+The following utility allows interacting with the daemon:
+```bash
+sudo tools/clamav-daemon.sh start|stop|status|restart
+```
+
 In the properties file for the module, there are `files.antivirus.*` properties.
 * enabled: Determines if antivirus scanning is enabled or disabled
 * host: The hostname the ClamAV daemon is running on (default localhost)
@@ -32,3 +37,12 @@ In the properties file for the module, there are `files.antivirus.*` properties.
 * platform: The platform the ClamAV daemon is running on (default UNIX, can choose from WINDOWS or JVM_PLATFORM)
 
 Or it can be disabled by passing -Dantivirus.disable in as a System property
+
+#### Troubleshooting
+If on startup of the application, you get an exception with the following message:
+```
+Caused by: ie.ul.ethics.scieng.files.antivirus.AntivirusException: Failed to sanity check the antivirus scanner ie.ul.ethics.scieng.files.antivirus.ClamAvAntivirusScanner@6101fd7d
+```
+it means that the antivirus provider (ClamAV) could not be reached. This could be because the daemon isn't running,
+or the configuration details are not correct. Try running `sudo tools/clamav-daemon.sh start` and try starting the application
+again. Otherwise, check that the configuration details are correct.

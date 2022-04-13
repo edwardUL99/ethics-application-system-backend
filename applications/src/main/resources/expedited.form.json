@@ -1,7 +1,11 @@
 {
   "id": "expedited",
   "name": "Expedited Ethics Application Form",
-  "description": "This form provides the questions for the expedited application to the ethics committee",
+  "description": [
+    "This application is what most studies should use.",
+    " If your study involves any participants under 18 and/or vulnerable participants,",
+    " choose the full application"
+  ],
   "version": "1.0",
   "components": [
     {
