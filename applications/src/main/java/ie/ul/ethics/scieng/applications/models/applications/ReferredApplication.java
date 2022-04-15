@@ -5,6 +5,7 @@ import ie.ul.ethics.scieng.applications.exceptions.InvalidStatusException;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.users.authorization.Permissions;
 import ie.ul.ethics.scieng.users.models.User;
+import ie.ul.ethics.scieng.users.models.authorization.Permission;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -125,7 +126,15 @@ public class ReferredApplication extends SubmittedApplication {
     @Override
     public ReferredApplication clean(User user) {
         ReferredApplication application = copy();
-        application.comments = filterComments(application.comments, user.getRole().getPermissions());
+        Collection<Permission> permissions = user.getRole().getPermissions();
+        boolean review = permissions.contains(Permissions.REVIEW_APPLICATIONS);
+
+        if (!review) {
+            application.assignedCommitteeMembers.clear();
+            application.previousCommitteeMembers.clear();
+        }
+
+        application.comments = filterComments(application.comments, permissions);
 
         return application;
     }

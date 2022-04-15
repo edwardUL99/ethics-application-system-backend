@@ -320,19 +320,24 @@ public class SubmittedApplication extends Application {
     public SubmittedApplication clean(User user) {
         SubmittedApplication application = copy();
         Collection<Permission> permissions = user.getRole().getPermissions();
+        boolean review = permissions.contains(Permissions.REVIEW_APPLICATIONS);
+
+        if (!review)
+            application.assignedCommitteeMembers.clear();
 
         if (status == ApplicationStatus.SUBMITTED || status == ApplicationStatus.REVIEW || status == ApplicationStatus.REVIEWED) {
-            if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+            if (!review) {
                 application.comments = filterComments(application.comments, permissions);
                 application.finalComment = null;
+                application.assignedCommitteeMembers.clear();
             }
         } else if (status == ApplicationStatus.RESUBMITTED) {
-            if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+            if (!review) {
                 application.comments = filterComments(application.comments, permissions);
                 application.finalComment = null;
                 application.previousCommitteeMembers.clear();
             }
-        } else if ((status == ApplicationStatus.APPROVED || status == ApplicationStatus.REJECTED) && !permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+        } else if ((status == ApplicationStatus.APPROVED || status == ApplicationStatus.REJECTED) && !review) {
             application.comments.clear();
             application.previousCommitteeMembers.clear();
         }

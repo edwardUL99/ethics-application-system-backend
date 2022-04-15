@@ -232,7 +232,8 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
     public MappedApprovalRequest mapApprovalRequest(ApproveApplicationRequest request) {
         Application application = applicationService.getApplication(request.getId());
         ReviewSubmittedApplicationRequest.Comment finalComment = request.getFinalComment();
-        Comment mapped = new Comment(null, userService.loadUser(finalComment.getUsername()), finalComment.getComment(), null, new ArrayList<>());
+        Comment mapped = (finalComment == null) ? null:new Comment(null,
+                userService.loadUser(finalComment.getUsername()), finalComment.getComment(), null, new ArrayList<>());
 
         return new MappedApprovalRequest(application, request.isApprove(), mapped);
     }
