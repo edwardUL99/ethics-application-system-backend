@@ -165,20 +165,25 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
 
             answers.forEach((k, v) -> {
                 v.setUser(user);
-                Answer answer = applicationAnswers.get((k));
-
-                if (answer == null || answer.getValue().isEmpty())
-                    // only replace the answer if one is not already provided
-                    applicationAnswers.put(k, v);
+                applicationAnswers.put(k, v);
             });
 
-            repository.delete(answerRequest);
-            application.removeUserAccess(user);
-            applicationService.createApplication(application, true);
+            deleteRequest(answerRequest);
             emailService.sendAnsweredResponse(answerRequest);
 
             return true;
         }
+    }
+
+    /**
+     * Deletes the given answer request
+     * @param request the request to delete
+     */
+    private void deleteRequest(AnswerRequest request) {
+        Application application = request.getApplication();
+        repository.delete(request);
+        application.removeUserAccess(request.getUser());
+        applicationService.createApplication(application, true);
     }
 
     /**
@@ -188,7 +193,8 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
      */
     private AnswerRequest verifyComponentsExist(AnswerRequest request) {
         if (request != null) {
-            ApplicationTemplate template = request.getApplication().getApplicationTemplate();
+            Application application = request.getApplication();
+            ApplicationTemplate template = application.getApplicationTemplate();
             List<ApplicationComponent> components = request.getComponents();
             List<ApplicationComponent> modified = components
                     .stream()
@@ -199,7 +205,7 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
             int originalSize = components.size();
 
             if (modified.size() == 0) {
-                repository.delete(request);
+                deleteRequest(request);
 
                 return null;
             } else if (modifiedSize != originalSize) {
@@ -226,7 +232,7 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
 
         if (request != null) {
             if (!validStates.contains(request.getApplication().getStatus()))
-                repository.delete(request);
+                deleteRequest(request);
             else
                 return verifyComponentsExist(request);
         }
@@ -248,7 +254,7 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
 
         requests.forEach(r -> {
             if (!validStates.contains(r.getApplication().getStatus())) {
-                repository.delete(r);
+                deleteRequest(r);
                 returned.remove(r);
             }
         });
