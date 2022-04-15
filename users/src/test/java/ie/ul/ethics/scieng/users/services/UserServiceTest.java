@@ -406,13 +406,4 @@ public class UserServiceTest {
     public void shouldUpdateRoleToChair() {
         testUpdateRoleDowngrade(Roles.CHAIR);
     }
-
-    /**
-     * This method tests that if the requested role to update to is administrator and that any existing administrators are downgraded
-     * to committee members
-     */
-    @Test
-    public void shouldUpdateUserToAdministrator() {
-        testUpdateRoleDowngrade(Roles.ADMINISTRATOR);
-    }
 }
