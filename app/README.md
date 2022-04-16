@@ -7,7 +7,7 @@ This module does not provide any of its own endpoints. It's sole purpose is to s
 for endpoints defined in the modules.
 
 ## Configuration
-The file [app.ethics.properties](src/main/resources/app.ethics.properties) reads the following environment variables to configure the database:
+The file [application.properties](src/main/resources/application.properties) reads the following environment variables to configure the database:
 * DATABASE_URL: jdbc url for the database
 * DATABASE_USER: username of the database user to login with
 * DATABASE_PASS: password of the database to login with

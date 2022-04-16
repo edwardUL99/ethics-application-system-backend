@@ -134,7 +134,7 @@ public class ReferredApplication extends SubmittedApplication {
             application.previousCommitteeMembers.clear();
         }
 
-        application.comments = filterComments(application.comments, permissions);
+        application.comments = filterComments(application.comments, permissions, user);
 
         return application;
     }

@@ -175,7 +175,7 @@ public class ApplicationRequestMapperImpl implements ApplicationRequestMapper {
      */
     public Comment mapComment(ReviewSubmittedApplicationRequest.Comment comment) {
         Comment mapped = new Comment(comment.getId(), userService.loadUser(comment.getUsername()), comment.getComment(),
-                comment.getComponentId(), new ArrayList<>(), comment.getCreatedAt(), comment.isSharedApplicant());
+                comment.getComponentId(), new ArrayList<>(), comment.getCreatedAt(), comment.isSharedApplicant(), comment.isSharedReviewer());
         mapped.setEdited(comment.isEdited());
 
         if (mapped.getUser() == null)

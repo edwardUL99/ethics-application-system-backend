@@ -447,7 +447,7 @@ public class ApplicationRequestMapperTest {
 
         Application returned = requestMapper.reviewSubmittedRequestToSubmitted(request);
 
-        assertEquals(mapped, returned);
+        assertEquals(mapped.getComments(), returned.getComments());
         assertTrue(returned.getComments().get(comment.getComponentId()).getComments().contains(comment));
         verify(applicationService).getApplication(APPLICATION_ID);
         verify(userService, times(2)).loadUser(USERNAME);
