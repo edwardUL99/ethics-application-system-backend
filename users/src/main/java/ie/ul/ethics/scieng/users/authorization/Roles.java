@@ -55,7 +55,7 @@ public final class Roles {
     /**
      * This is a role that has all the permissions of the CHAIR except for a certain set
      */
-    public static final Role ADMINISTRATOR =
+    public static Role ADMINISTRATOR =
         new Role(null, "Administrator",
                 "This role has the same permissions as the chair except for the permission to grant permissions to others",
                 Permissions.getPermissions().stream()
@@ -72,6 +72,9 @@ public final class Roles {
         return Arrays.stream(Roles.class.getDeclaredFields())
             .filter(f -> Modifier.isStatic(f.getModifiers()) && !f.getName().equals("log"))
             .map(f -> {
+                if (Modifier.isFinal(f.getModifiers()))
+                    throw new IllegalStateException("Role field " + f + " is final. Role fields need to be non-final");
+
                 try {
                     Role r = (Role)f.get(roleObj);
                     r.setTag(f.getName());

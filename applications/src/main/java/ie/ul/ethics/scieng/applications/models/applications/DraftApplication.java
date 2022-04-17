@@ -75,7 +75,20 @@ public class DraftApplication extends Application {
      */
     @Override
     public boolean canBeViewedBy(User user) {
-        return accessList.contains(new UserAccess(null, user)) || this.user.getUsername().equals(user.getUsername()) &&
+        return canBeViewedBy(user, false);
+    }
+
+    /**
+     * This method determines if the application can be viewed by the user
+     *
+     * @param user          the user that wished to view the application
+     * @param answerRequest true to determine if the user can access the application in an answer request context (by checking access list), otherwise just check
+     *                      permissions and credentials
+     * @return true if they can view it, false if not
+     */
+    @Override
+    public boolean canBeViewedBy(User user, boolean answerRequest) {
+        return (answerRequest && accessList.contains(new UserAccess(null, user))) || this.user.getUsername().equals(user.getUsername()) &&
                 user.getRole().getPermissions().contains(Permissions.VIEW_OWN_APPLICATIONS);
     }
 

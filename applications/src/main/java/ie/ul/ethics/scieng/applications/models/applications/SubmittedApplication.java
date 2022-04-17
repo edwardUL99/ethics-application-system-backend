@@ -247,7 +247,20 @@ public class SubmittedApplication extends Application {
      */
     @Override
     public boolean canBeViewedBy(User user) {
-        if (this.accessList.contains(new UserAccess(null, user))) {
+        return canBeViewedBy(user, false);
+    }
+
+    /**
+     * This method determines if the application can be viewed by the user
+     *
+     * @param user          the user that wished to view the application
+     * @param answerRequest true to determine if the user can access the application in an answer request context (by checking access list), otherwise just check
+     *                      permissions and credentials
+     * @return true if they can view it, false if not
+     */
+    @Override
+    public boolean canBeViewedBy(User user, boolean answerRequest) {
+        if (answerRequest && this.accessList.contains(new UserAccess(null, user))) {
             return true;
         } else {
             Collection<Permission> permissions = user.getRole().getPermissions();

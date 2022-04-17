@@ -138,11 +138,13 @@ public class ApplicationController implements SearchController<ApplicationRespon
      * This endpoint retrieves the application with the given ID
      * @param id the id of the application
      * @param applicationId the applicationId if wants to be found by that
+     * @param answerRequest true if the application is being retrieved in an answerRequest context, otherwise access will be blocked regardless of accessList
      * @return the response body
      */
     @GetMapping
     public ResponseEntity<?> getApplication(@RequestParam(required = false, name = "dbId") Long id,
-                                            @RequestParam(required = false, name = "id") String applicationId) {
+                                            @RequestParam(required = false, name = "id") String applicationId,
+                                            @RequestParam(required = false, name = "answerRequest") boolean answerRequest) {
         if ((id == null && applicationId == null) || (id != null && applicationId != null))
             return ResponseEntity.badRequest().build();
 
@@ -151,7 +153,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
         if (application != null) {
             User user = userService.loadUser(authenticationInformation.getUsername());
 
-            if (application.canBeViewedBy(user)) {
+            if (application.canBeViewedBy(user, answerRequest)) {
                 return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application.clean(user)));
             } else {
                 return respondError(INSUFFICIENT_PERMISSIONS);

@@ -102,6 +102,9 @@ public final class Permissions {
         return Arrays.stream(Permissions.class.getDeclaredFields())
             .filter(f -> Modifier.isStatic(f.getModifiers()) && !f.getName().equals("log"))
             .map(f -> {
+                if (Modifier.isFinal(f.getModifiers()))
+                    throw new IllegalStateException("Permission field " + f + " is final. Permission fields need to be non-final");
+
                 try {
                     Permission p = (Permission) f.get(permissionObj);
                     p.setTag(f.getName());
@@ -121,21 +124,11 @@ public final class Permissions {
      * @return the found permission, null if not found
      */
     public static Permission getPermissionByFieldName(String fieldName) {
-        Permissions permissionObj = new Permissions();
-
-        return Arrays.stream(Permissions.class.getDeclaredFields())
-            .filter(f -> Modifier.isStatic(f.getModifiers()) &&
-                    f.getName().equals(fieldName) && !f.getName().equals("log"))
-            .map(f -> {
-                try {
-                    return (Permission) f.get(permissionObj);
-                } catch (IllegalAccessException ex) {
-                    ex.printStackTrace();
-                    return null;
-                }
-            }).filter(Objects::nonNull)
-            .findFirst()
-            .orElse(null);
+        return getPermissions()
+                .stream()
+                .filter(p -> p.getTag().equals(fieldName))
+                .findFirst()
+                .orElse(null);
     }
 
     /**

@@ -59,6 +59,7 @@ public class ReplacementBranch extends Branch {
         /**
          * The container ID to replace
          */
+        @Column(name = "replaceId")
         private String replace;
         /**
          * The ID of the container to add into the replacement. The ID can be [application-id]-[containerId]
