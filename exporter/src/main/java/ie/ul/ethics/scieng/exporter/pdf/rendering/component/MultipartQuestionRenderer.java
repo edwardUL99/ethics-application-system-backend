@@ -8,6 +8,7 @@ import com.itextpdf.text.Paragraph;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.MultipartQuestionComponent;
 import ie.ul.ethics.scieng.applications.templates.components.QuestionComponent;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,9 +22,10 @@ public class MultipartQuestionRenderer extends QuestionComponentRenderer {
      *
      * @param application the application being rendered
      * @param component   the component to render
+     * @param context     rendering context
      */
-    public MultipartQuestionRenderer(Application application, QuestionComponent component) {
-        super(application, component);
+    public MultipartQuestionRenderer(Application application, QuestionComponent component, PDFContext context) {
+        super(application, component, context);
     }
 
     /**
@@ -52,7 +54,7 @@ public class MultipartQuestionRenderer extends QuestionComponentRenderer {
             Chunk partTitle = new Chunk(partNumber, FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.LIGHT_GRAY));
             paragraph.add(partTitle);
             paragraph.add(Chunk.NEWLINE);
-            paragraph.add(ComponentRenderers.getRenderer(application, part.getQuestion()).renderToElement(new HashMap<>()));
+            paragraph.add(ComponentRenderers.getRenderer(application, context, part.getQuestion()).renderToElement(new HashMap<>()));
             paragraph.add(Chunk.NEWLINE);
         }
 

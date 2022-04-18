@@ -7,6 +7,7 @@ import com.itextpdf.text.PageSize;
 import com.itextpdf.text.pdf.PdfWriter;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.exporter.exceptions.ExportException;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 import ie.ul.ethics.scieng.exporter.pdf.rendering.info.InformationRenderers;
 
 import java.io.ByteArrayInputStream;
@@ -38,8 +39,13 @@ public class ApplicationRenderer {
         return InformationRenderers.getApplicationInfo(application.getStatus()).renderInfo(application);
     }
 
-    private Element parseTemplate() {
-        return new ApplicationTemplateRenderer(application).render();
+    /**
+     * Parse the template into PDF
+     * @param context the context for rendering
+     * @return the parsed template
+     */
+    private Element parseTemplate(PDFContext context) {
+        return new ApplicationTemplateRenderer(application, context).render();
     }
 
     /**
@@ -48,15 +54,20 @@ public class ApplicationRenderer {
      */
     public InputStream render() {
         try {
+            PDFContext context = new PDFContext();
+
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Document document = new Document(PageSize.A4);
             PdfWriter.getInstance(document, outputStream);
 
+            context.setDocument(document);
+
             document.open();
             document.add(getApplicationInfo());
-            document.add(parseTemplate());
-
+            document.add(parseTemplate(context));
             document.close();
+
+            context.setDocument(null);
 
             return new ByteArrayInputStream(outputStream.toByteArray());
         } catch (DocumentException ex) {

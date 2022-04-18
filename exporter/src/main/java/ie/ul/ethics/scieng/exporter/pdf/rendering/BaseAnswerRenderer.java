@@ -6,6 +6,7 @@ import com.itextpdf.text.FontFactory;
 import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 import ie.ul.ethics.scieng.users.models.User;
 
 /**
@@ -16,13 +17,14 @@ public abstract class BaseAnswerRenderer implements AnswerRenderer {
      * Renders the given answer to a PDF element
      *
      * @param answer the answer to render
+     * @param context the rendering context
      * @return the rendered element
      */
     @Override
-    public Element renderAnswer(Answer answer) {
+    public Element renderAnswer(Answer answer, PDFContext context) {
         Paragraph paragraph = new Paragraph();
         User user = answer.getUser();
-        Element value = parseAnswerValue(answer);
+        Element value = parseAnswerValue(answer, context);
 
         if (user == null) {
             return value;
@@ -42,7 +44,8 @@ public abstract class BaseAnswerRenderer implements AnswerRenderer {
     /**
      * Parse the value of the answer
      * @param answer the answer to parse
+     * @param context the rendering context
      * @return the element representing the value
      */
-    protected abstract Element parseAnswerValue(Answer answer);
+    protected abstract Element parseAnswerValue(Answer answer, PDFContext context);
 }

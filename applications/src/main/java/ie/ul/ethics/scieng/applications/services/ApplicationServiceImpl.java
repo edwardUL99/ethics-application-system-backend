@@ -246,7 +246,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private List<AttachedFile> getAttachedFiles(Application application) {
         return application.getAttachedFiles()
                 .stream()
-                .peek(file -> file.setId(null))
+                .map(AttachedFile::copy)
                 .collect(Collectors.toList());
     }
 

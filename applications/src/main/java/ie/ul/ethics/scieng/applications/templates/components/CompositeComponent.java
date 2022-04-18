@@ -32,11 +32,6 @@ public abstract class CompositeComponent extends ApplicationComponent {
     public abstract List<ApplicationComponent> getComponents();
 
     /**
-     * Sort the list of child components
-     */
-    public abstract void sortComponents();
-
-    /**
      * Clear the database ID of this component and also any child components
      */
     @Override

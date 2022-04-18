@@ -9,6 +9,7 @@ import com.itextpdf.text.Paragraph;
 import ie.ul.ethics.scieng.applications.models.applications.Answer;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.QuestionComponent;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 import ie.ul.ethics.scieng.exporter.pdf.rendering.AnswerRenderer;
 import ie.ul.ethics.scieng.exporter.pdf.rendering.AnswerRenderers;
 
@@ -26,15 +27,21 @@ public class QuestionComponentRenderer implements ComponentRenderer {
      * The component being rendered
      */
     protected final QuestionComponent component;
+    /**
+     * The context for rendering
+     */
+    protected final PDFContext context;
 
     /**
      * Construct a component instance
      * @param application the application being rendered
      * @param component the component to render
+     * @param context rendering context
      */
-    public QuestionComponentRenderer(Application application, QuestionComponent component) {
+    public QuestionComponentRenderer(Application application, QuestionComponent component, PDFContext context) {
         this.application = application;
         this.component = component;
+        this.context = context;
     }
 
     /**
@@ -47,9 +54,14 @@ public class QuestionComponentRenderer implements ComponentRenderer {
         Paragraph paragraph = new Paragraph();
 
         Font font = FontFactory.getFont(FontFactory.COURIER_BOLD, 16, BaseColor.BLACK);
-        Chunk title = new Chunk(component.getTitle(), font);
-        paragraph.add(title);
-        paragraph.add(Chunk.NEWLINE);
+
+        String titleText = component.getTitle();
+
+        if (titleText != null) {
+            Chunk title = new Chunk(titleText, font);
+            paragraph.add(title);
+            paragraph.add(Chunk.NEWLINE);
+        }
 
         Element description = renderDescription();
 
@@ -60,10 +72,8 @@ public class QuestionComponentRenderer implements ComponentRenderer {
 
         Answer answer = application.getAnswers().get(component.getComponentId());
 
-        if (answer != null) {
-            paragraph.add(renderAnswer(answer));
-            paragraph.add(Chunk.NEWLINE);
-        }
+        paragraph.add(renderAnswer(answer));
+        paragraph.add(Chunk.NEWLINE);
 
         Element comments = CommentsRenderer.renderComments(application, component);
 
@@ -96,11 +106,33 @@ public class QuestionComponentRenderer implements ComponentRenderer {
      */
     protected Element renderAnswer(Answer answer) {
         if (answer != null) {
-            AnswerRenderer renderer = AnswerRenderers.getRenderer(answer.getValueType());
+            AnswerRenderer renderer = customAnswerRenderer(answer);
 
-            return renderer.renderAnswer(answer);
+            if (renderer == null)
+                renderer = AnswerRenderers.getRenderer(answer.getValueType());
+
+            return renderer.renderAnswer(answer, context);
         } else {
             return new Chunk("No answer provided", FontFactory.getFont(FontFactory.COURIER, 14, BaseColor.BLACK));
         }
+    }
+
+    /**
+     * Determines if elements returned from {@link #renderToElement(Map)} should be added or if they are automatically added
+     *
+     * @return true to add, false to not add
+     */
+    @Override
+    public boolean addReturnedElements() {
+        return true;
+    }
+
+    /**
+     * A hook to define a custom answer render for the renderer. Return null to not define a custom one
+     * @param answer the answer being rendered
+     * @return the custom renderer, null if not
+     */
+    protected AnswerRenderer customAnswerRenderer(Answer answer) {
+        return null;
     }
 }

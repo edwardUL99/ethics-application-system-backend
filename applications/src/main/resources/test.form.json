@@ -250,6 +250,41 @@
               "title": "Record Based"
             }
           ]
+        },
+        {
+          "type": "multipart-question",
+          "title": "How many participants will be recruited?",
+          "conditional": false,
+          "parts": {
+            "1": {
+              "question": {
+                "type": "text-question",
+                "title": "Male",
+                "name": "male_participants",
+                "questionType": "number"
+              },
+              "branches": []
+            },
+            "2": {
+              "question": {
+                "type": "text-question",
+                "title": "Female",
+                "name": "female_participants",
+                "questionType": "number"
+              },
+              "branches": []
+            },
+            "3": {
+              "question": {
+                "type": "text-question",
+                "title": "Provide further information if necessary",
+                "name": "participants_recruitment_information",
+                "singleLine": false,
+                "required": false
+              },
+              "branches": []
+            }
+          }
         }
       ]
     }

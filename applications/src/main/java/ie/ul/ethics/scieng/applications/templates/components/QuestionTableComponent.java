@@ -91,6 +91,15 @@ public class QuestionTableComponent extends QuestionComponent {
     }
 
     /**
+     * If this component has a list of child components in some form or another this method, sorts them. Can be a noop
+     */
+    @Override
+    public void sortComponents() {
+        for (Cells cells : cells.columns.values())
+            cells.sort();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -133,6 +142,28 @@ public class QuestionTableComponent extends QuestionComponent {
          */
         @ManyToMany(cascade = CascadeType.ALL)
         private List<QuestionComponent> components;
+
+        /**
+         * Sort the cells. Sorted based on the id_X where X is the sequence number, i.e. the row index.
+         */
+        public void sort() {
+            components.sort((a, b) -> {
+                String[] aId = a.getComponentId().split("_");
+                String[] bId = b.getComponentId().split("_");
+
+                String aCompare = aId[aId.length - 1];
+                String bCompare = bId[bId.length - 1];
+
+                try {
+                    int aSequence = Integer.parseInt(aCompare);
+                    int bSequence = Integer.parseInt(bCompare);
+
+                    return aSequence - bSequence;
+                } catch (NumberFormatException ignored) {
+                    return aCompare.compareTo(bCompare);
+                }
+            });
+        }
 
         /**
          * {@inheritDoc}

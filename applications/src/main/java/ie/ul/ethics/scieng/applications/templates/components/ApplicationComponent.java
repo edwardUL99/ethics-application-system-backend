@@ -65,6 +65,11 @@ public abstract class ApplicationComponent implements Comparable<ApplicationComp
     }
 
     /**
+     * If this component has a list of child components in some form or another this method, sorts them. Can be a noop
+     */
+    public abstract void sortComponents();
+
+    /**
      * Clear the database ID of this component and also any child components
      */
     public abstract void clearDatabaseIDs();
