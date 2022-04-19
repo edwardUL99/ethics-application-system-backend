@@ -74,7 +74,8 @@ public abstract class Application {
      */
     protected LocalDateTime lastUpdated;
     /**
-     * A list of users with access to the application if they need to provide input to it
+     * A list of users with access to the application if they need to provide input to it. Access only for answer requests.
+     * Any other contexts (i.e. retrieving viewable applications), should be blocked
      */
     @OneToMany(cascade = CascadeType.ALL)
     protected List<UserAccess> accessList;
@@ -317,11 +318,20 @@ public abstract class Application {
     }
 
     /**
-     * This method determines if the provided user can view this application
+     * This method determines if the provided user can view this application without checking answer lists
      * @param user the user that wishes to view the application
      * @return true if they can view it, false if not
      */
     public abstract boolean canBeViewedBy(User user);
+
+    /**
+     * This method determines if the application can be viewed by the user
+     * @param user the user that wished to view the application
+     * @param answerRequest true to determine if the user can access the application in an answer request context (by checking access list), otherwise just check
+     *                      permissions and credentials
+     * @return true if they can view it, false if not
+     */
+    public abstract boolean canBeViewedBy(User user, boolean answerRequest);
 
     /**
      * Set the status of the application. The status an application can be in differs depending on the concrete sub-class.

@@ -9,11 +9,10 @@ import ie.ul.ethics.scieng.authentication.models.ResetPasswordToken;
 import ie.ul.ethics.scieng.authentication.repositories.AccountRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ConfirmationTokenRepository;
 import ie.ul.ethics.scieng.authentication.repositories.ResetPasswordTokenRepository;
-import ie.ul.ethics.scieng.test.utils.Caching;
 import ie.ul.ethics.scieng.authentication.test.config.TestConfiguration;
 import ie.ul.ethics.scieng.test.utils.TestApplication;
 import static ie.ul.ethics.scieng.test.utils.constants.Authentication.*;
-import org.junit.jupiter.api.BeforeEach;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,19 +65,6 @@ public class AccountServiceTest {
      */
     @Autowired
     private AccountService accountService;
-    /**
-     * The cache utilities so we can evict cache for testing
-     */
-    @Autowired
-    private Caching cache;
-
-    /**
-     * Clear cache before each test
-     */
-    @BeforeEach
-    private void clearCache() {
-        cache.clearCache();
-    }
 
     /**
      * Creates an account for testing
@@ -274,24 +260,6 @@ public class AccountServiceTest {
     }
 
     /**
-     * Tests that an account should be retrieved by username from cache
-     */
-    @Test
-    public void shouldGetAccountByUsernameCached() {
-        Account account = createTestAccount();
-
-        given(accountRepository.findByUsername(USERNAME))
-                .willReturn(Optional.of(account));
-
-        accountService.getAccount(USERNAME);
-        accountService.getAccount(USERNAME);
-        accountService.getAccount(USERNAME);
-        accountService.getAccount(USERNAME);
-
-        verify(accountRepository, times(1)).findByUsername(USERNAME);
-    }
-
-    /**
      * Tests that null should be returned if a username does not exist
      */
     @Test
@@ -319,24 +287,6 @@ public class AccountServiceTest {
 
         assertEquals(account, returned);
         verify(accountRepository).findByEmail(EMAIL);
-    }
-
-    /**
-     * Tests that an account should be retrieved by email
-     */
-    @Test
-    public void shouldGetAccountByEmailCached() {
-        Account account = createTestAccount();
-
-        given(accountRepository.findByEmail(EMAIL))
-                .willReturn(Optional.of(account));
-
-        accountService.getAccount(EMAIL, true);
-        accountService.getAccount(EMAIL, true);
-        accountService.getAccount(EMAIL, true);
-        accountService.getAccount(EMAIL, true);
-
-        verify(accountRepository, times(1)).findByEmail(EMAIL);
     }
 
     /**

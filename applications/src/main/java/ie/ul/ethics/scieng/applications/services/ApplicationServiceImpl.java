@@ -24,10 +24,6 @@ import ie.ul.ethics.scieng.users.models.User;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +35,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -47,7 +42,6 @@ import java.util.stream.Collectors;
  * This class is the implementation of the ApplicationService
  */
 @Service
-@CacheConfig(cacheNames = "applications")
 @Log4j2
 public class ApplicationServiceImpl implements ApplicationService {
     /**
@@ -108,7 +102,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the application if found, null if not
      */
     @Override
-    @Cacheable(value = "application")
     public Application getApplication(Long id) {
         return applicationRepository.findById(id).orElse(null);
     }
@@ -120,7 +113,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the application if found, null if not
      */
     @Override
-    @Cacheable(value = "application")
     public Application getApplication(String applicationId) {
         return applicationRepository.findByApplicationId(applicationId).orElse(null);
     }
@@ -132,7 +124,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the list of applications
      */
     @Override
-    @Cacheable(value = "user_applications")
     public List<Application> getUserApplications(User user) {
         return applicationRepository.findByUser(user);
     }
@@ -144,7 +135,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the list of found applications
      */
     @Override
-    @Cacheable(value = "status_applications")
     public List<Application> getApplicationsWithStatus(ApplicationStatus status) {
         return applicationRepository.findByStatus(status);
     }
@@ -197,12 +187,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the saved application
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true),
-            @CacheEvict(value = "template", allEntries = true)
-    })
     @Transactional
     public Application createApplication(Application application, boolean update) {
         if (update && application.getId() == null)
@@ -222,7 +206,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the saved template or null if not found
      */
     @Override
-    @Cacheable(value = "template")
     public ApplicationTemplate getApplicationTemplate(Long id) {
         ApplicationTemplate template = templateRepository.findById(id).orElse(null);
 
@@ -263,7 +246,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     private List<AttachedFile> getAttachedFiles(Application application) {
         return application.getAttachedFiles()
                 .stream()
-                .peek(file -> file.setId(null))
+                .map(AttachedFile::copy)
                 .collect(Collectors.toList());
     }
 
@@ -277,11 +260,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws InvalidStatusException if the application is not in a draft or referred state
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     @Transactional
     public Application submitApplication(Application application) throws InvalidStatusException {
         Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.DRAFT, ApplicationStatus.REFERRED);
@@ -319,11 +297,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws ApplicationException if the status is incorrect or an exception with message CANT_REVIEW if the user is not a committee member
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application assignCommitteeMembers(Application application, List<User> committeeMembers) throws ApplicationException {
         if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
             throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
@@ -348,11 +321,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws ApplicationException if the status is incorrect or no committee member with username is assigned
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application unassignCommitteeMember(Application application, String username) throws ApplicationException {
         if (!List.of(ApplicationStatus.SUBMITTED, ApplicationStatus.REVIEW).contains(application.getStatus()))
             throw new InvalidStatusException("The application is in an invalid status for assigning committee members");
@@ -377,11 +345,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws InvalidStatusException if the application status is not re-submitted
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application acceptResubmitted(Application application, List<User> committeeMembers) throws InvalidStatusException {
         if (application.getStatus() != ApplicationStatus.RESUBMITTED)
             throw new InvalidStatusException("The application status must be " + ApplicationStatus.RESUBMITTED + " to use this method");
@@ -403,11 +366,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws InvalidStatusException if the application is not in the submitted state and finishReview is false
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application reviewApplication(Application application, boolean finishReview) throws InvalidStatusException {
         ApplicationStatus status = application.getStatus();
 
@@ -435,11 +393,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws InvalidStatusException if the application is not in review
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application markMemberReviewComplete(Application application, String member) throws InvalidStatusException {
         if (application.getStatus() != ApplicationStatus.REVIEW)
             throw new InvalidStatusException("You can only mark a committee member as having finished their review on an application in " +
@@ -465,11 +418,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws InvalidStatusException if the application is not in a reviewed state
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application approveApplication(Application application, boolean approve, Comment finalComment) throws InvalidStatusException {
         if (application.getStatus() != ApplicationStatus.REVIEWED)
             throw new InvalidStatusException("To approve/reject an Application, its status must be " + ApplicationStatus.REVIEWED);
@@ -486,20 +434,6 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     /**
-     * Copy the given comment
-     * @param comment the comment to copy
-     * @return the copied comment
-     */
-    private Comment copyComment(Comment comment) {
-        Comment copied = new Comment(null, comment.getUser(), comment.getComment(), comment.getComponentId(), new ArrayList<>());
-
-        for (Comment sub : comment.getSubComments())
-            copied.addSubComment(copyComment(sub));
-
-        return copied;
-    }
-
-    /**
      * Map comments to a way where they're able to be saved without detached instance exceptions
      * @param comments the comments to map
      */
@@ -507,9 +441,11 @@ public class ApplicationServiceImpl implements ApplicationService {
         Map<String, ApplicationComments> mapped = new HashMap<>();
         comments.forEach((k, v) -> {
             List<Comment> commentList = new ArrayList<>();
-            ApplicationComments comments1 = new ApplicationComments(null, v.getComponentId(), commentList);
-            comments1.setComponentId(v.getComponentId());
-            v.getComments().forEach(c -> commentList.add(copyComment(c)));
+            String componentId = v.getComponentId();
+            ApplicationComments comments1 = new ApplicationComments(null, componentId, commentList);
+            comments1.setComponentId(componentId);
+            v.getComments().forEach(c -> commentList.add(c.copy()));
+            mapped.put(componentId, comments1);
         });
 
         return mapped;
@@ -526,11 +462,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @throws ApplicationException if the application is not in a reviewed state or the referrer does not have the REFER_APPLICATIONS permission
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     @Transactional
     public Application referApplication(Application application, List<String> editableFields, User referrer) throws ApplicationException {
         if (application.getStatus() != ApplicationStatus.REVIEWED)
@@ -546,7 +477,7 @@ public class ApplicationServiceImpl implements ApplicationService {
 
         List<AssignedCommitteeMember> assigned = application.getAssignedCommitteeMembers()
                 .stream()
-                .peek(a -> a.setId(null))
+                .map(a -> new AssignedCommitteeMember(null, a.getApplicationId(), a.getUser(), a.isFinishReview()))
                 .collect(Collectors.toList());
 
         Application referredApplication =
@@ -561,7 +492,7 @@ public class ApplicationServiceImpl implements ApplicationService {
         entityManager.flush();
         referredApplication = applicationRepository.save(referredApplication);
 
-        emailService.sendApplicationReferredEmail(application, referrer);
+        emailService.sendApplicationReferredEmail(referredApplication, referrer);
 
         return referredApplication;
     }
@@ -582,11 +513,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @param application the application to delete
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     @Transactional
     public void deleteApplication(Application application) {
         deleteApplicationInstance(application);
@@ -621,11 +547,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the patched application
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     public Application patchAnswers(Application application, Map<String, Answer> answers) {
         Map<String, Answer> applicationAnswers = application.getAnswers();
 
@@ -643,41 +564,6 @@ public class ApplicationServiceImpl implements ApplicationService {
         }
 
         return createApplication(application, true);
-    }
-
-    /**
-     * Merge the updated comment into the existing comment
-     * @param comment the comment to update
-     * @param updated the comment to merge
-     */
-    private void mergeUpdate(Comment comment, Comment updated) {
-        if (!Objects.equals(comment.getId(), updated.getId())) {
-            throw new IllegalStateException("To merge an updated comment into an existing one, they must have the same ID");
-        } else {
-            comment.setComponentId(updated.getComponentId());
-            comment.setUser(updated.getUser());
-            comment.setCreatedAt(updated.getCreatedAt());
-            comment.setSharedApplicant(updated.isSharedApplicant());
-            comment.setComment(updated.getComment());
-            comment.setEdited(updated.getEdited());
-
-            List<Comment> updatedSub = updated.getSubComments();
-            Map<Long, Comment> updatedSubsMap = updatedSub
-                    .stream()
-                    .collect(Collectors.toMap(Comment::getId, c -> c));
-            List<Comment> toRemove = new ArrayList<>();
-
-            for (Comment subComment : comment.getSubComments()) {
-                Comment updatedSubComment = updatedSubsMap.get(subComment.getId());
-
-                if (updatedSubComment == null)
-                    toRemove.add(subComment);
-                else
-                    mergeUpdate(subComment, updatedSubComment);
-            }
-
-            toRemove.forEach(comment::removeSubComment);
-        }
     }
 
     /**
@@ -715,7 +601,7 @@ public class ApplicationServiceImpl implements ApplicationService {
                 if (list.size() == 0)
                     applicationComments.remove(componentId);
             } else {
-                mergeUpdate(found, updated);
+                found.merge(updated);
             }
 
             return true;
@@ -733,11 +619,6 @@ public class ApplicationServiceImpl implements ApplicationService {
      * @return the patched application
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "application", allEntries = true),
-            @CacheEvict(value = "user_applications", allEntries = true),
-            @CacheEvict(value = "status_applications", allEntries = true)
-    })
     @Transactional
     public Application patchComment(Application application, Comment updated, boolean delete) {
         if (updated.getParent() != null)
@@ -749,9 +630,8 @@ public class ApplicationServiceImpl implements ApplicationService {
         ApplicationComments comments;
 
         if (componentId != null && (comments = applicationComments.get(componentId)) != null) {
-            if (doPatch(applicationComments, componentId, comments, updated, delete)) {
+            if (doPatch(applicationComments, componentId, comments, updated, delete))
                 application = createApplication(application, true);
-            }
 
             return application;
         } else {

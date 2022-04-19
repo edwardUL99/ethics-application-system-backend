@@ -42,6 +42,14 @@ public class AttachedFile {
     private String username;
 
     /**
+     * Copy the attached file instance
+     * @return the copy
+     */
+    public AttachedFile copy() {
+        return new AttachedFile(null, filename, directory, username);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

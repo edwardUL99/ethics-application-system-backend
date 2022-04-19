@@ -14,10 +14,6 @@ import ie.ul.ethics.scieng.common.properties.PropertyFinder;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.userdetails.User;
@@ -37,7 +33,6 @@ import java.util.UUID;
  * The implementation of the AccountService interface
  */
 @Service
-@CacheConfig(cacheNames = "accounts")
 @Log4j2
 public class AccountServiceImpl implements AccountService {
     /**
@@ -98,10 +93,6 @@ public class AccountServiceImpl implements AccountService {
      * @return the created account
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "account", allEntries = true),
-            @CacheEvict(value = "userdetail", allEntries = true)
-    })
     public Account createAccount(String username, String email, String password, boolean confirm) {
         if (getAccount(username, false) != null)
             throw new UsernameExistsException(username);
@@ -121,10 +112,6 @@ public class AccountServiceImpl implements AccountService {
      * @param account the account to delete
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "account", allEntries = true),
-            @CacheEvict(value = "userdetail", allEntries = true)
-    })
     public void deleteAccount(Account account) {
         accountRepository.delete(account);
     }
@@ -147,10 +134,6 @@ public class AccountServiceImpl implements AccountService {
      * @param account the account with updated details (other than username)
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "account", allEntries = true),
-            @CacheEvict(value = "userdetail", allEntries = true)
-    })
     public void updateAccount(Account account) {
         String username = account.getUsername();
         String email = account.getEmail();
@@ -173,7 +156,6 @@ public class AccountServiceImpl implements AccountService {
      * @return the account represented by the username, null if not found
      */
     @Override
-    @Cacheable(value = "account")
     public Account getAccount(String username) {
         return accountRepository.findByUsername(username).orElse(null);
     }
@@ -187,7 +169,6 @@ public class AccountServiceImpl implements AccountService {
      * @return the found account, null if not found
      */
     @Override
-    @Cacheable(value = "account")
     public Account getAccount(String username, boolean email) {
         Optional<Account> optional = (email) ? accountRepository.findByEmail(username):accountRepository.findByUsername(username);
 
@@ -201,7 +182,6 @@ public class AccountServiceImpl implements AccountService {
      * @throws UsernameNotFoundException if the user is not found
      */
     @Override
-    @Cacheable(value = "userdetail")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         Account account = getAccount(username);
 
@@ -235,10 +215,6 @@ public class AccountServiceImpl implements AccountService {
      * @return true if confirmed, false if not
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "account", allEntries = true),
-            @CacheEvict(value = "userdetail", allEntries = true)
-    })
     public boolean confirmAccount(Account account, String token) {
         ConfirmationToken confirmationToken = tokenRepository.findByEmail(account.getEmail()).orElse(null);
 
@@ -300,10 +276,6 @@ public class AccountServiceImpl implements AccountService {
      * @param password the password to set for the account
      */
     @Override
-    @Caching(evict = {
-            @CacheEvict(value = "account", allEntries = true),
-            @CacheEvict(value = "userdetail", allEntries = true)
-    })
     public void resetPassword(Account account, String password) {
         account.setPassword(passwordEncoder.encode(password));
         resetTokenRepository.deleteById(account.getUsername());

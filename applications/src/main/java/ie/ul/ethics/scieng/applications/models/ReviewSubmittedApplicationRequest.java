@@ -61,6 +61,10 @@ public class ReviewSubmittedApplicationRequest {
          */
         private boolean sharedApplicant;
         /**
+         * Determines if the comment is shared with all reviewers or just admin/chair
+         */
+        private boolean sharedReviewer;
+        /**
          * The timestamp of when the application was created
          */
         private LocalDateTime createdAt;
@@ -80,7 +84,7 @@ public class ReviewSubmittedApplicationRequest {
          */
         public Comment(Long id, String username, String comment, String componentId, List<Comment> subComments,
                        LocalDateTime createdAt) {
-            this(id, username, comment, componentId, subComments, false, createdAt, false);
+            this(id, username, comment, componentId, subComments, false, false, createdAt, false);
         }
     }
 }

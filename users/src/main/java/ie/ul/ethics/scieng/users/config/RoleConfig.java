@@ -45,35 +45,41 @@ public class RoleConfig implements CommandLineRunner {
     /**
      * Save the permission if it doesn't exist or update if it changed
      * @param permission the permission to save
+     * @return updated if changed or null if not changed
      */
-    private void savePermissionIfNotExists(Permission permission) {
+    private Permission savePermissionIfNotExists(Permission permission) {
         Permission foundPermission = permissionRepository.findByTag(permission.getTag()).orElse(null);
 
         if (foundPermission == null || !foundPermission.equals(permission)) {
             if (foundPermission != null)
                 permission.setId(foundPermission.getId());
 
-            permissionRepository.save(permission);
+            return permissionRepository.save(permission);
         } else {
             permission.setId(foundPermission.getId());
         }
+
+        return null;
     }
 
     /**
      * Save the role if not exists or update if it changed
      * @param role the role to save
+     * @return updated if changed or null if not changed
      */
-    private void saveRoleIfNotExists(Role role) {
+    private Role saveRoleIfNotExists(Role role) {
         Role foundRole = roleRepository.findByTag(role.getTag()).orElse(null);
 
         if (foundRole == null || !foundRole.equals(role)) {
             if (foundRole != null)
                 role.setId(foundRole.getId());
 
-            roleRepository.save(role);
+            return roleRepository.save(role);
         } else {
             role.setId(foundRole.getId());
         }
+
+        return null;
     }
 
     /**
@@ -82,7 +88,10 @@ public class RoleConfig implements CommandLineRunner {
     private void saveDefaultPermissions() {
         for (Permission permission : Permissions.getPermissions()) {
             log.debug("Loading permission {}", permission.getName());
-            savePermissionIfNotExists(permission);
+            Permission saved = savePermissionIfNotExists(permission);
+
+            if (saved != null)
+                Permissions.updatePermission(saved);
         }
     }
 
@@ -92,7 +101,10 @@ public class RoleConfig implements CommandLineRunner {
     private void saveDefaultRoles() {
         for (Role role : Roles.getRoles()) {
             log.debug("Loading role {} with {} permissions", role.getName(), role.getPermissions().size());
-            saveRoleIfNotExists(role);
+            Role saved = saveRoleIfNotExists(role);
+
+            if (saved != null)
+                Roles.updateRole(saved);
         }
     }
 

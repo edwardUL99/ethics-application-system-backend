@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 
 work_dir="$PWD"
+source "$work_dir/tools/ethics-env.sh"
+
 cd app
 
 if [ ! -d "target" ]; then
@@ -21,5 +23,5 @@ echo "Starting $work_dir/app/target/$jar_file"
 
 jvm_args="$@"
 
-java $jvm_args -jar "$jar_file"
+java $jvm_args -Dspring.profiles.default=prod -jar "$jar_file"
 

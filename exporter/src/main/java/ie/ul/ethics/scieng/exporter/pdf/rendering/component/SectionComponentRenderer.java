@@ -11,8 +11,8 @@ import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.applications.templates.components.ComponentType;
 import ie.ul.ethics.scieng.applications.templates.components.SectionComponent;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -26,9 +26,10 @@ public class SectionComponentRenderer extends DefaultComponentRenderer {
      *
      * @param application the application to render
      * @param component   the component being rendered
+     * @param context     for rendering
      */
-    public SectionComponentRenderer(Application application, ApplicationComponent component) {
-        super(application, component);
+    public SectionComponentRenderer(Application application, ApplicationComponent component, PDFContext context) {
+        super(application, component, context);
     }
 
     /**
@@ -47,13 +48,20 @@ public class SectionComponentRenderer extends DefaultComponentRenderer {
             ComponentType componentType = sub.getType();
 
             if (componentType == ComponentType.SECTION) {
-                new SectionComponentRenderer(application, sub).renderToElement(Map.of(
+                new SectionComponentRenderer(application, sub, context).renderToElement(Map.of(
                         "chapter", chapter,
                         "parent", section
                 )); // the render adds the section to the chapter/parent automatically
             } else {
-                section.add(ComponentRenderers.getRenderer(application, sub).renderToElement(new HashMap<>()));
-                section.add(Chunk.NEWLINE);
+                ComponentRenderer renderer = ComponentRenderers.getRenderer(application, context, sub);
+                boolean add = renderer.addReturnedElements();
+
+                Element element = renderer.renderToElement(Map.of("chapyer", chapter));
+
+                if (add) {
+                    section.add(element);
+                    section.add(Chunk.NEWLINE);
+                }
             }
         }
     }
@@ -84,5 +92,15 @@ public class SectionComponentRenderer extends DefaultComponentRenderer {
                 return section;
             }
         }
+    }
+
+    /**
+     * Determines if elements returned from {@link #renderToElement(Map)} should be added or if they are automatically added
+     *
+     * @return true to add, false to not add
+     */
+    @Override
+    public boolean addReturnedElements() {
+        return false;
     }
 }

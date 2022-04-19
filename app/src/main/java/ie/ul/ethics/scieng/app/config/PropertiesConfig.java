@@ -21,13 +21,13 @@ import java.io.IOException;
 @Order(-1000)
 public class PropertiesConfig {
     /**
-     * The loaded resources to add to the loaded properties
+     * The loaded property resources
      */
     private static Resource[] resources;
 
     /**
-     * Instantiate the config
-     * @param loadedProperties the class  to hold the loaded properties resources
+     * Create an instance
+     * @param loadedProperties holds the loaded resources
      */
     @Autowired
     public PropertiesConfig(LoadedProperties loadedProperties) {

@@ -13,7 +13,9 @@ import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * This class represents a comment left on an application
@@ -61,6 +63,10 @@ public class Comment {
      */
     private boolean sharedApplicant;
     /**
+     * Determines if the comment is shared with all reviewers or just admin/chair
+     */
+    private boolean sharedReviewer;
+    /**
      * The time when the comment was created
      */
     private LocalDateTime createdAt;
@@ -91,12 +97,7 @@ public class Comment {
      * @param createdAt the timestamp the comment was created at
      */
     public Comment(Long id, User user, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt) {
-        this.id = id;
-        this.user = user;
-        this.comment = comment;
-        this.componentId = componentId;
-        subComments.forEach(this::addSubComment);
-        this.createdAt = createdAt;
+        this(id, user, comment, componentId, subComments, createdAt, false, false);
     }
 
     /**
@@ -108,15 +109,19 @@ public class Comment {
      * @param subComments the sub-comments added to this comment
      * @param createdAt the timestamp the comment was created at
      * @param sharedApplicant indicates if comment can be viewed by applicant (applied to parent and subsequently all sub-comments)
+     * @param sharedReviewer determines if the comment has been shared with all reviewers or just chair/committee
      */
-    public Comment(Long id, User user, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt, boolean sharedApplicant) {
+    public Comment(Long id, User user, String comment, String componentId, List<Comment> subComments, LocalDateTime createdAt,
+                   boolean sharedApplicant, boolean sharedReviewer) {
         this.id = id;
         this.user = user;
         this.comment = comment;
         this.componentId = componentId;
         this.sharedApplicant = sharedApplicant;
+        this.sharedReviewer = sharedReviewer;
         subComments.forEach(this::addSubComment);
         this.createdAt = createdAt;
+        this.edited = false;
     }
 
     /**
@@ -148,6 +153,59 @@ public class Comment {
     }
 
     /**
+     * Merge the information from the provided comment into this comment. Must have non-null IDs and be equal
+     * @param comment the comment to merge
+     */
+    public void merge(Comment comment) {
+        Long id = comment.getId();
+
+        if (this.id == null || id == null)
+            throw new IllegalStateException("Cannot merge unsaved comments");
+        else if (!Objects.equals(this.id, id))
+            throw new IllegalStateException("Cannot merge different comments: " + this.id + " != " + id);
+
+        componentId = comment.componentId;
+        user = comment.user;
+        createdAt = comment.createdAt;
+        sharedApplicant = comment.sharedApplicant;
+        sharedReviewer = comment.sharedReviewer;
+        this.comment = comment.comment;
+        edited = comment.edited;
+
+        List<Comment> updatedSub = comment.subComments;
+        Map<Long, Comment> updatedSubsMap = updatedSub
+                .stream()
+                .collect(Collectors.toMap(Comment::getId, c -> c));
+        List<Comment> toRemove = new ArrayList<>();
+
+        for (Comment subComment : comment.subComments) {
+            Comment updatedSubComment = updatedSubsMap.get(subComment.id);
+
+            if (updatedSubComment == null)
+                toRemove.add(subComment);
+            else
+                subComment.merge(updatedSubComment);
+        }
+
+        toRemove.forEach(comment::removeSubComment);
+    }
+
+    /**
+     * Copy this comment and all sub-comments
+     * @return the copied comment
+     */
+    public Comment copy() {
+        Comment copied = new Comment(null, user, comment, componentId, new ArrayList<>(), createdAt, sharedApplicant, sharedReviewer);
+        copied.edited = edited;
+        copied.parent = parent;
+
+        for (Comment sub : subComments)
+            copied.addSubComment(sub.copy());
+
+        return copied;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -157,7 +215,8 @@ public class Comment {
         Comment comment = (Comment) o;
         return Objects.equals(id, comment.id) && Objects.equals(user, comment.user) && Objects.equals(this.comment, comment.comment)
                 && Objects.equals(componentId, comment.componentId) && Objects.equals(subComments, comment.subComments)
-                && Objects.equals(createdAt, comment.createdAt) && Objects.equals(sharedApplicant, comment.sharedApplicant);
+                && Objects.equals(createdAt, comment.createdAt) && Objects.equals(sharedReviewer, comment.sharedReviewer)
+                && Objects.equals(sharedApplicant, comment.sharedApplicant) && Objects.equals(edited, comment.edited);
     }
 
     /**
@@ -165,6 +224,6 @@ public class Comment {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(id, user, comment, componentId, subComments, createdAt, sharedApplicant);
+        return Objects.hash(id, user, comment, componentId, subComments, createdAt, sharedApplicant, sharedReviewer, edited);
     }
 }

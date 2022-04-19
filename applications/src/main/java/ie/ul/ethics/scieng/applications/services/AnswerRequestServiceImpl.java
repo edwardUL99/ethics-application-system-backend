@@ -10,18 +10,22 @@ import ie.ul.ethics.scieng.applications.models.applications.answerrequest.AddAns
 import ie.ul.ethics.scieng.applications.models.applications.answerrequest.RespondAnswerRequest;
 import ie.ul.ethics.scieng.applications.models.applications.answerrequest.AnswerRequest;
 import ie.ul.ethics.scieng.applications.repositories.AnswerRequestRepository;
+import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * This class represents the default implementation of the AnswerRequestService
@@ -161,19 +165,57 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
 
             answers.forEach((k, v) -> {
                 v.setUser(user);
-                Answer answer = applicationAnswers.get((k));
-
-                if (answer == null || answer.getValue().isEmpty())
-                    // only replace the answer if one is not already provided
-                    applicationAnswers.put(k, v);
+                applicationAnswers.put(k, v);
             });
 
-            repository.delete(answerRequest);
-            application.removeUserAccess(user);
-            applicationService.createApplication(application, true);
+            deleteRequest(answerRequest);
             emailService.sendAnsweredResponse(answerRequest);
 
             return true;
+        }
+    }
+
+    /**
+     * Deletes the given answer request
+     * @param request the request to delete
+     */
+    private void deleteRequest(AnswerRequest request) {
+        Application application = request.getApplication();
+        repository.delete(request);
+        application.removeUserAccess(request.getUser());
+        applicationService.createApplication(application, true);
+    }
+
+    /**
+     * Verify that all the components in the request exist in the application template and remove any that no longer exist
+     * @param request the request to verify
+     * @return the same request if least one component still exists, false if none exist
+     */
+    private AnswerRequest verifyComponentsExist(AnswerRequest request) {
+        if (request != null) {
+            Application application = request.getApplication();
+            ApplicationTemplate template = application.getApplicationTemplate();
+            List<ApplicationComponent> components = request.getComponents();
+            List<ApplicationComponent> modified = components
+                    .stream()
+                    .filter(component -> template.hasComponent(component.getComponentId()))
+                    .collect(Collectors.toList());
+
+            int modifiedSize = modified.size();
+            int originalSize = components.size();
+
+            if (modified.size() == 0) {
+                deleteRequest(request);
+
+                return null;
+            } else if (modifiedSize != originalSize) {
+                request.setComponents(modified);
+                repository.save(request);
+            }
+
+            return request;
+        } else {
+            return null;
         }
     }
 
@@ -184,8 +226,18 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
      * @return the request if found, or null if no longer valid or not found
      */
     @Override
+    @Transactional
     public AnswerRequest getRequest(Long id) {
-        return repository.findById(id).orElse(null);
+        AnswerRequest request = repository.findById(id).orElse(null);
+
+        if (request != null) {
+            if (!validStates.contains(request.getApplication().getStatus()))
+                deleteRequest(request);
+            else
+                return verifyComponentsExist(request);
+        }
+
+        return null;
     }
 
     /**
@@ -195,17 +247,21 @@ public class AnswerRequestServiceImpl implements AnswerRequestService {
      * @return the list of answer requests from the supervisor
      */
     @Override
+    @Transactional
     public List<AnswerRequest> getRequests(String supervisor) {
         List<AnswerRequest> requests = repository.findByUser_username(supervisor);
         List<AnswerRequest> returned = new ArrayList<>(requests);
 
         requests.forEach(r -> {
             if (!validStates.contains(r.getApplication().getStatus())) {
-                repository.delete(r);
+                deleteRequest(r);
                 returned.remove(r);
             }
         });
 
-        return returned;
+        return returned.stream()
+            .map(this::verifyComponentsExist)
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
     }
 }

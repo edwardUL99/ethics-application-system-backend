@@ -25,7 +25,7 @@ public class SignatureQuestionComponent extends QuestionComponent {
      * Create a default SignatureQuestionConverter
      */
     public SignatureQuestionComponent() {
-        this(null, null, null, null);
+        this(null, null, null, null, true);
     }
 
     /**
@@ -34,9 +34,10 @@ public class SignatureQuestionComponent extends QuestionComponent {
      * @param name the name to give to the question
      * @param description the description of the component
      * @param label the label identifying who is supposed to sign it
+     * @param required determines if the signature is required
      */
-    public SignatureQuestionComponent(String title, String name, String description, String label) {
-        super(ComponentType.SIGNATURE, title, name, description, true); //  a signature will always be required if present
+    public SignatureQuestionComponent(String title, String name, String description, String label, boolean required) {
+        super(ComponentType.SIGNATURE, title, name, description, required);
         this.label = label;
     }
 

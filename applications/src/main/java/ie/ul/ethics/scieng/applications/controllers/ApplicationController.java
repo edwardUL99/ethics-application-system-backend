@@ -17,6 +17,7 @@ import ie.ul.ethics.scieng.applications.search.ApplicationSpecification;
 import ie.ul.ethics.scieng.applications.search.DraftApplicationSpecification;
 import ie.ul.ethics.scieng.applications.search.ReferredApplicationSpecification;
 import ie.ul.ethics.scieng.applications.search.SubmittedApplicationSpecification;
+import ie.ul.ethics.scieng.applications.services.ApplicationResponseService;
 import ie.ul.ethics.scieng.applications.services.ApplicationService;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 
@@ -75,6 +76,10 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     @Resource(name = "authenticationInformation")
     private AuthenticationInformation authenticationInformation;
+    /**
+     * A service to wrap application returning responses and cleans if necessary
+     */
+    private final ApplicationResponseService responseService;
 
     /**
      * Create the ApplicationController
@@ -82,13 +87,15 @@ public class ApplicationController implements SearchController<ApplicationRespon
      * @param requestMapper the mapper for mapping requests to entities
      * @param userService the user service for loading users
      * @param applicationIDPolicy the policy for generating IDs
+     * @param responseService a service to wrap application returning responses and cleans if necessary
      */
     public ApplicationController(ApplicationService applicationService, ApplicationRequestMapper requestMapper, UserService userService,
-                                 ApplicationIDPolicy applicationIDPolicy) {
+                                 ApplicationIDPolicy applicationIDPolicy, ApplicationResponseService responseService) {
         this.applicationService = applicationService;
         this.requestMapper = requestMapper;
         this.userService = userService;
         this.applicationIDPolicy = applicationIDPolicy;
+        this.responseService = responseService;
     }
 
     /**
@@ -131,11 +138,13 @@ public class ApplicationController implements SearchController<ApplicationRespon
      * This endpoint retrieves the application with the given ID
      * @param id the id of the application
      * @param applicationId the applicationId if wants to be found by that
+     * @param answerRequest true if the application is being retrieved in an answerRequest context, otherwise access will be blocked regardless of accessList
      * @return the response body
      */
     @GetMapping
     public ResponseEntity<?> getApplication(@RequestParam(required = false, name = "dbId") Long id,
-                                            @RequestParam(required = false, name = "id") String applicationId) {
+                                            @RequestParam(required = false, name = "id") String applicationId,
+                                            @RequestParam(required = false, name = "answerRequest") boolean answerRequest) {
         if ((id == null && applicationId == null) || (id != null && applicationId != null))
             return ResponseEntity.badRequest().build();
 
@@ -144,7 +153,7 @@ public class ApplicationController implements SearchController<ApplicationRespon
         if (application != null) {
             User user = userService.loadUser(authenticationInformation.getUsername());
 
-            if (application.canBeViewedBy(user)) {
+            if (application.canBeViewedBy(user, answerRequest)) {
                 return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application.clean(user)));
             } else {
                 return respondError(INSUFFICIENT_PERMISSIONS);
@@ -282,15 +291,15 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     @PatchMapping("/answers")
     public ResponseEntity<?> patchAnswers(@RequestBody PatchAnswersRequest request) {
-        Application application = applicationService.getApplication(request.getId());
+        return responseService.process(v -> {
+            Application application = applicationService.getApplication(request.getId());
 
-        if (application == null) {
-            return ResponseEntity.notFound().build();
-        } else {
-            application = applicationService.patchAnswers(application, request.getAnswers());
-
-            return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
-        }
+            if (application == null) {
+                return null;
+            } else {
+                return applicationService.patchAnswers(application, request.getAnswers());
+            }
+        });
     }
 
     /**
@@ -301,20 +310,20 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/submit")
     public ResponseEntity<?> submitApplication(@RequestBody @Valid SubmitApplicationRequest request) {
         try {
-            Application application = requestMapper.submitRequestToApplication(request);
+            return responseService.process(v -> {
+                Application application = requestMapper.submitRequestToApplication(request);
 
-            if (application != null) {
-                ResponseEntity<?> verification = verifyOwnUser(application.getUser().getUsername());
+                if (application != null) {
+                    ResponseEntity<?> verification = verifyOwnUser(application.getUser().getUsername());
 
-                if (verification != null)
-                    return verification;
+                    if (verification != null)
+                        throw new ApplicationResponseService.TaskInterrupt(verification);
 
-                Application submitted = applicationService.submitApplication(application);
-
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(submitted));
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+                    return applicationService.submitApplication(application);
+                } else {
+                    return null;
+                }
+            });
         } catch (MappingException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
@@ -367,18 +376,18 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     @PostMapping("/unassign/{username}")
     public ResponseEntity<?> unassignCommitteeMember(@PathVariable String username, @RequestParam String id) {
-        Application application = this.applicationService.getApplication(id);
+        try {
+            return responseService.process(v -> {
+                Application application = this.applicationService.getApplication(id);
 
-        if (application == null) {
-            return ResponseEntity.notFound().build();
-        } else {
-            try {
-                application = this.applicationService.unassignCommitteeMember(application, username);
-
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
-            } catch (InvalidStatusException ex) {
-                return respondError(INVALID_APPLICATION_STATUS);
-            }
+                if (application == null) {
+                    return null;
+                } else {
+                    return this.applicationService.unassignCommitteeMember(application, username);
+                }
+            });
+        } catch (InvalidStatusException ex) {
+            return respondError(INVALID_APPLICATION_STATUS);
         }
     }
 
@@ -390,16 +399,17 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/resubmit")
     public ResponseEntity<?> resubmitApplication(@RequestBody @Valid AcceptResubmittedRequest request) {
         try {
-            MappedAcceptResubmittedRequest mapped = requestMapper.mapAcceptResubmittedRequest(request);
-            Application application = mapped.getApplication();
-            List<User> committeeMembers = mapped.getCommitteeMembers();
+            return responseService.process(v -> {
+                MappedAcceptResubmittedRequest mapped = requestMapper.mapAcceptResubmittedRequest(request);
+                Application application = mapped.getApplication();
+                List<User> committeeMembers = mapped.getCommitteeMembers();
 
-            if (application == null || committeeMembers.stream().anyMatch(Objects::isNull)) {
-                return ResponseEntity.notFound().build();
-            } else {
-                Application accepted = applicationService.acceptResubmitted(application, committeeMembers);
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(accepted));
-            }
+                if (application == null || committeeMembers.stream().anyMatch(Objects::isNull)) {
+                    return null;
+                } else {
+                    return applicationService.acceptResubmitted(application, committeeMembers);
+                }
+            });
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
@@ -417,14 +427,15 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/review")
     public ResponseEntity<?> reviewApplication(@RequestBody @Valid ReviewApplicationRequest request) {
         try {
-            Application application = applicationService.getApplication(request.getId());
+            return responseService.process(v -> {
+                Application application = applicationService.getApplication(request.getId());
 
-            if (application == null) {
-                return ResponseEntity.notFound().build();
-            } else {
-                application = applicationService.reviewApplication(application, request.isFinishReview());
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
-            }
+                if (application == null) {
+                    return null;
+                } else {
+                    return applicationService.reviewApplication(application, request.isFinishReview());
+                }
+            });
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
@@ -439,15 +450,15 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PutMapping("/review")
     public ResponseEntity<?> reviewApplication(@RequestBody @Valid ReviewSubmittedApplicationRequest request) {
         try {
-            Application mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
+            return responseService.process(v -> {
+                Application mapped = requestMapper.reviewSubmittedRequestToSubmitted(request);
 
-            if (mapped == null) {
-                return ResponseEntity.notFound().build();
-            } else {
-                Application updated = applicationService.createApplication(mapped, true);
-
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(updated));
-            }
+                if (mapped == null) {
+                    return null;
+                } else {
+                    return applicationService.createApplication(mapped, true);
+                }
+            });
         } catch (MappingException ex) {
             ex.printStackTrace();
             return respondError(USER_NOT_FOUND);
@@ -464,22 +475,19 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     @PatchMapping("/comment")
     public ResponseEntity<?> patchComment(@RequestBody @Valid UpdateCommentRequest request) {
-        Application loaded = applicationService.getApplication(request.getId());
+        try {
+            return responseService.process(v -> {
+                Application loaded = applicationService.getApplication(request.getId());
 
-        if (loaded == null) {
-            return ResponseEntity.notFound().build();
-        } else {
-            try {
-                Application updated = applicationService.patchComment(loaded, requestMapper.mapComment(request.getUpdated()), request.isDeleteComment());
-
-                if (updated == null)
-                    return ResponseEntity.notFound().build();
-
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(updated));
-            } catch (ApplicationException ex) {
-                ex.printStackTrace();
-                return ResponseEntity.badRequest().build();
-            }
+                if (loaded == null) {
+                    return null;
+                } else {
+                    return applicationService.patchComment(loaded, requestMapper.mapComment(request.getUpdated()), request.isDeleteComment());
+                }
+            });
+        } catch (ApplicationException ex) {
+            ex.printStackTrace();
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -490,18 +498,19 @@ public class ApplicationController implements SearchController<ApplicationRespon
      */
     @PostMapping("/review/finish")
     public ResponseEntity<?> finishReview(@RequestBody @Valid FinishReviewRequest request) {
-        Application application = this.applicationService.getApplication(request.getId());
+        try {
+            return responseService.process(v -> {
+                Application application = this.applicationService.getApplication(request.getId());
 
-        if (application == null) {
-            return ResponseEntity.notFound().build();
-        } else {
-            try {
-                application = applicationService.markMemberReviewComplete(application, request.getMember());
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
-            } catch (InvalidStatusException ex) {
-                ex.printStackTrace();
-                return respondError(INVALID_APPLICATION_STATUS);
-            }
+                if (application == null) {
+                    return null;
+                } else {
+                    return applicationService.markMemberReviewComplete(application, request.getMember());
+                }
+            });
+        } catch (InvalidStatusException ex) {
+            ex.printStackTrace();
+            return respondError(INVALID_APPLICATION_STATUS);
         }
     }
 
@@ -513,17 +522,17 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/approve")
     public ResponseEntity<?> approveApplication(@RequestBody @Valid ApproveApplicationRequest request) {
         try {
-            MappedApprovalRequest mapped = requestMapper.mapApprovalRequest(request);
-            Application application = mapped.getApplication();
-            Comment finalComment;
+            return responseService.process(v -> {
+                MappedApprovalRequest mapped = requestMapper.mapApprovalRequest(request);
+                Application application = mapped.getApplication();
+                Comment finalComment;
 
-            if (application == null || ((finalComment = mapped.getFinalComment()) != null && finalComment.getUser() == null)) {
-                return ResponseEntity.notFound().build();
-            } else {
-                application = applicationService.approveApplication(application, mapped.isApprove(), finalComment);
-
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
-            }
+                if (application == null || ((finalComment = mapped.getFinalComment()) != null && finalComment.getUser() == null)) {
+                    return null;
+                } else {
+                    return applicationService.approveApplication(application, mapped.isApprove(), finalComment);
+                }
+            });
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
@@ -538,16 +547,17 @@ public class ApplicationController implements SearchController<ApplicationRespon
     @PostMapping("/refer")
     public ResponseEntity<?> referApplication(@RequestBody @Valid ReferApplicationRequest request) {
         try {
-            MappedReferApplicationRequest mapped = requestMapper.mapReferApplicationRequest(request);
-            Application application = mapped.getApplication();
-            User referrer = mapped.getReferrer();
+            return responseService.process(v -> {
+                MappedReferApplicationRequest mapped = requestMapper.mapReferApplicationRequest(request);
+                Application application = mapped.getApplication();
+                User referrer = mapped.getReferrer();
 
-            if (application == null || referrer == null) {
-                return ResponseEntity.notFound().build();
-            } else {
-                application = applicationService.referApplication(application, mapped.getEditableFields(), referrer);
-                return ResponseEntity.ok(ApplicationResponseFactory.buildResponse(application));
-            }
+                if (application == null || referrer == null) {
+                    return null;
+                } else {
+                    return applicationService.referApplication(application, mapped.getEditableFields(), referrer);
+                }
+            });
         } catch (InvalidStatusException ex) {
             ex.printStackTrace();
             return respondError(INVALID_APPLICATION_STATUS);
