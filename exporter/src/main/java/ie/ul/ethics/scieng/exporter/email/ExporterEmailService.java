@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -74,6 +75,36 @@ public class ExporterEmailService extends AsyncEmailService {
         String email = user.getAccount().getEmail();
         String requested = requestedAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
         content = String.format(content, userName, requested);
+
+        sendEmail(email, String.format("Application Export Failure - %s", requested), content);
+    }
+
+    /**
+     * Send the e-mail notifying the user that the export task failed because no applications within the date range existed
+     * @param user the user to send the e-mail to
+     * @param requestedAt the timestamp of when the export task was requested
+     * @param start the start of the range
+     * @param end the end of the range
+     */
+    public void sendExportRangeUnavailableEmail(User user, LocalDateTime requestedAt, LocalDate start, LocalDate end) {
+        String content = "<h2>Application Export Failure</h2>"
+                + "<p>Hello %s<br>This e-mail is a quick notification that the export application "
+                + "task you requested at <b>%s</b> could not be completed successfully.</p>"
+                + "<p>There are no applications available in the date range <b>%s</b> to <b>%s</b></p>"
+                + "<br>"
+                + "<h3>What do I need to do?</h3>"
+                + "<p>You can try exporting the application(s) again, but with a different date range<p>"
+                + "<p>Sorry for any inconvenience caused</p>"
+                + "<br>"
+                + "<p>Thank You,<p>"
+                + "<p>The Team</p>";
+
+        String userName = user.getName();
+        String email = user.getAccount().getEmail();
+        String requested = requestedAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+        content = String.format(content, userName, requested, start.format(formatter), end.format(formatter));
 
         sendEmail(email, String.format("Application Export Failure - %s", requested), content);
     }

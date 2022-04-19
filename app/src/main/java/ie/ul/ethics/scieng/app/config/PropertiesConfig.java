@@ -26,8 +26,8 @@ public class PropertiesConfig {
     private static Resource[] resources;
 
     /**
-     * Create an instance
-     * @param loadedProperties holds the loaded resources
+     * Instantiate the config
+     * @param loadedPropertie
      */
     @Autowired
     public PropertiesConfig(LoadedProperties loadedProperties) {

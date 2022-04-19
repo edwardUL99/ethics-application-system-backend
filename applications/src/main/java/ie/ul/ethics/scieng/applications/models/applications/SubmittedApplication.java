@@ -389,7 +389,7 @@ public class SubmittedApplication extends Application {
     @Override
     public SubmittedApplication copy() {
         SubmittedApplication submitted = new SubmittedApplication(id, applicationId, user, status, applicationTemplate, new HashMap<>(answers),
-                new ArrayList<>(attachedFiles), new ArrayList<>(), new ArrayList<>(assignedCommitteeMembers), finalComment, submittedTime, approvalTime);
+                new ArrayList<>(attachedFiles), new ArrayList<>(comments.values()), new ArrayList<>(assignedCommitteeMembers), finalComment, submittedTime, approvalTime);
         submitted.comments = comments;
         submitted.accessList = new ArrayList<>(accessList);
         submitted.previousCommitteeMembers = new ArrayList<>(previousCommitteeMembers);
