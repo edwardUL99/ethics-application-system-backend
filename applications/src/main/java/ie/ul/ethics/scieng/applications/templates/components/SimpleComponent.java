@@ -31,4 +31,12 @@ public abstract class SimpleComponent extends ApplicationComponent {
     public void clearDatabaseIDs() {
         this.databaseId = null;
     }
+
+    /**
+     * If this component has a list of child components in some form or another this method, sorts them. Can be a noop
+     */
+    @Override
+    public void sortComponents() {
+        // no-op
+    }
 }

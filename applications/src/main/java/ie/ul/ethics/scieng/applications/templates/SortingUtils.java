@@ -16,7 +16,7 @@ public final class SortingUtils {
      * @param component the current component to sort
      * @param toSort the list to sort
      */
-    public static void findSortRecursive(ApplicationComponent component, List<CompositeComponent> toSort) {
+    public static void findSortRecursive(ApplicationComponent component, List<ApplicationComponent> toSort) {
         if (component.isComposite()) {
             CompositeComponent composite = (CompositeComponent) component;
             toSort.add(composite);
@@ -24,6 +24,8 @@ public final class SortingUtils {
             for (ApplicationComponent child: composite.getComponents()) {
                 findSortRecursive(child, toSort);
             }
+        } else {
+            toSort.add(component);
         }
     }
 
@@ -31,8 +33,8 @@ public final class SortingUtils {
      * Sort all the composite components in the provided list
      * @param sort the list of components to sort. Clears the list after all the contained elements are sorted
      */
-    public static void sort(List<CompositeComponent> sort) {
-        sort.forEach(CompositeComponent::sortComponents);
+    public static void sort(List<ApplicationComponent> sort) {
+        sort.forEach(ApplicationComponent::sortComponents);
         sort.clear();
     }
 
@@ -41,7 +43,7 @@ public final class SortingUtils {
      * @param components the components to sort
      */
     public static void sortComponents(List<ApplicationComponent> components) {
-        List<CompositeComponent> toSort = new ArrayList<>();
+        List<ApplicationComponent> toSort = new ArrayList<>();
 
         for (ApplicationComponent child : components) {
             findSortRecursive(child, toSort);

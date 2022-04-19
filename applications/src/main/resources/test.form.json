@@ -162,6 +162,129 @@
               "branches": []
             }
           }
+        },
+        {
+          "type": "question-table",
+          "cells": {
+            "columns": {
+              "Name": {
+                "type": "text-question",
+                "name": "other_investigator_name",
+                "required": false
+              },
+              "Qualifications & Affiliation": {
+                "type": "text-question",
+                "name": "other_investigator_qualifications",
+                "required": false
+              },
+              "Signature": {
+                "type": "signature",
+                "name": "other_investigator_signature",
+                "label": null,
+                "required": false
+              }
+            }
+          },
+          "numRows": 2,
+          "_comment": "The name of each component will be suffixed with _n, where n is the row number. This element allows a table of columns being the name of the input and rows of cells where the cells are duplicated inputs to answer the columns"
+        },
+        {
+          "type": "checkbox-group",
+          "title": "Please indicate the terms that apply to this research project",
+          "multiple": true,
+          "defaultBranch": null,
+          "required": true,
+          "checkboxes": [
+            {
+              "title": "Healthy Adults"
+            },
+            {
+              "title": "Healthy Children (< 18 yrs)"
+            },
+            {
+              "title": "Patient Adults"
+            },
+            {
+              "title": "Patient Children (< 18 yrs)"
+            },
+            {
+              "title": "'Potentially Vulnerable' Adults"
+            },
+            {
+              "title": "'Potentially Vulnerable' Children"
+            },
+            {
+              "title": "Physical Activity"
+            },
+            {
+              "title": "Questionnaire/Interview"
+            },
+            {
+              "title": "Medical Devices/Drugs"
+            },
+            {
+              "title": "Video Recording/Photography"
+            },
+            {
+              "title": "Food/Drink Supplementation"
+            },
+            {
+              "title": "Collection of Personal Details"
+            },
+            {
+              "title": "Measure Physical In Nature"
+            },
+            {
+              "title": "Measure Psychological In Nature"
+            },
+            {
+              "title": "Body Tissue Samples"
+            },
+            {
+              "title": "Observational"
+            },
+            {
+              "title": "Body Fluids Samples (e.g. blood)"
+            },
+            {
+              "title": "Record Based"
+            }
+          ]
+        },
+        {
+          "type": "multipart-question",
+          "title": "How many participants will be recruited?",
+          "conditional": false,
+          "parts": {
+            "1": {
+              "question": {
+                "type": "text-question",
+                "title": "Male",
+                "name": "male_participants",
+                "questionType": "number"
+              },
+              "branches": []
+            },
+            "2": {
+              "question": {
+                "type": "text-question",
+                "title": "Female",
+                "name": "female_participants",
+                "questionType": "number"
+              },
+              "branches": []
+            },
+            "3": {
+              "question": {
+                "type": "text-question",
+                "title": "Provide further information if necessary",
+                "name": "participants_recruitment_information",
+                "singleLine": false,
+                "required": false
+              },
+              "branches": []
+            }
+          }
         }
       ]
     }

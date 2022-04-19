@@ -17,13 +17,11 @@ import ie.ul.ethics.scieng.applications.templates.repositories.ApplicationTempla
 import ie.ul.ethics.scieng.authentication.jwt.JWT;
 import ie.ul.ethics.scieng.authentication.jwt.JwtRequestFilter;
 import ie.ul.ethics.scieng.authentication.models.Account;
-import ie.ul.ethics.scieng.test.utils.Caching;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.applications.templates.config.TemplatesConfiguration;
 import ie.ul.ethics.scieng.applications.test.config.TestConfiguration;
 import ie.ul.ethics.scieng.test.utils.TestApplication;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -74,11 +72,6 @@ public class ApplicationServiceTest {
     @Autowired
     private ApplicationService applicationService;
     /**
-     * The cache utilities so we can evict cache for testing
-     */
-    @Autowired
-    private Caching cache;
-    /**
      * The mock loader bean
      */
     @MockBean
@@ -109,14 +102,6 @@ public class ApplicationServiceTest {
     public ApplicationServiceTest() {
         ApplicationTemplate template = new ApplicationTemplate(null, "test", "test app", "description", "1.0", new ArrayList<>());
         this.templates = new ApplicationTemplate[]{template};
-    }
-
-    /**
-     * Clear cache before each test
-     */
-    @BeforeEach
-    private void clearCache() {
-        cache.clearCache();
     }
 
     /**
@@ -188,25 +173,6 @@ public class ApplicationServiceTest {
     }
 
     /**
-     * Tests that retrieving an application should be cached
-     */
-    @Test
-    public void shouldGetApplicationCache() {
-        Application application = createDraftApplication(getTemplate());
-
-        given(applicationRepository.findById(APPLICATION_DB_ID))
-                .willReturn(Optional.of(application));
-
-        applicationService.getApplication(APPLICATION_DB_ID);
-        applicationService.getApplication(APPLICATION_DB_ID);
-        applicationService.getApplication(APPLICATION_DB_ID);
-        Application found = applicationService.getApplication(APPLICATION_DB_ID);
-
-        assertEquals(application, found);
-        verify(applicationRepository, times(1)).findById(APPLICATION_DB_ID);
-    }
-
-    /**
      * Tests that null should be returned if an application by ID does not exist
      */
     @Test
@@ -235,26 +201,6 @@ public class ApplicationServiceTest {
 
         assertEquals(application, found);
         verify(applicationRepository).findByApplicationId(APPLICATION_ID);
-    }
-
-    /**
-     * Tests that retrieving an application should be cached
-     */
-    @Test
-    public void shouldGetApplicationByAppIdCache() {
-        Application application = createDraftApplication(getTemplate());
-        application.setApplicationId(APPLICATION_ID);
-
-        given(applicationRepository.findByApplicationId(APPLICATION_ID))
-                .willReturn(Optional.of(application));
-
-        applicationService.getApplication(APPLICATION_ID);
-        applicationService.getApplication(APPLICATION_ID);
-        applicationService.getApplication(APPLICATION_ID);
-        Application found = applicationService.getApplication(APPLICATION_ID);
-
-        assertEquals(application, found);
-        verify(applicationRepository, times(1)).findByApplicationId(APPLICATION_ID);
     }
 
     /**
@@ -290,27 +236,6 @@ public class ApplicationServiceTest {
     }
 
     /**
-     * Tests that retrieving use's applications should be cached
-     */
-    @Test
-    public void shouldGetUserApplicationsCache() {
-        Application application = createDraftApplication(getTemplate());
-        User user = application.getUser();
-        List<Application> applications = List.of(application);
-
-        given(applicationRepository.findByUser(user))
-                .willReturn(applications);
-
-        applicationService.getUserApplications(user);
-        applicationService.getUserApplications(user);
-        applicationService.getUserApplications(user);
-        List<Application> retrieved = applicationService.getUserApplications(user);
-
-        assertEquals(applications, retrieved);
-        verify(applicationRepository, times(1)).findByUser(user);
-    }
-
-    /**
      * Tests that applications are retrieved by status
      */
     @Test
@@ -326,27 +251,6 @@ public class ApplicationServiceTest {
 
         assertEquals(applications, retrieved);
         verify(applicationRepository).findByStatus(status);
-    }
-
-    /**
-     * Tests that retrieving use's applications should be cached
-     */
-    @Test
-    public void shouldGetApplicationsByStatusCache() {
-        Application application = createDraftApplication(getTemplate());
-        ApplicationStatus status = ApplicationStatus.DRAFT;
-        List<Application> applications = List.of(application);
-
-        given(applicationRepository.findByStatus(status))
-                .willReturn(applications);
-
-        applicationService.getApplicationsWithStatus(status);
-        applicationService.getApplicationsWithStatus(status);
-        applicationService.getApplicationsWithStatus(status);
-        List<Application> retrieved = applicationService.getApplicationsWithStatus(status);
-
-        assertEquals(applications, retrieved);
-        verify(applicationRepository, times(1)).findByStatus(status);
     }
 
     /**
@@ -469,27 +373,6 @@ public class ApplicationServiceTest {
 
         assertEquals(template, returned);
         verify(templateRepository).findById(TEMPLATE_DB_ID);
-    }
-
-    /**
-     * Tests that the application template should be retrieved successfully from cache
-     */
-    @Test
-    public void shouldGetApplicationTemplateCached() {
-        Application draftApplication = createDraftApplication(getTemplate());
-        ApplicationTemplate template = draftApplication.getApplicationTemplate();
-        template.setDatabaseId(TEMPLATE_DB_ID);
-
-        given(templateRepository.findById(TEMPLATE_DB_ID))
-                .willReturn(Optional.of(template));
-
-        applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
-        applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
-        applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
-        ApplicationTemplate returned = applicationService.getApplicationTemplate(TEMPLATE_DB_ID);
-
-        assertEquals(template, returned);
-        verify(templateRepository, times(1)).findById(TEMPLATE_DB_ID);
     }
 
     /**
@@ -829,8 +712,11 @@ public class ApplicationServiceTest {
 
         List<String> editable = new ArrayList<>();
 
+        ReferredApplication referredApplication = new ReferredApplication(null, APPLICATION_ID, createTestUser(), getTemplate(),
+                new HashMap<>(), new ArrayList<>(), new ArrayList<>(), null, new ArrayList<>(), referrer);
+
         given(applicationRepository.save(any()))
-                .willReturn(new ReferredApplication());
+                .willReturn(referredApplication);
 
         Application returned = applicationService.referApplication(submitted, editable, referrer);
 

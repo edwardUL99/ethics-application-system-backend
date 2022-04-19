@@ -69,6 +69,26 @@ public class MultipartQuestionComponent extends QuestionComponent {
     }
 
     /**
+     * Determines if the given component ID matches the ID of this component. (If multiple components are nested
+     * inside the same component, this should be overridden and first check if this component matches, then check children)
+     *
+     * @param componentId the ID to match
+     * @return true if matched, false if not
+     */
+    @Override
+    public boolean matchesComponentId(String componentId) {
+        if (super.matchesComponentId(componentId)) {
+            return true;
+        } else {
+            for (QuestionPart part : parts.values())
+                if (part.getQuestion().matchesComponentId(componentId))
+                    return true;
+
+            return false;
+        }
+    }
+
+    /**
      * This class represents a question part
      */
     @NoArgsConstructor

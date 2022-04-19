@@ -70,6 +70,36 @@ public class QuestionTableComponent extends QuestionComponent {
     }
 
     /**
+     * Determines if the given component ID matches the ID of this component. (If multiple components are nested
+     * inside the same component, this should be overridden and first check if this component matches, then check children)
+     *
+     * @param componentId the ID to match
+     * @return true if matched, false if not
+     */
+    @Override
+    public boolean matchesComponentId(String componentId) {
+        if (super.matchesComponentId(componentId)) {
+            return true;
+        } else {
+            for (Cells cells : cells.columns.values())
+                for (ApplicationComponent component : cells.components)
+                    if (component.matchesComponentId(componentId))
+                        return true;
+
+            return false;
+        }
+    }
+
+    /**
+     * If this component has a list of child components in some form or another this method, sorts them. Can be a noop
+     */
+    @Override
+    public void sortComponents() {
+        for (Cells cells : cells.columns.values())
+            cells.sort();
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -112,6 +142,28 @@ public class QuestionTableComponent extends QuestionComponent {
          */
         @ManyToMany(cascade = CascadeType.ALL)
         private List<QuestionComponent> components;
+
+        /**
+         * Sort the cells. Sorted based on the id_X where X is the sequence number, i.e. the row index.
+         */
+        public void sort() {
+            components.sort((a, b) -> {
+                String[] aId = a.getComponentId().split("_");
+                String[] bId = b.getComponentId().split("_");
+
+                String aCompare = aId[aId.length - 1];
+                String bCompare = bId[bId.length - 1];
+
+                try {
+                    int aSequence = Integer.parseInt(aCompare);
+                    int bSequence = Integer.parseInt(bCompare);
+
+                    return aSequence - bSequence;
+                } catch (NumberFormatException ignored) {
+                    return aCompare.compareTo(bCompare);
+                }
+            });
+        }
 
         /**
          * {@inheritDoc}

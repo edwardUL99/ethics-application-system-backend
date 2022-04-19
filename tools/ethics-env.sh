@@ -1,0 +1,5 @@
+export DATABASE_URL="jdbc:postgresql://localhost:5432/ethics"
+export DATABASE_USER="ethicsuser"
+export DATABASE_PASS="testpass"
+export ETHICS_ANTIVIRUS_DISABLE="true"
+export ETHICS_CHAIR_EMAIL="john.mulvihill@ul.ie"

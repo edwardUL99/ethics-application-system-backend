@@ -11,7 +11,8 @@ import com.itextpdf.text.Phrase;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.ApplicationTemplate;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
-import ie.ul.ethics.scieng.applications.templates.components.ComponentType;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
+import ie.ul.ethics.scieng.exporter.pdf.rendering.component.ComponentRenderer;
 import ie.ul.ethics.scieng.exporter.pdf.rendering.component.ComponentRenderers;
 
 import java.util.List;
@@ -25,13 +26,19 @@ public class ApplicationTemplateRenderer {
      * The application being rendered
      */
     private final Application application;
+    /**
+     * The rendering context
+     */
+    private final PDFContext context;
 
     /**
      * Construct an instance
      * @param application the application being rendered
+     * @param context the rendering context
      */
-    public ApplicationTemplateRenderer(Application application) {
+    public ApplicationTemplateRenderer(Application application, PDFContext context) {
         this.application = application;
+        this.context = context;
     }
 
     /**
@@ -43,8 +50,9 @@ public class ApplicationTemplateRenderer {
         Map<String, Object> renderOptions = Map.of("chapter", chapter);
 
         for (ApplicationComponent component : template.getComponents()) {
-            boolean add = component.getType() != ComponentType.SECTION; // a section adds itself to create the section
-            Element rendered = ComponentRenderers.getRenderer(application, component).renderToElement(renderOptions);
+            ComponentRenderer renderer = ComponentRenderers.getRenderer(application, context, component);
+            boolean add = renderer.addReturnedElements();
+            Element rendered = renderer.renderToElement(renderOptions);
 
             if (add)
                 chapter.add(rendered);
