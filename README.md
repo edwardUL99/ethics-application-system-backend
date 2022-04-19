@@ -7,9 +7,78 @@ This repository is the location of the back-end (server) development work done f
 The project requires the following tools installed on your local machine:
 * Java 11 for runtime, JDK 11 for development
 * Apache Maven 3.6.3
-* Python 3. **optional** - only required if you wish to use the Python tools
+* Python 3. **optional** - only required if you wish to use the Python tools (API tester and backup utility)
 * The `files` module requires **ClamAV**. See [Files README.md](files/README.md) for instructions on setting it up. It can also 
-be disabled should the deployment not support it (not recommended).
+be disabled should the deployment not support it (not recommended). It is by default disabled ([ethics-env.sh](tools/ethics-env.sh) sets the environment disable variable), however should be enabled 
+as soon as ClamAV is set up and configured
+
+The `tools/` directory provides Bash scripts which work on Ubuntu linux. The build process is different on other operating
+systems. On other systems like Windows, you will need to run the maven build commands and java run commands manually. You can take a look
+at the scripts for the commands as examples.
+
+## Quickstart
+As long as the requirements are satisfied, you can run the following command as a "quickstart". It builds and starts the application
+with an embedded in-memory database for quick setup without having to setup a persistent Postgres database.
+
+Run from the root of the project
+
+```bash 
+tools/quickstart.sh
+```
+
+**Note**: Quickstart does not support the following features since they'll need to be configured (as below) to work:
+* Account Confirmation - Accounts will always be confirmed automatically without sending a confirmation e-mail to the new user
+* E-mail functionality - Email needs to be configured to set the SMTP server port, sender email and password. This can be configured
+by environment variables below
+* Antivirus scanning of uploaded files - ClamAV needs to be installed and configured
+* Exporting of Applications - Applications will be exported on request, but the link to download them is sent via e-mail and e-mail
+does not work in a quick-start environment
+
+## Build
+To build the backend, from the project root, simply run the following command:
+```bash
+tools/build.sh -DkipTests
+```
+
+This script first runs a Maven build of all the modules. It by default, runs all the tests, but to skip tests, pass in
+`-DskipTests` at the end of the command.
+
+## Database Setup
+The application can be used with a Postgres or Embedded in memory database. It is preferred to use Postgres since this storage is
+persistent.
+
+### Postgres
+To install Postgres, ensure it is installed on your machine. The steps to install it on Linux (Ubuntu) can be found here:
+https://www.postgresqltutorial.com/postgresql-getting-started/install-postgresql-linux/.
+
+Regardless of your environment, once Postgres is installed, ensure that you can access it as an administrator so that you can create
+databases and users.
+
+Once you have access to the `psql` command, run the following commands:
+```bash
+psql -U <username>
+postgres=# CREATE DATABASE ethics;
+postgres=# CREATE USER ethicsuser WITH ENCRYPTED PASSWORD 'testpass'; 
+postgres=# GRANT ALL PRIVILEGES ON DATABASE ethics TO ethicsuser;
+```
+
+For the password choose a more secure password. In the [ethics-env.sh](tools/ethics-env.sh), set the following properties:
+```
+export DATABASE_URL=jdbc:postgresql://localhost:5432/ethics
+export DATABASE_USER=ethicsuser
+export DATABASE_PASS=testpass
+```
+
+### Embedded
+To run the application with an embedded in-memory database, run the following command:
+```tools/run.sh -Dspring.profiles.active=embedded```
+
+## Run
+After a build is completed, from the project root, start the backend by running the following command:
+```bash
+tools/run.sh
+```
+This script executes the executable JAR produced by the build script
 
 ## Modules
 The backend is defined as a set of Maven modules, each providing their own functionality and endpoints. See the
@@ -22,28 +91,11 @@ The modules are outlined as follows:
 | [app](app)                       | Provides the main entrypoint into the backend application. Imports all the backend modules                                                                                    |
 | [applications](applications)     | Provides the backend processing of ethics applications                                                                                                                        |
 | [authentication](authentication) | Provides authentication (username/email and password authentication) for the backend API                                                                                      |
-| [common](common)                 | Provides common classes/resources that can be shared between the modules                                                                                                      |
+| [common](common)                 | Provides common classes/resources that can be shared between the modules, such as e-mail functionality                                                                                                  |
 | [exporter](exporter)             | Provides the backend functionality for exporting applications to other file formats                                                                                           |
 | [test-utils](test-utils)         | Provides utility classes for testing in the other modules                                                                                                                     |
 | [users](users)                   | Provides the backend functionality for details surrounding the system's user and the management and authorization of their roles, e.g., standard user, committee member, etc. |
 | [files](files)                   | Provides a means of uploading and downloading files to and from the backend server                                                                                            |
-
-## Build
-**Important**: You must configure the app module properties as described in [app README](app/README.md) file before build
-
-To build the backend, from the project root, simply run the following command:
-```bash
-tools/build.sh
-```
-This script first runs a Maven build of all the modules (except for the **app** module). When this is completed, it builds
-the **app** module and repackages it in a way that makes the JAR file executable.
-
-## Run
-After a build is completed, from the project root, start the backend by running the following command:
-```bash
-tools/run.sh
-```
-This script executes the executable JAR produced by the build script
 
 ## Configuration
 Each module provides its own `<module>/src/main/resources/<module>.ethics.properties` file and other configuration files which allow
@@ -54,6 +106,9 @@ See each module's README file for information on configuration for that module.
 ### Environment
 There is a list of environment variables that can also be configured which can be useful for configuring it in deployment
 without having to change the properties files. The environment variables take precedence over the application properties.
+
+**Note**: Environment variables take precedence over properties set through the JVM properties (-D flag) or
+property files
 
 The list of supported environment variables are as follows:
 * **ETHICS_FRONTEND_URL**: The URL base of where the front-end is running. Any pages, e.g. forgot-password is appended onto
@@ -74,6 +129,9 @@ removed
 * **ETHICS_CHAIR_EMAIL**: On initial setup of the system, if a user is created with this e-mail address, they are automatically assigned the Chair role
 * **ETHICS_EMAIL_CONTACT**: Specify the e-mail of the committee member to contact (specified also by a property in the [common](common/src/main/resources/common.ethics.properties)
 configuration). Displayed in e-mail footers
+
+These variables can be set externally or added to the [ethics-env.sh](tools/ethics-env.sh) which is sourced by [run.sh](tools/run.sh)
+on startup
 
 ## Testing
 
