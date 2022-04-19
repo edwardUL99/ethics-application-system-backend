@@ -216,6 +216,7 @@ public class SubmittedApplication extends Application {
     @Override
     public void addComment(Comment comment) {
         String componentId = comment.getComponentId();
+        Long id = comment.getId();
         ApplicationComments comments = this.comments.get(componentId);
 
         if (comments != null) {
@@ -225,7 +226,7 @@ public class SubmittedApplication extends Application {
             for (int i = 0; i < commentsList.size() && !added; i++) {
                 Comment comment1 = commentsList.get(i);
 
-                if (Objects.equals(comment1.getId(), comment.getId())) {
+                if (id != null && comment1.getId() != null && Objects.equals(comment1.getId(), comment.getId())) {
                     added = true;
                     commentsList.set(i, comment);
                 }
@@ -246,7 +247,20 @@ public class SubmittedApplication extends Application {
      */
     @Override
     public boolean canBeViewedBy(User user) {
-        if (this.accessList.contains(new UserAccess(null, user))) {
+        return canBeViewedBy(user, false);
+    }
+
+    /**
+     * This method determines if the application can be viewed by the user
+     *
+     * @param user          the user that wished to view the application
+     * @param answerRequest true to determine if the user can access the application in an answer request context (by checking access list), otherwise just check
+     *                      permissions and credentials
+     * @return true if they can view it, false if not
+     */
+    @Override
+    public boolean canBeViewedBy(User user, boolean answerRequest) {
+        if (answerRequest && this.accessList.contains(new UserAccess(null, user))) {
             return true;
         } else {
             Collection<Permission> permissions = user.getRole().getPermissions();
@@ -273,7 +287,7 @@ public class SubmittedApplication extends Application {
             Set<ApplicationStatus> permissible = Set.of(ApplicationStatus.SUBMITTED, ApplicationStatus.RESUBMITTED,
                     ApplicationStatus.REVIEW, ApplicationStatus.REVIEWED,
                     ApplicationStatus.APPROVED, ApplicationStatus.REJECTED);
-            if (!permissible.contains(status)) // TODO decide if approved/rejected require their own subclasses
+            if (!permissible.contains(status))
                 throw new InvalidStatusException("The only applicable statuses for a SubmittedApplication are " + permissible);
 
             this.status = status;
@@ -281,21 +295,40 @@ public class SubmittedApplication extends Application {
     }
 
     /**
+     * Determines if the comment can be viewed depending on the provided permissions
+     * @param comment the comment to query
+     * @param review true if the user has review permissions
+     * @param admin true if the user has admin permissions
+     * @param user the user that will be viewing the comments
+     * @return true if the comment can be viewed, false if not
+     */
+    private boolean canViewComment(Comment comment, boolean review, boolean admin, User user) {
+        if (admin)
+            return true;
+        else if (review)
+            return comment.isSharedReviewer() || comment.getUser().getUsername().equals(user.getUsername());
+        else
+            return comment.isSharedApplicant();
+    }
+
+    /**
      * Filters comments based on permissions and application shared
      * @param comments the comments to filter
      * @param permissions the permissions of the user
+     * @param user the user viewing the application
      * @return the filtered comments
      */
-    protected Map<String, ApplicationComments> filterComments(Map<String, ApplicationComments> comments, Collection<Permission> permissions) {
+    protected Map<String, ApplicationComments> filterComments(Map<String, ApplicationComments> comments, Collection<Permission> permissions, User user) {
         Map<String, ApplicationComments> filtered = new HashMap<>();
         boolean review = permissions.contains(Permissions.REVIEW_APPLICATIONS);
+        boolean admin = permissions.contains(Permissions.ADMIN);
 
         for (Map.Entry<String, ApplicationComments> e : comments.entrySet()) {
             String id = e.getKey();
             ApplicationComments appComments = e.getValue();
             List<Comment> filteredComments = appComments.getComments()
                     .stream()
-                    .filter(comment -> review || comment.isSharedApplicant())
+                    .filter(comment -> canViewComment(comment, review, admin, user))
                     .collect(Collectors.toList());
 
             if (filteredComments.size() > 0) {
@@ -320,19 +353,26 @@ public class SubmittedApplication extends Application {
     public SubmittedApplication clean(User user) {
         SubmittedApplication application = copy();
         Collection<Permission> permissions = user.getRole().getPermissions();
+        boolean review = permissions.contains(Permissions.REVIEW_APPLICATIONS);
+
+        if (!review)
+            application.assignedCommitteeMembers.clear();
 
         if (status == ApplicationStatus.SUBMITTED || status == ApplicationStatus.REVIEW || status == ApplicationStatus.REVIEWED) {
-            if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
-                application.comments = filterComments(application.comments, permissions);
+            application.comments = filterComments(application.comments, permissions, user);
+
+            if (!review) {
                 application.finalComment = null;
+                application.assignedCommitteeMembers.clear();
             }
         } else if (status == ApplicationStatus.RESUBMITTED) {
-            if (!permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
-                application.comments = filterComments(application.comments, permissions);
+            application.comments = filterComments(application.comments, permissions, user);
+
+            if (!review) {
                 application.finalComment = null;
                 application.previousCommitteeMembers.clear();
             }
-        } else if ((status == ApplicationStatus.APPROVED || status == ApplicationStatus.REJECTED) && !permissions.contains(Permissions.REVIEW_APPLICATIONS)) {
+        } else if ((status == ApplicationStatus.APPROVED || status == ApplicationStatus.REJECTED) && !review) {
             application.comments.clear();
             application.previousCommitteeMembers.clear();
         }

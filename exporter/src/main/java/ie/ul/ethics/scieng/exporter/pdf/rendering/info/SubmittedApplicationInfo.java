@@ -17,6 +17,9 @@ import ie.ul.ethics.scieng.users.models.User;
 import java.time.LocalDateTime;
 import java.util.Collection;
 
+/**
+ * This class renders application information for submitted applications
+ */
 public class SubmittedApplicationInfo extends DefaultApplicationInfo {
     /**
      * Render a final comment to the chapter

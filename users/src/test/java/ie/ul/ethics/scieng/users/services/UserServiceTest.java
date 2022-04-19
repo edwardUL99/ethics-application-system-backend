@@ -8,12 +8,10 @@ import ie.ul.ethics.scieng.users.models.User;
 import ie.ul.ethics.scieng.users.models.authorization.Role;
 import ie.ul.ethics.scieng.users.repositories.UserRepository;
 import ie.ul.ethics.scieng.users.test.config.TestConfiguration;
-import ie.ul.ethics.scieng.test.utils.Caching;
 import ie.ul.ethics.scieng.users.exceptions.AccountNotExistsException;
 import ie.ul.ethics.scieng.users.authorization.Roles;
 import ie.ul.ethics.scieng.test.utils.TestApplication;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,11 +58,6 @@ public class UserServiceTest {
      */
     @Autowired
     private UserService userService;
-    /**
-     * The cache utilities so we can evict cache for testing
-     */
-    @Autowired
-    private Caching cache;
 
     /**
      * Creates a test account
@@ -80,14 +73,6 @@ public class UserServiceTest {
      */
     public static User createTestUser() {
         return new User(NAME, createTestAccount(), DEPARTMENT, Roles.APPLICANT);
-    }
-
-    /**
-     * Clear cache before each test
-     */
-    @BeforeEach
-    private void clearCache() {
-        cache.clearCache();
     }
 
     /**
@@ -113,30 +98,6 @@ public class UserServiceTest {
     }
 
     /**
-     * Tests that the response from retrieving all users should be cached
-     */
-    @Test
-    public void shouldGetAllUsersCached() {
-        List<User> users = new ArrayList<>();
-
-        for (int i = 0; i < 5; i++) {
-            User user = createTestUser();
-            user.setName("User " + i);
-            users.add(user);
-        }
-
-        given(userRepository.findAll())
-                .willReturn(users);
-
-        userService.getAllUsers();
-        userService.getAllUsers();
-        userService.getAllUsers();
-        userService.getAllUsers();
-
-        verify(userRepository, times(1)).findAll();
-    }
-
-    /**
      * This method tests that a user should be loaded successfully
      */
     @Test
@@ -153,23 +114,6 @@ public class UserServiceTest {
     }
 
     /**
-     * This method tests that a user should be loaded successfully from cache
-     */
-    @Test
-    public void shouldLoadUserSuccessfullyCached() {
-        User user = createTestUser();
-
-        given(userRepository.findByUsername(USERNAME))
-                .willReturn(Optional.of(user));
-
-        userService.loadUser(USERNAME);
-        userService.loadUser(USERNAME);
-        userService.loadUser(USERNAME);
-
-        verify(userRepository, times(1)).findByUsername(USERNAME);
-    }
-
-    /**
      * This method tests that a user should be loaded by email successfully
      */
     @Test
@@ -183,24 +127,6 @@ public class UserServiceTest {
 
         assertEquals(user, returned);
         verify(userRepository).findByAccount_Email(EMAIL);
-    }
-
-    /**
-     * This method tests that a user should be loaded by email successfully from the cache
-     */
-    @Test
-    public void shouldLoadUserByEmailCached() {
-        User user = createTestUser();
-
-        given(userRepository.findByAccount_Email(EMAIL))
-                .willReturn(Optional.of(user));
-
-        userService.loadUser(EMAIL, true);
-        userService.loadUser(EMAIL, true);
-        userService.loadUser(EMAIL, true);
-        userService.loadUser(EMAIL, true);
-
-        verify(userRepository, times(1)).findByAccount_Email(EMAIL);
     }
 
     /**
@@ -405,14 +331,5 @@ public class UserServiceTest {
     @Test
     public void shouldUpdateRoleToChair() {
         testUpdateRoleDowngrade(Roles.CHAIR);
-    }
-
-    /**
-     * This method tests that if the requested role to update to is administrator and that any existing administrators are downgraded
-     * to committee members
-     */
-    @Test
-    public void shouldUpdateUserToAdministrator() {
-        testUpdateRoleDowngrade(Roles.ADMINISTRATOR);
     }
 }

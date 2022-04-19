@@ -8,6 +8,7 @@ import com.itextpdf.text.Paragraph;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.applications.templates.components.TextComponent;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 
 import java.util.Map;
 
@@ -20,9 +21,10 @@ public class TextComponentRenderer extends DefaultComponentRenderer {
      *
      * @param application the application to render
      * @param component   the component being rendered
+     * @param context     for rendering
      */
-    public TextComponentRenderer(Application application, ApplicationComponent component) {
-        super(application, component);
+    public TextComponentRenderer(Application application, ApplicationComponent component, PDFContext context) {
+        super(application, component, context);
     }
 
     /**

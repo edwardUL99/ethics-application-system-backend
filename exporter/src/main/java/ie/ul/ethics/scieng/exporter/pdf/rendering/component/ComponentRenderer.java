@@ -15,4 +15,10 @@ public interface ComponentRenderer {
      * @return the rendered element
      */
     Element renderToElement(Map<String, Object> renderOptions);
+
+    /**
+     * Determines if elements returned from {@link #renderToElement(Map)} should be added or if they are automatically added
+     * @return true to add, false to not add
+     */
+    boolean addReturnedElements();
 }

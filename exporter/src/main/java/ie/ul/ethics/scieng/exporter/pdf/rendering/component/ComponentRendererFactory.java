@@ -4,6 +4,7 @@ import com.itextpdf.text.Element;
 import ie.ul.ethics.scieng.applications.models.applications.Application;
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
 import ie.ul.ethics.scieng.applications.templates.components.QuestionComponent;
+import ie.ul.ethics.scieng.exporter.pdf.PDFContext;
 
 import java.util.Map;
 
@@ -24,15 +25,21 @@ public class ComponentRendererFactory implements ComponentRenderer {
      * The renderer being delegated to
      */
     private ComponentRenderer delegate;
+    /**
+     * Rendering context
+     */
+    private PDFContext context;
 
     /**
      * Create an instance
      * @param application the application being rendered
      * @param component the component being rendered
+     * @param context rendering context
      */
-    public ComponentRendererFactory(Application application, ApplicationComponent component) {
+    public ComponentRendererFactory(Application application, ApplicationComponent component, PDFContext context) {
         this.application = application;
         this.component = component;
+        this.context = context;
         initialiseDelegate();
     }
 
@@ -40,15 +47,15 @@ public class ComponentRendererFactory implements ComponentRenderer {
      * Initialise the delegate
      */
     private void initialiseDelegate() {
-        ComponentRenderer renderer = ComponentRenderers.getRenderer(application, component, false);
+        ComponentRenderer renderer = ComponentRenderers.getRenderer(application, context, component, false);
 
         if (renderer != null) {
             delegate = renderer;
         } else {
             if (component instanceof QuestionComponent) {
-                delegate = new QuestionComponentRenderer(application, (QuestionComponent) component);
+                delegate = new QuestionComponentRenderer(application, (QuestionComponent) component, context);
             } else {
-                delegate = new DefaultComponentRenderer(application, component);
+                delegate = new DefaultComponentRenderer(application, component, context);
             }
         }
     }
@@ -62,5 +69,15 @@ public class ComponentRendererFactory implements ComponentRenderer {
     @Override
     public Element renderToElement(Map<String, Object> renderOptions) {
         return (delegate != null) ? delegate.renderToElement(renderOptions):null;
+    }
+
+    /**
+     * Determines if elements returned from {@link #renderToElement(Map)} should be added or if they are automatically added
+     *
+     * @return true to add, false to not add
+     */
+    @Override
+    public boolean addReturnedElements() {
+        return delegate != null && delegate.addReturnedElements();
     }
 }

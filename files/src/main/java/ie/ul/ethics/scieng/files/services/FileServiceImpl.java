@@ -41,16 +41,16 @@ public class FileServiceImpl implements FileService {
     public FileServiceImpl(FilesConfigurationProperties properties, UserDirectoryService userDirectoryService) {
         this.storageLocation = Paths.get(properties.getStorageDir())
                 .toAbsolutePath().normalize();
-        createStorageLocation();
+        createStorageLocation(this.storageLocation);
         this.userDirectoryService = userDirectoryService;
     }
 
     /**
      * Create the storage location if it does not exist
      */
-    private void createStorageLocation() {
+    private void createStorageLocation(Path storageLocation) {
         try {
-            Files.createDirectories(this.storageLocation);
+            Files.createDirectories(storageLocation);
         } catch (IOException ex) {
             throw new FileException("Could not create the upload directory", ex);
         }
@@ -79,7 +79,8 @@ public class FileServiceImpl implements FileService {
             throw new FileException("You cannot include .. in the file path", null);
 
         try {
-            createStorageLocation();
+            Path storageLocation = this.storageLocation.resolve("data");
+            createStorageLocation(storageLocation);
 
             String targetPath = (directory == null) ? target:directory + "/" + target;
 
@@ -103,6 +104,8 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     public Resource loadFile(String filename, String directory, String username) throws FileException {
+        Path storageLocation = this.storageLocation.resolve("data");
+
         if (!userDirectoryService.canViewFile(storageLocation, filename, directory, username))
             throw new PermissionDeniedException("The user cannot view the file", null);
 
@@ -127,6 +130,8 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     public void deleteFile(String filename, String directory, String username) throws FileException {
+        Path storageLocation = this.storageLocation.resolve("data");
+
         if (!userDirectoryService.canDeleteFile(storageLocation, filename, directory, username))
             throw new PermissionDeniedException("The user cannot delete this file", null);
 
@@ -151,7 +156,7 @@ public class FileServiceImpl implements FileService {
      */
     @Override
     public Path getStorageLocation() {
-        createStorageLocation();
+        createStorageLocation(this.storageLocation);
         return storageLocation;
     }
 }

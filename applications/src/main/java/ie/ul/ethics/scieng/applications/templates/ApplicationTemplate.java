@@ -1,7 +1,6 @@
 package ie.ul.ethics.scieng.applications.templates;
 
 import ie.ul.ethics.scieng.applications.templates.components.ApplicationComponent;
-import ie.ul.ethics.scieng.applications.templates.components.CompositeComponent;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -56,7 +55,7 @@ public class ApplicationTemplate {
      * Sorts all the components
      */
     public void sort() {
-        List<CompositeComponent> toSort = new ArrayList<>();
+        List<ApplicationComponent> toSort = new ArrayList<>();
 
         for (ApplicationComponent child : components) {
             SortingUtils.findSortRecursive(child, toSort);
@@ -64,6 +63,19 @@ public class ApplicationTemplate {
         }
 
         Collections.sort(components);
+    }
+
+    /**
+     * Determines if the template has a component with the given ID
+     * @param componentId the ID to search for
+     * @return true if it has an ID, false if not
+     */
+    public boolean hasComponent(String componentId) {
+        for (ApplicationComponent component : components)
+            if (component.matchesComponentId(componentId))
+                return true;
+
+        return false;
     }
 
     /**

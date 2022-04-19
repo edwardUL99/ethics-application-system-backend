@@ -49,6 +49,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -124,6 +125,11 @@ public class ApplicationControllerTest {
     private void initMocks() {
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
         MockitoAnnotations.openMocks(this);
+
+        given(authenticationInformation.getUsername())
+                .willReturn(USERNAME);
+        given(userService.loadUser(USERNAME))
+                .willReturn(createTestUser());
     }
 
     /**
@@ -710,7 +716,7 @@ public class ApplicationControllerTest {
 
         verify(requestMapper).submitRequestToApplication(request);
         verify(applicationService).submitApplication(draft);
-        verify(authenticationInformation).getUsername();
+        verify(authenticationInformation, atLeastOnce()).getUsername();
     }
 
     /**
@@ -761,7 +767,6 @@ public class ApplicationControllerTest {
                 .andExpect(content().contentType(JSON.MEDIA_TYPE))
                 .andExpect(content().json(response));
 
-        verify(requestMapper).submitRequestToApplication(request);
         verifyNoInteractions(applicationService);
         verify(authenticationInformation).getUsername();
     }
@@ -970,10 +975,8 @@ public class ApplicationControllerTest {
         submitted.clearPreviousCommitteeMembers();
 
         AcceptResubmittedRequest request = new AcceptResubmittedRequest(APPLICATION_ID, List.of(USERNAME));
-        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submitted);
 
         String json = JSON.convertJSON(request);
-        String result = JSON.convertJSON(response);
 
         List<User> committeeMembers = List.of(submitted.getUser());
 
@@ -981,6 +984,10 @@ public class ApplicationControllerTest {
                 .willReturn(new MappedAcceptResubmittedRequest(resubmitted, committeeMembers));
         given(applicationService.acceptResubmitted(resubmitted, committeeMembers))
                 .willReturn(submitted);
+
+        submitted.setAssignedCommitteeMembers(Collections.emptyList());
+        ApplicationResponse response = ApplicationResponseFactory.buildResponse(submitted);
+        String result = JSON.convertJSON(response);
 
         mockMvc.perform(post(createApiPath(Endpoint.APPLICATIONS, "resubmit"))
                 .contentType(JSON.MEDIA_TYPE)
@@ -1230,6 +1237,8 @@ public class ApplicationControllerTest {
 
         FinishReviewRequest request = new FinishReviewRequest(APPLICATION_ID, USERNAME);
         String json = JSON.convertJSON(request);
+
+        submittedApplication.setAssignedCommitteeMembers(Collections.emptyList());
         ApplicationResponse response = ApplicationResponseFactory.buildResponse(submittedApplication);
         String result = JSON.convertJSON(response);
 
@@ -1274,10 +1283,6 @@ public class ApplicationControllerTest {
         review.setStatus(ApplicationStatus.REVIEW);
         Application mapped = createSubmittedApplication(draft);
         mapped.setStatus(ApplicationStatus.REVIEW);
-
-        Comment comment = new Comment(null, null, "comment", "component", new ArrayList<>());
-        comment.addSubComment(new Comment(null, null, "comment1", "component1", new ArrayList<>()));
-        mapped.addComment(comment);
 
         ReviewSubmittedApplicationRequest.Comment requestComment =
                 new ReviewSubmittedApplicationRequest.Comment(null, USERNAME, "comment", "component", new ArrayList<>(), LocalDateTime.now());
