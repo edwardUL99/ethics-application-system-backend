@@ -8,6 +8,7 @@ import org.springframework.core.io.Resource;
 import javax.activation.DataHandler;
 import javax.activation.DataSource;
 import javax.activation.FileDataSource;
+import javax.activation.URLDataSource;
 import javax.mail.BodyPart;
 import javax.mail.Message;
 import javax.mail.MessagingException;
@@ -152,21 +153,21 @@ public class AdvancedEmail {
     /**
      * Add the image to the e-mail
      * @param imageID the ID mentioned in the html content as <img src="cid:imageID">
-     * @param image the image file to attach
+     * @param image the image resource
      * @return instance of this for chaining
      * @throws EmailException if an error occurs
      */
-    public AdvancedEmail attachImage(String imageID, File image) {
+    public AdvancedEmail attachImage(String imageID, Resource image) {
         try {
             BodyPart bodyPart = new MimeBodyPart();
-            DataSource fds = new FileDataSource(image);
+            DataSource fds = new URLDataSource(image.getURL());
             bodyPart.setDataHandler(new DataHandler(fds));
             bodyPart.setHeader("Content-ID", "<" + imageID + ">");
-            bodyPart.setFileName(image.getName());
+            bodyPart.setFileName(imageID);
             bodyParts.add(bodyPart);
 
             return this;
-        } catch (MessagingException ex) {
+        } catch (MessagingException | IOException ex) {
             throw new EmailException("Failed to attach image", ex);
         }
     }
@@ -225,13 +226,8 @@ public class AdvancedEmail {
         if (this.addULHeader) {
             content = getHeaderHTML() + content;
 
-            try {
-                Resource resource = new ClassPathResource("ul-logo.jpg");
-                File file = resource.getFile();
-                attachImage("ul-logo", file);
-            } catch (IOException ex) {
-                throw new EmailException("Failed to construct HTML content", ex);
-            }
+            Resource resource = new ClassPathResource("ul-logo.jpg");
+            attachImage("ul-logo", resource);
         }
 
         if (this.addFooter)
