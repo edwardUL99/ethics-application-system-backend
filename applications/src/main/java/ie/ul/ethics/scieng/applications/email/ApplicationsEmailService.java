@@ -164,17 +164,18 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>";
 
         String requestedAt = request.getRequestedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-        User supervisor = request.getUser();
+        User user = request.getUser();
         Application application = request.getApplication();
         String requester = application.getUser().getName();
+        String id = application.getApplicationId();
 
         String urlBase = getFrontendURL();
         urlBase = urlBase + (String.format("/answer-request?id=%d", request.getId()));
 
-        content = String.format(content, requestedAt, supervisor.getName(), requester, application.getApplicationId(),
+        content = String.format(content, requestedAt, user.getName(), requester, id,
                 requester, requestedAt, urlBase, "Give Answers", urlBase);
 
-        sendEmail(supervisor.getAccount().getEmail(), String.format("Input Requested on Application %s at %s", application.getApplicationId(), requestedAt), content);
+        sendEmail(user.getAccount().getEmail(), String.format("Input Requested on Application %s at %s", application.getApplicationId(), requestedAt), content);
     }
 
     /**
@@ -197,7 +198,7 @@ public class ApplicationsEmailService extends AsyncEmailService {
                 + "<p>If for some reason, the link doesn't work, paste the following link into your browser: %s</p>";
 
         String requestedAt = request.getRequestedAt().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
-        String supervisor = request.getUser().getName();
+        String user = request.getUser().getName();
         Application application = request.getApplication();
         String id = application.getApplicationId();
         User requester = application.getUser();
@@ -205,9 +206,9 @@ public class ApplicationsEmailService extends AsyncEmailService {
         String urlBase = getFrontendURL();
         urlBase = urlBase + (String.format("/application?id=%s", id));
 
-        content = String.format(content, requestedAt, requester.getName(), supervisor, id,
-                supervisor, requestedAt, urlBase, id, urlBase);
+        content = String.format(content, requester.getName(), user, id, user,
+                requestedAt, urlBase, id, urlBase);
 
-        sendEmail(requester.getAccount().getEmail(), String.format("Input on Application %s requested at %s provided", application.getApplicationId(), requestedAt), content);
+        sendEmail(requester.getAccount().getEmail(), String.format("Input on Application %s requested at %s provided", id, requestedAt), content);
     }
 }
